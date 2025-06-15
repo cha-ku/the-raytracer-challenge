@@ -5,26 +5,30 @@
 #ifndef THE_RAYTRACER_CHALLENGE_CANVAS_HPP
 #define THE_RAYTRACER_CHALLENGE_CANVAS_HPP
 
-#include <array>
 #include <cstdint>
+#include <vector>
 #include <expected>
 #include <fstream>
+#include <sstream>
+#include <ranges>
 #include "Colour.hpp"
 
-struct Canvas {
-    uint32_t width;
-    uint32_t height;
+namespace raytracer {
+    enum class PixelError {
+        bad_dimensions
+    };
     enum class CanvasError {
         invalid_path
     };
-    [[nodiscard]] std::expected<bool, CanvasError> write(const std::string& file_path) const {
-        std::ofstream out_file(file_path);
-        if (!out_file) {
-            return std::unexpected(CanvasError::invalid_path);
-        }
-        out_file << "P3\n" << width << " " << height << "\n255\n";
-        return true;
-    }
-};
+    struct Canvas {
+        uint32_t width{0};
+        uint32_t height{0};
+        std::vector<std::vector<uint8_t>> storage{width * height, {0, 0, 0}};
+
+        explicit constexpr Canvas(uint32_t h, uint32_t w) : height(h), width(w) {};
+        void write_pixel(uint32_t pix_w, uint32_t pix_h, const Colour& colour);
+    };
+    std::expected<bool, CanvasError> canvas_to_ppm(const Canvas& canvas, const std::string& file_path);
+}
 
 #endif //THE_RAYTRACER_CHALLENGE_CANVAS_HPP

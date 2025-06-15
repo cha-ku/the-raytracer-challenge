@@ -8,9 +8,7 @@
 #include <cmath>
 
 namespace utils {
-    static constexpr auto epsilon = 1e-6f;
-
-    static constexpr bool areAlmostEqual(const float a, const float b) {
+    static constexpr bool equal(const float a, const float b, const float epsilon = 1e-6f) {
         return std::fabs(a - b) < epsilon;
     }
 }

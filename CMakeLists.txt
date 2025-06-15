@@ -14,5 +14,12 @@ FetchContent_MakeAvailable(Catch2)
 
 add_subdirectory(tests)
 
-add_executable(raytracer src/main.cpp)
+add_library(simulation STATIC src/simulation.cpp
+        include/simulation.hpp
+        include/Canvas.cpp)
+target_include_directories(simulation PUBLIC include)
+
+add_executable(raytracer src/main.cpp
+        include/Canvas.cpp)
 target_include_directories(raytracer PUBLIC include)
+#target_link_libraries(raytracer simulation)
