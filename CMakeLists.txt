@@ -22,4 +22,4 @@ target_include_directories(simulation PUBLIC include)
 add_executable(raytracer src/main.cpp
         include/Canvas.cpp)
 target_include_directories(raytracer PUBLIC include)
-#target_link_libraries(raytracer simulation)
+target_link_libraries(raytracer simulation)

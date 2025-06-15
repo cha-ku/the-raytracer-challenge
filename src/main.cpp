@@ -5,26 +5,21 @@
 #include "simulation.hpp"
 #include "Utils.hpp"
 
-int main() {
-//    simulate();
-    raytracer::Canvas canvas{400, 400};
-    std::cout << canvas.width << " , " << canvas.height << "\n";
-    static constexpr std::string output{"outfile.ppm"};
-    for (int j = 0; j < canvas.height; ++j) {
-        for (int i = 0; i < canvas.height; ++i) {
-            std::random_device rd;
-            std::mt19937 gen(rd());
-            std::uniform_real_distribution<float> dis(0.0f, 1.0f); // Range [0, 1]
-            auto colour = raytracer::Colour(dis(gen),dis(gen), dis(gen));
-            canvas.write_pixel(i, j, colour);
+void test() {
+    raytracer::Canvas c(16, 16);
+    const raytracer::Colour color(0.66, 0.33, 0.33);
+    for (int h = 0; h < c.height; ++h) {
+        for (int w = 0; w < c.width; ++w) {
+            if (h < 10) {
+                c.write_pixel(w, h, color);
+            }
         }
     }
-    const auto retval = raytracer::canvas_to_ppm(canvas, output);
-    if (retval.has_value()) {
-        std::cout << "Data written to " << output << "\n";
-    }
-    else if (retval.error() == raytracer::CanvasError::invalid_path){
-        std::cout << "Cannot write file " << output << " - invalid path\n";
-    }
+    [[maybe_unused]] auto ret = raytracer::canvas_to_ppm(c, "testfile.ppm");
+}
+
+int main() {
+    simulate();
+    //test();
     return 0;
 }

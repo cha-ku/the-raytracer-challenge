@@ -35,16 +35,30 @@ void simulate() {
     Vector velocity{Vector::normalize({1, 1.8, 0}) * 11.25};
     Projectile projectile {start, velocity};
     Environment environment{Vector(0, -0.1, 0), Vector(-0.01, 0, 0)};
-    Canvas canvas{900, 550};
+    Canvas canvas{900, 900};
 
     int ticks = 0;
 
+    const auto within_bounds = [](const Canvas& canvas, const Projectile& projectile){
+        return static_cast<decltype(canvas.height)>(projectile.position.y) < canvas.height
+        &&  static_cast<decltype(canvas.width)>(projectile.position.x) < canvas.width;
+    };
+
     // Run simulation
-    while ((canvas.height - static_cast<decltype(canvas.height)>(projectile.position.y)) > 0) {
-        std::cout << "Tick " << ticks << ": Position (" << projectile.position.x << ", " << projectile.position.y << ", " << projectile.position.z << ")\n";
+    while (within_bounds(canvas, projectile)) {
+        const auto height = static_cast<float>(canvas.height);
+        canvas.write_pixel(static_cast<uint32_t>(projectile.position.x), static_cast<uint32_t>(height - projectile.position.y), Colour(0.66, 0.11, 0.3));
         projectile = tick(environment, projectile);
         ++ticks;
     }
-
     std::cout << "Projectile hit the ground after " << ticks << " ticks.\n";
+    static constexpr std::string output{"projectile.ppm"};
+    const auto retval = raytracer::canvas_to_ppm(canvas, output);
+    if (retval.has_value()) {
+        std::cout << "Data written to " << output << "\n";
+    }
+    else if (retval.error() == raytracer::CanvasError::invalid_path){
+        std::cout << "Cannot write file " << output << " - invalid path\n";
+    }
+
 }

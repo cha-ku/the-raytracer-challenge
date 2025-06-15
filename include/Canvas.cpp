@@ -2,11 +2,12 @@
 // Created by chaku on 15/06/25.
 //
 
+#include <print>
 #include "Canvas.hpp"
 
 namespace raytracer {
     void Canvas::write_pixel(uint32_t pix_w, uint32_t pix_h, const Colour& colour) {
-        storage[pix_w * pix_h] = {static_cast<uint8_t>(colour.r * 255), static_cast<uint8_t>(colour.g * 255), static_cast<uint8_t>(colour.b * 255)};
+        storage[pix_h * width + pix_w] = {static_cast<uint8_t>(colour.r * 255), static_cast<uint8_t>(colour.g * 255), static_cast<uint8_t>(colour.b * 255)};
     }
 
     std::expected<bool, CanvasError> canvas_to_ppm(const Canvas& canvas, const std::string& file_path) {
@@ -16,7 +17,7 @@ namespace raytracer {
         }
         const std::string header{"P3\n" + std::to_string(canvas.width) + " " + std::to_string(canvas.height) + "\n255\n"};
         out_file << header;
-        for (const auto& row : canvas.storage) {
+        for (const auto& [index, row] : std::views::enumerate(canvas.storage)) {
             const std::vector<std::string> strings =
                     row | std::views::transform([](int n) { return std::to_string(n); })
                     | std::ranges::to<std::vector<std::string>>();
@@ -31,6 +32,7 @@ namespace raytracer {
                 out_file << out_str;
             }
             */
+//            std::println("{} {}", std::to_string(index), out_str);
             out_file << out_str;
             out_file << "\n";
         }
