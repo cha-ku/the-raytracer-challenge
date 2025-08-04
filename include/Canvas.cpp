@@ -17,11 +17,11 @@ namespace raytracer {
         }
         const std::string header{"P3\n" + std::to_string(canvas.width) + " " + std::to_string(canvas.height) + "\n255\n"};
         out_file << header;
-        for (const auto& [index, row] : std::views::enumerate(canvas.storage)) {
+        for (const auto& row : canvas.storage) {
             const std::vector<std::string> strings =
                     row | std::views::transform([](int n) { return std::to_string(n); })
                     | std::ranges::to<std::vector<std::string>>();
-            auto out_str = std::ranges::to<std::string>(std::views::join_with(strings, ' '));
+//            auto out_str = std::ranges::to<std::string>(std::views::join_with(strings, ' '));
             /*
             if (out_str.size() > 70) {
                 out_file << out_str.substr(0,  70);
@@ -33,8 +33,14 @@ namespace raytracer {
             }
             */
 //            std::println("{} {}", std::to_string(index), out_str);
-            out_file << out_str;
-            out_file << "\n";
+            std::string out_str;
+            for (size_t i = 0; i < strings.size(); ++i) {
+                out_str += strings[i];
+                if (i < strings.size() - 1) {
+                    out_str += ' ';
+                }
+            }
+            out_file << out_str << "\n";
         }
         return true;
     }

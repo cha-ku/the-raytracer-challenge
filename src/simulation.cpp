@@ -53,7 +53,7 @@ void simulate() {
     }
     std::cout << "Projectile hit the ground after " << ticks << " ticks.\n";
     static constexpr std::string output{"projectile.ppm"};
-    const auto retval = raytracer::canvas_to_ppm(canvas, output);
+    const auto& retval = raytracer::canvas_to_ppm(canvas, output);
     if (retval.has_value()) {
         std::cout << "Data written to " << output << "\n";
     }

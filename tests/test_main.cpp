@@ -4,10 +4,13 @@
 
 #define CATCH_CONFIG_MAIN
 #include <catch2/catch_all.hpp>
+#include "Matrix.hpp"
 #include "Vector.hpp"
 #include "Point.hpp"
 #include "Colour.hpp"
 #include "Utils.hpp"
+
+using namespace raytracer;
 
 TEST_CASE("Vector addition test") {
     REQUIRE(Vector(1, 2, 3) + Vector(4, 5, 6) == Vector(5, 7, 9));
@@ -45,8 +48,8 @@ TEST_CASE("Magnitude of a vector") {
     REQUIRE(Vector::magnitude({1, 0, 0}) == 1);
     REQUIRE(Vector::magnitude({0, 1, 0}) == 1);
     REQUIRE(Vector::magnitude({0, 0, 1}) == 1);
-    REQUIRE(utils::areAlmostEqual(Vector::magnitude({1, 2, 3}), std::sqrt(14)));
-    REQUIRE(utils::areAlmostEqual(Vector::magnitude({-1, -2, -3}), std::sqrt(14)));
+    REQUIRE(utils::equal(Vector::magnitude({1, 2, 3}), std::sqrt(14)));
+    REQUIRE(utils::equal(Vector::magnitude({-1, -2, -3}), std::sqrt(14)));
 }
 
 TEST_CASE("Normalization of a vector") {
@@ -76,4 +79,18 @@ TEST_CASE("Colour subtraction test") {
 TEST_CASE("Colour multiplication test") {
     const Colour colour{0.2, 0.3, 0.4};
     REQUIRE(colour * 2.0 == Colour(0.4, 0.6, 0.8));
+}
+
+TEST_CASE("Matrix constructor test") {
+    constexpr auto r = 2;
+    constexpr auto c = 3;
+    Container<int> container{r, c};
+    REQUIRE(container.m_data == decltype(container.m_data)(2 * 3, 0));
+    REQUIRE(container.m_rows == 2);
+    REQUIRE(container.m_cols == 3);
+
+    Matrix matrix{make_matrix(container)};
+    REQUIRE(matrix[0, 0] == 0);
+    matrix[1, 1] = 42;
+    REQUIRE(matrix[1, 1] == 42);
 }

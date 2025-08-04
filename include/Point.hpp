@@ -15,10 +15,6 @@ namespace raytracer {
 
         constexpr auto operator<=>(const Point& p) const = default;
 
-        constexpr Point operator+(const Point& p) const {
-            return {p.x + x, p.y + y, p.z + z};
-        }
-
         constexpr Vector operator-(const Point& p) const {
             return {x - p.x, y - p.y, z - p.z};
         }
