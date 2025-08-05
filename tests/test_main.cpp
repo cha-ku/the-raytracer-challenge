@@ -81,6 +81,25 @@ TEST_CASE("Colour multiplication test") {
     REQUIRE(colour * 2.0 == Colour(0.4, 0.6, 0.8));
 }
 
+TEST_CASE("Create Container from range") {
+    std::vector<double> tmp_vec{1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
+    Container<double> container_vec(3, 3, tmp_vec);
+    REQUIRE(std::ranges::equal(container_vec.m_data, tmp_vec));
+
+    std::array<int, 9> tmp_array{1, 2, 3, 4, 5, 6, 7, 8, 9};
+    Container<int> container_array(3, 3, tmp_array);
+    REQUIRE(std::ranges::equal(container_array.m_data, tmp_array));
+
+    const char tmp_char_array[] = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'};
+    Container<char> container_char(3, 3, tmp_char_array);
+    REQUIRE(std::ranges::equal(container_char.m_data, tmp_char_array));
+}
+
+TEST_CASE("Container throws on invalid size") {
+    std::array<double, 9> tmp{1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
+    REQUIRE_THROWS_AS(Container<double>(4, 3, tmp), std::invalid_argument);
+}
+
 TEST_CASE("Matrix constructor test") {
     constexpr auto r = 2;
     constexpr auto c = 3;
@@ -93,4 +112,26 @@ TEST_CASE("Matrix constructor test") {
     REQUIRE(matrix[0, 0] == 0);
     matrix[1, 1] = 42;
     REQUIRE(matrix[1, 1] == 42);
+
+    std::vector<double> tmp{1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
+    REQUIRE(tmp.size() == 9);
+    Container<double> container1(3, 3, tmp);
+    Matrix matrix1{make_matrix(container1)};
+    REQUIRE(matrix1[0, 0] == 1.0);
+    REQUIRE(matrix1[0, 1] == 2.0);
+    REQUIRE(matrix1[0, 2] == 3.0);
+    REQUIRE(matrix1[1, 0] == 4.0);
+    REQUIRE(matrix1[1, 1] == 5.0);
+    REQUIRE(matrix1[1, 2] == 6.0);
+    REQUIRE(matrix1[2, 0] == 7.0);
+    REQUIRE(matrix1[2, 1] == 8.0);
+    REQUIRE(matrix1[2, 2] == 9.0);
+}
+
+
+TEST_CASE("Matrix comparison test") {
+    constexpr auto r = 3;
+    constexpr auto c = 3;
+    Container<int> container1{r, c, std::vector{1, 3, 5, 5, 6, 8, 9, 10, 32}};
+    Matrix matrix1{make_matrix(container1)};
 }
