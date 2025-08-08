@@ -135,3 +135,34 @@ TEST_CASE("Matrix comparison test") {
     Container<int> container1{r, c, std::vector{1, 3, 5, 5, 6, 8, 9, 10, 32}};
     Matrix matrix1{make_matrix(container1)};
 }
+
+TEST_CASE("Matrix multiplication test") {
+    constexpr auto dim = 4;
+    Container<int> container1{dim, dim, std::vector{1, 2, 3, 4,
+                                                                          5, 6, 7, 8,
+                                                                          9, 8, 7, 6,
+                                                                          5, 4, 3, 2}};
+
+    Container<int> container2{dim, dim, std::vector{-2, 1, 2, 3,
+                                                                         3, 2, 1, -1,
+                                                                         4, 3, 6, 5,
+                                                                         1, 2, 7, 8}};
+    Container result = multiply(container1, container2);
+    Matrix result_mat{make_matrix(result)};
+    REQUIRE(result_mat[0, 0] == 20);
+    REQUIRE(result_mat[0, 1] == 22);
+    REQUIRE(result_mat[0, 2] == 50);
+    REQUIRE(result_mat[0, 3] == 48);
+    REQUIRE(result_mat[1, 0] == 44);
+    REQUIRE(result_mat[1, 1] == 54);
+    REQUIRE(result_mat[1, 2] == 114);
+    REQUIRE(result_mat[1, 3] == 108);
+    REQUIRE(result_mat[2, 0] == 40);
+    REQUIRE(result_mat[2, 1] == 58);
+    REQUIRE(result_mat[2, 2] == 110);
+    REQUIRE(result_mat[2, 3] == 102);
+    REQUIRE(result_mat[3, 0] == 16);
+    REQUIRE(result_mat[3, 1] == 26);
+    REQUIRE(result_mat[3, 2] == 46);
+    REQUIRE(result_mat[3, 3] == 42);
+}
