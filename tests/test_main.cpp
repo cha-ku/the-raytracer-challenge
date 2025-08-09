@@ -77,7 +77,7 @@ TEST_CASE("Colour subtraction test") {
 }
 
 TEST_CASE("Colour multiplication test") {
-    const Colour colour{0.2, 0.3, 0.4};
+    constexpr Colour colour{0.2, 0.3, 0.4};
     REQUIRE(colour * 2.0 == Colour(0.4, 0.6, 0.8));
 }
 
@@ -90,7 +90,7 @@ TEST_CASE("Create Container from range") {
     Container<int> container_array(3, 3, tmp_array);
     REQUIRE(std::ranges::equal(container_array.m_data, tmp_array));
 
-    const char tmp_char_array[] = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'};
+    constexpr char tmp_char_array[] = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'};
     Container<char> container_char(3, 3, tmp_char_array);
     REQUIRE(std::ranges::equal(container_char.m_data, tmp_char_array));
 }
@@ -147,7 +147,7 @@ TEST_CASE("Matrix multiplication test") {
                                                                          3, 2, 1, -1,
                                                                          4, 3, 6, 5,
                                                                          1, 2, 7, 8}};
-    Container result = multiply(container1, container2);
+    Container result{multiply(container1, container2)};
     Matrix result_mat{make_matrix(result)};
     REQUIRE(result_mat[0, 0] == 20);
     REQUIRE(result_mat[0, 1] == 22);
@@ -165,4 +165,32 @@ TEST_CASE("Matrix multiplication test") {
     REQUIRE(result_mat[3, 1] == 26);
     REQUIRE(result_mat[3, 2] == 46);
     REQUIRE(result_mat[3, 3] == 42);
+
+    Container<int> container3{dim, dim, std::vector{1, 2, 3, 4,
+                                                    2, 4, 4, 2,
+                                                    8, 6, 4, 1,
+                                                    0, 0, 0, 1}};
+
+    constexpr auto num_cols = 1;
+    Container<int> container4{dim, num_cols, std::vector{1, 2, 3, 1}};
+    Container result1{multiply(container3, container4)};
+    Matrix result_mat1{make_matrix(result1)};
+    REQUIRE(result_mat1[0, 0] == 18);
+    REQUIRE(result_mat1[0, 1] == 24);
+    REQUIRE(result_mat1[0, 2] == 33);
+    REQUIRE(result_mat1[0, 3] == 1);
+}
+
+TEST_CASE("Identity matrix test") {
+    Container<int> ident_mat{Container<int>::identity(3)};
+    Matrix result_ident_mat{make_matrix(ident_mat)};
+    REQUIRE(result_ident_mat[0, 0] == 1);
+    REQUIRE(result_ident_mat[0, 1] == 0);
+    REQUIRE(result_ident_mat[0, 2] == 0);
+    REQUIRE(result_ident_mat[1, 0] == 0);
+    REQUIRE(result_ident_mat[1, 1] == 1);
+    REQUIRE(result_ident_mat[1, 2] == 0);
+    REQUIRE(result_ident_mat[2, 0] == 0);
+    REQUIRE(result_ident_mat[2, 1] == 0);
+    REQUIRE(result_ident_mat[2, 2] == 1);
 }

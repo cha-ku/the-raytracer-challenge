@@ -17,16 +17,25 @@ namespace raytracer {
         size_t m_cols;
         constexpr explicit Container(const size_t rows, const size_t cols) : m_rows(rows), m_cols(cols), m_data(rows * cols, 0) {};
 
-        constexpr Container(const size_t rows, const size_t cols, auto&& custom_data) : m_rows(rows), m_cols(cols),
+        constexpr explicit Container(const size_t rows, const size_t cols, auto&& custom_data) : m_rows(rows), m_cols(cols),
         m_data(std::begin(custom_data), std::end(custom_data))
         {
             if (std::ranges::size(custom_data) != rows * cols) {
-                throw std::invalid_argument("RuntimeError: Data size does not match matrix dimensions");
+                throw std::invalid_argument("Data size does not match matrix dimensions");
             }
         };
 
-        auto data() -> decltype(m_data.data()) { return m_data.data(); };
-        auto operator<=>(const Container&) const = default;
+        constexpr auto data() -> decltype(m_data.data()) { return m_data.data(); };
+
+        constexpr auto operator<=>(const Container&) const = default;
+
+        static constexpr Container<T> identity(const size_t dim) {
+            Container<T> result(dim, dim);
+            for (size_t i = 0; i < dim; ++i) {
+                result.m_data[i * dim + i] = 1;
+            }
+            return result;
+        }
     };
 
     template <typename T>
@@ -57,7 +66,7 @@ namespace raytracer {
                 }
             }
         }
-        return {rows, cols, result_vec};
+        return Container<T>(rows, cols, result_vec);
     }
 }
 
