@@ -194,3 +194,29 @@ TEST_CASE("Identity matrix test") {
     REQUIRE(result_ident_mat[2, 1] == 0);
     REQUIRE(result_ident_mat[2, 2] == 1);
 }
+
+TEST_CASE("Matrix transpose test") {
+    Container<int> transpose_test{4, 4};
+    transpose_test.m_data = {0, 9, 3, 0,
+                             9, 8, 0, 8,
+                             1, 8, 5, 3,
+                             0, 0, 5, 8};
+    auto transposed{transpose(transpose_test)};
+    Matrix transpose_mat{make_matrix(transposed)};
+    REQUIRE(transpose_mat[0, 0] == 0);
+    REQUIRE(transpose_mat[0, 1] == 9);
+    REQUIRE(transpose_mat[0, 2] == 1);
+    REQUIRE(transpose_mat[0, 3] == 0);
+    REQUIRE(transpose_mat[1, 0] == 9);
+    REQUIRE(transpose_mat[1, 1] == 8);
+    REQUIRE(transpose_mat[1, 2] == 8);
+    REQUIRE(transpose_mat[1, 3] == 0);
+    REQUIRE(transpose_mat[2, 0] == 3);
+    REQUIRE(transpose_mat[2, 1] == 0);
+    REQUIRE(transpose_mat[2, 2] == 5);
+    REQUIRE(transpose_mat[2, 3] == 5);
+    REQUIRE(transpose_mat[3, 0] == 0);
+    REQUIRE(transpose_mat[3, 1] == 8);
+    REQUIRE(transpose_mat[3, 2] == 3);
+    REQUIRE(transpose_mat[3, 3] == 8);
+}

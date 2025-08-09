@@ -68,6 +68,18 @@ namespace raytracer {
         }
         return Container<T>(rows, cols, result_vec);
     }
+
+    template <typename T>
+    Container<int> transpose(Container<T>& container) {
+        auto result = container;
+        for (size_t row = 0; row < container.m_rows; ++row) {
+            for (size_t col = 0; col < container.m_cols; ++col) {
+                // result[col, row] = container[row, col]
+                std::swap(container.m_data[col * container.m_cols + row] , result.m_data[row * container.m_cols + col]);
+            }
+        }
+        return result;
+    }
 }
 
 #endif //THE_RAYTRACER_CHALLENGE_MATRIX_HPP
