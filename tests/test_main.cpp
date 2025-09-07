@@ -3,12 +3,13 @@
 //
 
 #define CATCH_CONFIG_MAIN
-#include <catch2/catch_all.hpp>
-#include "Matrix.hpp"
+#include "MatrixImpl.hpp"
 #include "Vector.hpp"
 #include "Point.hpp"
 #include "Colour.hpp"
 #include "Utils.hpp"
+
+#include <catch2/catch_all.hpp>
 
 using namespace raytracer;
 
@@ -248,6 +249,21 @@ TEST_CASE("Submatrix test 2") {
 }
 
 TEST_CASE("Determinant test") {
-    Container<int> determinant_test{2, 2, std::vector{1,  5, -3, 2}};
-    REQUIRE(determinant(determinant_test) == 17);
+    const Container<int> determinant_test2x2{2, 2, std::vector{1, 5, -3, 2}};
+    REQUIRE(determinant(determinant_test2x2) == 17);
+    const Container<int> bad_determinant_test{1, 2, std::vector{1, 5}};
+    REQUIRE_THROWS_AS(determinant(bad_determinant_test), std::invalid_argument);
+    const Container<int> determinant_test3x3{3, 3, std::vector{1, 2, 6, -5, 8, -4, 2, 6, 4}};
+    REQUIRE(determinant(determinant_test3x3) == -196);
+}
+
+TEST_CASE("Minor test") {
+    const Container<int> minor_test{3, 3, std::vector{3, 5, 0, 2, -1, -7, 6, -1, 5}};
+    REQUIRE(minor(minor_test, 1, 0) == 25);
+}
+
+TEST_CASE("Cofactor test") {
+    const Container<int> cofactor_test{3, 3, std::vector{3, 5, 0, 2, -1, -7, 6, -1, 5}};
+    REQUIRE(cofactor(cofactor_test, 0, 0) == -12);
+    REQUIRE(cofactor(cofactor_test, 1, 0) == -25);
 }
