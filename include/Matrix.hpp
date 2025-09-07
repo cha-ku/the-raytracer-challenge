@@ -12,9 +12,9 @@ namespace raytracer {
     template <typename T>
     requires std::is_arithmetic_v<T>
     struct Container {
-        std::vector<T> m_data;
         size_t m_rows;
         size_t m_cols;
+        std::vector<T> m_data;
         constexpr explicit Container(const size_t rows, const size_t cols) : m_rows(rows), m_cols(cols), m_data(rows * cols, 0) {};
 
         constexpr explicit Container(const size_t rows, const size_t cols, auto&& custom_data) : m_rows(rows), m_cols(cols),
@@ -70,7 +70,7 @@ namespace raytracer {
     }
 
     template <typename T>
-    Container<int> transpose(Container<T>& container) {
+    Container<T> transpose(Container<T>& container) {
         auto result = container;
         for (size_t row = 0; row < container.m_rows; ++row) {
             for (size_t col = 0; col < container.m_cols; ++col) {
@@ -80,6 +80,32 @@ namespace raytracer {
         }
         return result;
     }
+
+    template <typename T>
+    T determinant(Container<T>& container) {
+        if (container.m_rows != 2 || container.m_cols != 2) {
+            throw std::invalid_argument("Determinant is only implemented for 2x2 matrices");
+        }
+        return container.data()[0] * container.data()[3] - container.data()[1] * container.data()[2];
+    }
+
+    template<typename T>
+    Container<T> submatrix(Container<T>& container, const decltype(Container<T>::m_rows) row, const decltype(Container<T>::m_cols) col) {
+        auto result = container;
+        result.m_data.clear();
+        result.m_rows = container.m_rows - 1;
+        result.m_cols = container.m_cols - 1;
+        auto matrix {make_matrix(container)};
+        for (size_t r = 0; r < container.m_rows; ++r) {
+            for (size_t c = 0; c < container.m_cols; ++c) {
+                if (r != row && c != col) {
+                    result.m_data.emplace_back(matrix[r, c]);
+                }
+            }
+        }
+        return result;
+    }
+
 }
 
 #endif //THE_RAYTRACER_CHALLENGE_MATRIX_HPP

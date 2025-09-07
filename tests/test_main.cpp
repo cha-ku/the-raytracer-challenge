@@ -220,3 +220,34 @@ TEST_CASE("Matrix transpose test") {
     REQUIRE(transpose_mat[3, 2] == 3);
     REQUIRE(transpose_mat[3, 3] == 8);
 }
+
+TEST_CASE("Submatrix test 1") {
+    Container<int> submatrix_test{3, 3};
+    submatrix_test.m_data = {1, 5, 0,
+                            -3, 2, 7,
+                             0, 6, -3};
+    decltype(submatrix_test) minor{submatrix(submatrix_test, 0, 2)};
+    REQUIRE(minor.m_data == decltype(submatrix_test.m_data){-3, 2, 0, 6});
+    REQUIRE(minor.m_rows == submatrix_test.m_rows - 1);
+    REQUIRE(minor.m_cols == submatrix_test.m_cols - 1);
+}
+
+TEST_CASE("Submatrix test 2") {
+    Container<int> submatrix_test{4, 4};
+    submatrix_test.m_data = {-6 , 1 , 1 , 6,
+                             -8 , 5 , 8 , 6,
+                             -1 , 0 , 8 , 2,
+                             -7 , 1 , -1 , 1};
+    decltype(submatrix_test) minor{submatrix(submatrix_test, 2, 1)};
+    REQUIRE(minor.m_data == decltype(submatrix_test.m_data){
+        -6 , 1 , 6,
+        -8 , 8 , 6,
+        -7 , -1 , 1});
+    REQUIRE(minor.m_rows == submatrix_test.m_rows - 1);
+    REQUIRE(minor.m_cols == submatrix_test.m_cols - 1);
+}
+
+TEST_CASE("Determinant test") {
+    Container<int> determinant_test{2, 2, std::vector{1,  5, -3, 2}};
+    REQUIRE(determinant(determinant_test) == 17);
+}
