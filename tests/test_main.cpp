@@ -255,6 +255,12 @@ TEST_CASE("Determinant test") {
     REQUIRE_THROWS_AS(determinant(bad_determinant_test), std::invalid_argument);
     const Container<int> determinant_test3x3{3, 3, std::vector{1, 2, 6, -5, 8, -4, 2, 6, 4}};
     REQUIRE(determinant(determinant_test3x3) == -196);
+    const Container<int> determinant_test4x4{4, 4,
+        std::vector{-2, -8, 3, 5,
+                    -3, 1, 7, 3,
+                    1, 2, -9, 6,
+                    -6, 7, 7, -9}};
+    REQUIRE(determinant(determinant_test4x4) == -4071);
 }
 
 TEST_CASE("Minor test") {

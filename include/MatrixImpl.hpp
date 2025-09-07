@@ -59,6 +59,12 @@ namespace raytracer {
         if (container.m_rows == 3 && container.m_cols == 3) {
             return container.m_data[0] * cofactor(container, 0, 0) + container.m_data[1] * cofactor(container, 0, 1) + container.m_data[2] * cofactor(container, 0, 2);
         }
+        if (container.m_rows == 4 && container.m_cols == 4) {
+            return container.m_data[0] * cofactor(container, 0, 0) +
+                   container.m_data[1] * cofactor(container, 0, 1) +
+                   container.m_data[2] * cofactor(container, 0, 2) +
+                   container.m_data[3] * cofactor(container, 0, 3);
+        }
         return {};
     }
 
