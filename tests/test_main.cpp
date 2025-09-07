@@ -273,3 +273,15 @@ TEST_CASE("Cofactor test") {
     REQUIRE(cofactor(cofactor_test, 0, 0) == -12);
     REQUIRE(cofactor(cofactor_test, 1, 0) == -25);
 }
+
+TEST_CASE("Inverse test") {
+    const Container<int> inverse_test{4, 4, std::vector{-5, 2, 6, -8,
+                                                                  1, -5, 1, 8,
+                                                                  7, 7, -6, -7,
+                                                                  1, -3, 7, 4}};
+    REQUIRE(inverse(inverse_test).value() == Container<double>{inverse_test.m_rows, inverse_test.m_cols,
+        std::vector{0.21805  , 0.45113  , 0.24060  , -0.04511,
+                   -0.80827 , -1.45677 , -0.44361 , 0.52068 ,
+                   -0.07895 , -0.22368 , -0.05263 , 0.19737 ,
+                   -0.52256 , -0.81391 , -0.30075 , 0.30639 }});
+}

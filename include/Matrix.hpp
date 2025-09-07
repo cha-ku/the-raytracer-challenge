@@ -5,8 +5,11 @@
 #ifndef THE_RAYTRACER_CHALLENGE_MATRIX_HPP
 #define THE_RAYTRACER_CHALLENGE_MATRIX_HPP
 
+#include <expected>
 #include <vector>
 #include <mdspan>
+
+#include "Utils.hpp"
 
 namespace raytracer {
     template <typename T>
@@ -27,8 +30,6 @@ namespace raytracer {
 
         constexpr auto data() -> decltype(m_data.data()) { return m_data.data(); }
 
-        constexpr auto operator<=>(const Container&) const = default;
-
         static constexpr Container identity(const size_t dim) {
             Container result(dim, dim);
             for (size_t i = 0; i < dim; ++i) {
@@ -37,6 +38,14 @@ namespace raytracer {
             return result;
         }
     };
+
+    template<typename T=double>
+    constexpr auto operator==(const Container<T>& a, const Container<T>& other) -> bool {
+        if (a.m_rows != other.m_rows || a.m_cols != other.m_cols) {
+            return false;
+        }
+        return utils::is_almost_equal(a.m_data, other.m_data);
+    }
 
     template <typename T>
     using Matrix = std::mdspan<T, std::dextents<size_t, 2>>;
@@ -61,6 +70,9 @@ namespace raytracer {
 
     template<typename T>
     T cofactor(Container<T> container, decltype(Container<T>::m_rows) row, decltype(Container<T>::m_cols) col);
+
+    template<typename T>
+    std::expected<Container<double>, bool> inverse(Container<T> container);
 }
 
 #endif //THE_RAYTRACER_CHALLENGE_MATRIX_HPP

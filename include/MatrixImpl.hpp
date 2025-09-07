@@ -95,6 +95,32 @@ namespace raytracer {
         T result = minor(container, row, col);
         return (row + col) % 2 == 0 ? result : -result;
     }
+
+    template<typename T>
+    std::expected<Container<double>, bool> inverse(Container<T> container) {
+        auto container_determinant = determinant(container);
+        if (container_determinant == 0) {
+            return std::unexpected(false);
+        }
+        const size_t num_rows = container.m_rows;
+        const size_t num_cols = container.m_rows;
+        auto matrix = make_matrix(container);
+        auto cofactors = Container<double>(num_rows, num_cols, std::vector<T>(num_rows * num_cols, 0));
+        auto cofactor_matrix{make_matrix(cofactors)};
+        for (auto row = 0; row < num_rows; ++row) {
+            for (auto col = 0; col < num_cols; ++col) {
+                cofactor_matrix[row, col] = cofactor(container, row, col);
+            }
+        }
+        auto result{transpose(cofactors)};
+        auto result_matrix{make_matrix(result)};
+        for (auto row = 0; row < num_rows; ++row) {
+            for (auto col = 0; col < num_cols; ++col) {
+                result_matrix[row, col] /= container_determinant;
+            }
+        }
+        return result;
+    }
 }
 
 #endif //THE_RAYTRACER_CHALLENGE_MATRIX_IMPL_HPP
