@@ -139,15 +139,23 @@ TEST_CASE("Matrix comparison test") {
 
 TEST_CASE("Matrix multiplication test") {
     constexpr auto dim = 4;
-    Container<int> container1{dim, dim, std::vector{1, 2, 3, 4,
-                                                                          5, 6, 7, 8,
-                                                                          9, 8, 7, 6,
-                                                                          5, 4, 3, 2}};
+    Container<int> container1{
+        dim, dim, std::vector{
+            1, 2, 3, 4,
+            5, 6, 7, 8,
+            9, 8, 7, 6,
+            5, 4, 3, 2
+        }
+    };
 
-    Container<int> container2{dim, dim, std::vector{-2, 1, 2, 3,
-                                                                         3, 2, 1, -1,
-                                                                         4, 3, 6, 5,
-                                                                         1, 2, 7, 8}};
+    Container<int> container2{
+        dim, dim, std::vector{
+            -2, 1, 2, 3,
+            3, 2, 1, -1,
+            4, 3, 6, 5,
+            1, 2, 7, 8
+        }
+    };
     Container result{multiply(container1, container2)};
     Matrix result_mat{make_matrix(result)};
     REQUIRE(result_mat[0, 0] == 20);
@@ -167,10 +175,14 @@ TEST_CASE("Matrix multiplication test") {
     REQUIRE(result_mat[3, 2] == 46);
     REQUIRE(result_mat[3, 3] == 42);
 
-    Container<int> container3{dim, dim, std::vector{1, 2, 3, 4,
-                                                    2, 4, 4, 2,
-                                                    8, 6, 4, 1,
-                                                    0, 0, 0, 1}};
+    Container<int> container3{
+        dim, dim, std::vector{
+            1, 2, 3, 4,
+            2, 4, 4, 2,
+            8, 6, 4, 1,
+            0, 0, 0, 1
+        }
+    };
 
     constexpr auto num_cols = 1;
     Container<int> container4{dim, num_cols, std::vector{1, 2, 3, 1}};
@@ -198,10 +210,12 @@ TEST_CASE("Identity matrix test") {
 
 TEST_CASE("Matrix transpose test") {
     Container<int> transpose_test{4, 4};
-    transpose_test.m_data = {0, 9, 3, 0,
-                             9, 8, 0, 8,
-                             1, 8, 5, 3,
-                             0, 0, 5, 8};
+    transpose_test.m_data = {
+        0, 9, 3, 0,
+        9, 8, 0, 8,
+        1, 8, 5, 3,
+        0, 0, 5, 8
+    };
     auto transposed{transpose(transpose_test)};
     Matrix transpose_mat{make_matrix(transposed)};
     REQUIRE(transpose_mat[0, 0] == 0);
@@ -224,9 +238,11 @@ TEST_CASE("Matrix transpose test") {
 
 TEST_CASE("Submatrix test 1") {
     Container<int> submatrix_test{3, 3};
-    submatrix_test.m_data = {1, 5, 0,
-                            -3, 2, 7,
-                             0, 6, -3};
+    submatrix_test.m_data = {
+        1, 5, 0,
+        -3, 2, 7,
+        0, 6, -3
+    };
     decltype(submatrix_test) minor{submatrix(submatrix_test, 0, 2)};
     REQUIRE(minor.m_data == decltype(submatrix_test.m_data){-3, 2, 0, 6});
     REQUIRE(minor.m_rows == submatrix_test.m_rows - 1);
@@ -235,15 +251,17 @@ TEST_CASE("Submatrix test 1") {
 
 TEST_CASE("Submatrix test 2") {
     Container<int> submatrix_test{4, 4};
-    submatrix_test.m_data = {-6 , 1 , 1 , 6,
-                             -8 , 5 , 8 , 6,
-                             -1 , 0 , 8 , 2,
-                             -7 , 1 , -1 , 1};
+    submatrix_test.m_data = {
+        -6, 1, 1, 6,
+        -8, 5, 8, 6,
+        -1, 0, 8, 2,
+        -7, 1, -1, 1
+    };
     decltype(submatrix_test) minor{submatrix(submatrix_test, 2, 1)};
     REQUIRE(minor.m_data == decltype(submatrix_test.m_data){
-        -6 , 1 , 6,
-        -8 , 8 , 6,
-        -7 , -1 , 1});
+            -6, 1, 6,
+            -8, 8, 6,
+            -7, -1, 1});
     REQUIRE(minor.m_rows == submatrix_test.m_rows - 1);
     REQUIRE(minor.m_cols == submatrix_test.m_cols - 1);
 }
@@ -255,11 +273,15 @@ TEST_CASE("Determinant test") {
     REQUIRE_THROWS_AS(determinant(bad_determinant_test), std::invalid_argument);
     const Container<int> determinant_test3x3{3, 3, std::vector{1, 2, 6, -5, 8, -4, 2, 6, 4}};
     REQUIRE(determinant(determinant_test3x3) == -196);
-    const Container<int> determinant_test4x4{4, 4,
-        std::vector{-2, -8, 3, 5,
-                    -3, 1, 7, 3,
-                    1, 2, -9, 6,
-                    -6, 7, 7, -9}};
+    const Container<int> determinant_test4x4{
+        4, 4,
+        std::vector{
+            -2, -8, 3, 5,
+            -3, 1, 7, 3,
+            1, 2, -9, 6,
+            -6, 7, 7, -9
+        }
+    };
     REQUIRE(determinant(determinant_test4x4) == -4071);
 }
 
@@ -275,13 +297,40 @@ TEST_CASE("Cofactor test") {
 }
 
 TEST_CASE("Inverse test") {
-    const Container<int> inverse_test{4, 4, std::vector{-5, 2, 6, -8,
-                                                                  1, -5, 1, 8,
-                                                                  7, 7, -6, -7,
-                                                                  1, -3, 7, 4}};
+    const Container<int> inverse_test{
+        4, 4, std::vector{
+            -5, 2, 6, -8,
+            1, -5, 1, 8,
+            7, 7, -6, -7,
+            1, -3, 7, 4
+        }
+    };
+
     REQUIRE(inverse(inverse_test).value() == Container<double>{inverse_test.m_rows, inverse_test.m_cols,
-        std::vector{0.21805  , 0.45113  , 0.24060  , -0.04511,
-                   -0.80827 , -1.45677 , -0.44361 , 0.52068 ,
-                   -0.07895 , -0.22368 , -0.05263 , 0.19737 ,
-                   -0.52256 , -0.81391 , -0.30075 , 0.30639 }});
+            std::vector{0.21805, 0.45113, 0.24060, -0.04511,
+            -0.80827, -1.45677, -0.44361, 0.52068,
+            -0.07895, -0.22368, -0.05263, 0.19737,
+            -0.52256, -0.81391, -0.30075, 0.30639 }});
+
+    const Container<double> a{
+        4, 4, std::vector{
+            3, -9, 7, 3,
+            3, -8, 2, -9,
+            -4, 4, 4, 1,
+            -6, 5, -1, 1
+        }
+    };
+
+    const Container<double> b{
+        4, 4, std::vector{
+            8, 2, 2, 2,
+            3, -1, 7, 0,
+            7, 0, 5, 4,
+            6, -2, 0, 5
+        }
+    };
+
+    const Container c{multiply(a, b)};
+
+    REQUIRE(multiply(c, inverse(b).value()) == a);
 }

@@ -12,17 +12,20 @@
 #include "Utils.hpp"
 
 namespace raytracer {
-    template <typename T>
-    requires std::is_arithmetic_v<T>
+    template<typename T>
+        requires std::is_arithmetic_v<T>
     struct Container {
         size_t m_rows;
         size_t m_cols;
         std::vector<T> m_data;
-        constexpr explicit Container(const size_t rows, const size_t cols) : m_rows(rows), m_cols(cols), m_data(rows * cols, 0) {};
 
-        constexpr explicit Container(const size_t rows, const size_t cols, auto&& custom_data) : m_rows(rows), m_cols(cols),
-        m_data(std::begin(custom_data), std::end(custom_data))
-        {
+        constexpr explicit Container(const size_t rows, const size_t cols) : m_rows(rows), m_cols(cols),
+                                                                             m_data(rows * cols, 0) {
+        };
+
+        constexpr explicit Container(const size_t rows, const size_t cols, auto &&custom_data) : m_rows(rows),
+            m_cols(cols),
+            m_data(std::begin(custom_data), std::end(custom_data)) {
             if (std::ranges::size(custom_data) != rows * cols) {
                 throw std::invalid_argument("Data size does not match matrix dimensions");
             }
@@ -40,30 +43,31 @@ namespace raytracer {
     };
 
     template<typename T=double>
-    constexpr auto operator==(const Container<T>& a, const Container<T>& other) -> bool {
-        if (a.m_rows != other.m_rows || a.m_cols != other.m_cols) {
+    constexpr auto operator==(const Container<T> &mat1, const Container<T> &mat2) -> bool {
+        if (mat1.m_rows != mat2.m_rows || mat1.m_cols != mat2.m_cols) {
             return false;
         }
-        return utils::is_almost_equal(a.m_data, other.m_data);
+        return utils::is_almost_equal(mat1.m_data, mat2.m_data);
     }
 
-    template <typename T>
-    using Matrix = std::mdspan<T, std::dextents<size_t, 2>>;
+    template<typename T>
+    using Matrix = std::mdspan<T, std::dextents<size_t, 2> >;
 
-    template <typename T>
-    Matrix<std::remove_cvref_t<T>> make_matrix(Container<T>& d);
+    template<typename T>
+    Matrix<std::remove_cvref_t<T> > make_matrix(Container<T> &d);
 
-    template <typename T>
+    template<typename T>
     Container<T> multiply(Container<T> container1, Container<T> container2);
 
-    template <typename T>
+    template<typename T>
     Container<T> transpose(Container<T> container);
 
-    template <typename T>
+    template<typename T>
     T determinant(Container<T> container);
 
     template<typename T>
-    Container<T> submatrix(Container<T> container, decltype(Container<T>::m_rows) row, decltype(Container<T>::m_cols) col);
+    Container<T> submatrix(Container<T> container, decltype(Container<T>::m_rows) row,
+                           decltype(Container<T>::m_cols) col);
 
     template<typename T>
     T minor(Container<T> container, decltype(Container<T>::m_rows) row, decltype(Container<T>::m_cols) col);

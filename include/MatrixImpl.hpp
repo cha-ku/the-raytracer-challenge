@@ -8,13 +8,13 @@
 #include "Matrix.hpp"
 
 namespace raytracer {
-    template <typename T>
-    Matrix<std::remove_cvref_t<T>> make_matrix(Container<T>& d) {
+    template<typename T>
+    Matrix<std::remove_cvref_t<T> > make_matrix(Container<T> &d) {
         using U = std::remove_cvref_t<T>;
         return Matrix<U>(d.data(), d.m_rows, d.m_cols);
     }
 
-    template <typename T>
+    template<typename T>
     Container<T> multiply(Container<T> container1, Container<T> container2) {
         Matrix mat1 = make_matrix(container1);
         Matrix mat2 = make_matrix(container2);
@@ -36,19 +36,19 @@ namespace raytracer {
         return Container<T>(rows, cols, result_vec);
     }
 
-    template <typename T>
+    template<typename T>
     Container<T> transpose(Container<T> container) {
         auto result = container;
         for (size_t row = 0; row < container.m_rows; ++row) {
             for (size_t col = 0; col < container.m_cols; ++col) {
                 // result[col, row] = container[row, col]
-                std::swap(container.m_data[col * container.m_cols + row] , result.m_data[row * container.m_cols + col]);
+                std::swap(container.m_data[col * container.m_cols + row], result.m_data[row * container.m_cols + col]);
             }
         }
         return result;
     }
 
-    template <typename T>
+    template<typename T>
     T determinant(Container<T> container) {
         if (container.m_rows != container.m_cols || container.m_rows < 2 || container.m_cols < 2) {
             throw std::invalid_argument("Determinant is only implemented for square matrices of size 2 or more");
@@ -57,7 +57,8 @@ namespace raytracer {
             return container.m_data[0] * container.m_data[3] - container.m_data[1] * container.m_data[2];
         }
         if (container.m_rows == 3 && container.m_cols == 3) {
-            return container.m_data[0] * cofactor(container, 0, 0) + container.m_data[1] * cofactor(container, 0, 1) + container.m_data[2] * cofactor(container, 0, 2);
+            return container.m_data[0] * cofactor(container, 0, 0) + container.m_data[1] * cofactor(container, 0, 1) +
+                   container.m_data[2] * cofactor(container, 0, 2);
         }
         if (container.m_rows == 4 && container.m_cols == 4) {
             return container.m_data[0] * cofactor(container, 0, 0) +
@@ -69,8 +70,9 @@ namespace raytracer {
     }
 
     template<typename T>
-    Container<T> submatrix(Container<T> container, decltype(Container<T>::m_rows) row, decltype(Container<T>::m_cols) col) {
-        const auto& matrix {make_matrix(container)};
+    Container<T> submatrix(Container<T> container, decltype(Container<T>::m_rows) row,
+                           decltype(Container<T>::m_cols) col) {
+        const auto &matrix{make_matrix(container)};
         auto result = container;
         result.m_data.clear();
         result.m_rows = container.m_rows - 1;
