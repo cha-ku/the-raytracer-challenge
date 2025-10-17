@@ -9,9 +9,10 @@
 
 namespace raytracer {
     struct Point {
-        float x;
-        float y;
-        float z;
+        float x{0};
+        float y{0};
+        float z{0};
+        float w{1};
 
         constexpr auto operator<=>(const Point& p) const = default;
 

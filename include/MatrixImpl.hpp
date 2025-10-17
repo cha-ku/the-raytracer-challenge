@@ -5,13 +5,14 @@
 #ifndef THE_RAYTRACER_CHALLENGE_MATRIX_IMPL_HPP
 #define THE_RAYTRACER_CHALLENGE_MATRIX_IMPL_HPP
 
+#include <format>
+#include <numeric>
 #include "Matrix.hpp"
 
 namespace raytracer {
     template<typename T>
     Matrix<std::remove_cvref_t<T> > make_matrix(Container<T> &d) {
-        using U = std::remove_cvref_t<T>;
-        return Matrix<U>(d.data(), d.m_rows, d.m_cols);
+        using U = std::remove_cvref_t<T>; return Matrix<U>(d.data(), d.m_rows, d.m_cols);
     }
 
     template<typename T>
@@ -19,21 +20,25 @@ namespace raytracer {
         Matrix mat1 = make_matrix(container1);
         Matrix mat2 = make_matrix(container2);
         if (mat1.extent(1) != mat2.extent(0)) {
-            throw std::invalid_argument("Matrix dimensions do not allow multiplication");
+            throw std::invalid_argument(std::format(
+                "Matrix dimensions do not allow multiplication: mat1 columns ({}) != mat2 rows ({})",
+                mat1.extent(1), mat2.extent(0)
+            ));
         }
         const size_t inner = mat1.extent(1);
         size_t rows = mat1.extent(0);
         size_t cols = mat2.extent(1);
 
-        std::vector<T> result_vec(rows * cols, 0);
+        Container<T> result{rows, cols};
+        Matrix result_matrix{make_matrix(result)};
         for (size_t i = 0; i < rows; ++i) {
             for (size_t j = 0; j < cols; ++j) {
                 for (size_t k = 0; k < inner; ++k) {
-                    result_vec[i * cols + j] += mat1[i, k] * mat2[k, j];
+                    result_matrix[i, j] += mat1[i, k] * mat2[k, j];
                 }
             }
         }
-        return Container<T>(rows, cols, result_vec);
+        return result;
     }
 
     template<typename T>
@@ -121,6 +126,56 @@ namespace raytracer {
                 result_matrix[row, col] /= container_determinant;
             }
         }
+        return result;
+    }
+
+    template <typename T>
+    constexpr Container<T> translation(T x, T y, T z) {
+        Container<T> result(Container<T>::identity(4));
+        auto mat{make_matrix(result)};
+        mat[0, 3] = x;
+        mat[1, 3] = y;
+        mat[2, 3] = z;
+        return result;
+    }
+
+    template <typename T>
+    constexpr Container<T> scale(T x, T y, T z) {
+        Container<T> result(Container<T>::identity(4));
+        auto mat{make_matrix(result)};
+        mat[0, 0] = x;
+        mat[1, 1] = y;
+        mat[2, 2] = z;
+        return result;
+    }
+
+    constexpr Container<double> rotation_x(const double radians) {
+        Container result(Container<double>::identity(4));
+        auto mat{make_matrix(result)};
+        mat[1, 1] = std::cos(radians);
+        mat[1, 2] = -std::sin(radians);
+        mat[2, 1] = std::sin(radians);
+        mat[2, 2] = std::cos(radians);
+        return result;
+    }
+
+    constexpr Container<double> rotation_y(const double radians) {
+        Container result(Container<double>::identity(4));
+        auto mat{make_matrix(result)};
+        mat[0, 0] = std::cos(radians);
+        mat[0, 2] = std::sin(radians);
+        mat[2, 0] = -std::sin(radians);
+        mat[2, 2] = std::cos(radians);
+        return result;
+    }
+
+    constexpr Container<double> rotation_z(const double radians) {
+        Container result(Container<double>::identity(4));
+        auto mat{make_matrix(result)};
+        mat[0, 0] = std::cos(radians);
+        mat[0, 1] = -std::sin(radians);
+        mat[1, 0] = std::sin(radians);
+        mat[1, 1] = std::cos(radians);
         return result;
     }
 }

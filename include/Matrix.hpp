@@ -9,6 +9,7 @@
 #include <vector>
 #include <mdspan>
 
+#include "Point.hpp"
 #include "Utils.hpp"
 
 namespace raytracer {
@@ -50,6 +51,10 @@ namespace raytracer {
         return utils::is_almost_equal(mat1.m_data, mat2.m_data);
     }
 
+    constexpr Container<double> make_container(const Point&& p) {
+        return Container<double>{4, 1, std::vector{p.x, p.y, p.z, p.w}};
+    }
+
     template<typename T>
     using Matrix = std::mdspan<T, std::dextents<size_t, 2> >;
 
@@ -77,6 +82,12 @@ namespace raytracer {
 
     template<typename T>
     std::expected<Container<double>, bool> inverse(Container<T> container);
+
+    template<typename T>
+    constexpr Container<T> translation(T x, T y, T z);
+
+    template <typename T>
+    constexpr Container<T> scale(T x, T y, T z);
 }
 
 #endif //THE_RAYTRACER_CHALLENGE_MATRIX_HPP
