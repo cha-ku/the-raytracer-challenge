@@ -51,7 +51,7 @@ namespace raytracer {
         return utils::is_almost_equal(mat1.m_data, mat2.m_data);
     }
 
-    constexpr Container<double> make_container(const Point&& p) {
+    constexpr Container<double> make_container(Point&& p) {
         return Container<double>{4, 1, std::vector{p.x, p.y, p.z, p.w}};
     }
 

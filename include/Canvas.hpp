@@ -8,8 +8,6 @@
 #include <cstdint>
 #include <vector>
 #include <expected>
-#include <fstream>
-#include <sstream>
 #include <ranges>
 #include "Colour.hpp"
 

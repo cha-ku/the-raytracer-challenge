@@ -6,6 +6,7 @@
 #define THE_RAYTRACER_CHALLENGE_UTILS_HPP
 
 #include <cmath>
+#include <vector>
 
 namespace utils {
     static constexpr bool equal(const float a, const float b, const float epsilon = 1e-6f) {

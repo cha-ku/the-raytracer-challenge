@@ -2,6 +2,7 @@
 // Created by chaku on 15/06/25.
 //
 
+#include <fstream>
 #include <print>
 #include "Canvas.hpp"
 
