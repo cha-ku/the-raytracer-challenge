@@ -64,3 +64,41 @@ void simulate_projectile() {
         std::cout << "Cannot write file " << output << " - invalid path\n";
     }
 }
+
+void simulate_clock() {
+    using namespace raytracer;
+    Canvas canvas{256, 256};
+    const Point centre{static_cast<float>(canvas.width)/2.f, 0, static_cast<float>(canvas.height)/2};
+    canvas.write_pixel(static_cast<uint32_t>(centre.x), static_cast<uint32_t>(centre.z),  Colour(1, 0, 0));
+    const float radius{3/8.f * static_cast<float>(canvas.width)};
+    // 12 o'clock position relative to origin
+    const auto twelve_oclock = make_container({0, 0, -radius});
+
+    for (int i = 0; i < 12; ++i) {
+        const auto rad = static_cast<float>(i) * std::numbers::pi_v<float>/6.f;
+        const auto hour{rotation_y(rad)};
+        try {
+            // Rotate the point around origin
+            const auto rotated = multiply(hour, twelve_oclock);
+            // Translate to canvas center
+            auto x = rotated.m_data[0] + centre.x;
+            auto z = rotated.m_data[2] + centre.z;
+
+            if (x >= 0.f && x < static_cast<float>(canvas.width) &&
+                z >= 0.f && z < static_cast<float>(canvas.height)) {
+                canvas.write_pixel(static_cast<uint32_t>(x), static_cast<uint32_t>(z),
+                    Colour(1, 1, 1));
+            }
+        }
+        catch (const std::invalid_argument& e) {
+            std::cerr << "Error at hour " << i << ": " << e.what() << "\n";
+        }
+    }
+    static constexpr std::string clock{"clock.ppm"};
+    const auto& retval = canvas_to_ppm(canvas, clock);
+    if (retval.has_value()) {
+        std::cout << "Data written to " << clock << "\n";
+    } else if (retval.error() == raytracer::CanvasError::invalid_path) {
+        std::cout << "Cannot write file " << clock << " - invalid path\n";
+    }
+}

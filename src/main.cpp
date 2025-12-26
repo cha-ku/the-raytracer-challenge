@@ -19,7 +19,8 @@ void test() {
 }
 
 int main() {
-    simulate();
+    // simulate_projectile();
+    simulate_clock();
     //test();
     return 0;
 }
