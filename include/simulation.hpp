@@ -5,6 +5,6 @@
 #ifndef THE_RAYTRACER_CHALLENGE_SIMULATION_HPP
 #define THE_RAYTRACER_CHALLENGE_SIMULATION_HPP
 
-void simulate();
+void simulate_projectile();
 
 #endif //THE_RAYTRACER_CHALLENGE_SIMULATION_HPP

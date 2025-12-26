@@ -7,11 +7,14 @@
 #include "Vector.hpp"
 #include "simulation.hpp"
 #include "Canvas.hpp"
+#include <numbers>
+
+#include "MatrixImpl.hpp"
 
 // Projectile structure
 struct Projectile {
-    raytracer::Point position;
-    raytracer::Vector velocity;
+    raytracer::Point position{};
+    raytracer::Vector velocity{};
 };
 
 // Environment structure
@@ -28,7 +31,7 @@ Projectile tick(const Environment &env, const Projectile &proj) {
 }
 
 
-void simulate() {
+void simulate_projectile() {
     using namespace raytracer;
     // Initialize projectile and environment
     Point start{0, 1, 0};
