@@ -74,3 +74,37 @@ TEST_CASE("Rotation test") {
         REQUIRE(multiply(full_quarter, point) == make_container(Point{-1, 0, 0}));
     }
 }
+
+TEST_CASE("Shearing test") {
+    SECTION("Shearing transformation moves x in proportion to z") {
+        const auto transform{shearing(0, 1, 0, 0, 0, 0)};
+        const auto point{make_container(Point(2, 3, 4))};
+        REQUIRE(multiply(transform, point) == make_container(Point(6, 3, 4)));
+    }
+
+    SECTION("Shearing transformation moves y in proportion to x") {
+        const auto transform{shearing(0, 0, 1, 0, 0, 0)};
+        const auto point{make_container(Point(2, 3, 4))};
+        REQUIRE(multiply(transform, point) == make_container(Point(2, 5, 4)));
+    }
+
+    SECTION("Shearing transformation moves y in proportion to z") {
+        const auto transform{shearing(0, 0, 0, 1, 0, 0)};
+        const auto point{make_container(Point(2, 3, 4))};
+        REQUIRE(multiply(transform, point) == make_container(Point(2, 7, 4)));
+    }
+
+    SECTION("Shearing transformation moves z in proportion to x") {
+        const auto transform{shearing(0, 0, 0, 0, 1, 0)};
+        const auto point{make_container(Point(2, 3, 4))};
+        REQUIRE(multiply(transform, point) == make_container(Point(2, 3, 6)));
+    }
+
+    SECTION("Shearing transformation moves z in proportion to y") {
+        const auto transform{shearing(0, 0, 0, 0, 0, 1)};
+        const auto point{make_container(Point(2, 3, 4))};
+        REQUIRE(multiply(transform, point) == make_container(Point(2, 3, 7)));
+    }
+}
+
+

@@ -178,6 +178,18 @@ namespace raytracer {
         mat[1, 1] = std::cos(radians);
         return result;
     }
+
+    constexpr Container<double> shearing(const double xy, const double xz, const double yx, const double yz, const double zx, const double zy) {
+        Container result(Container<double>::identity(4));
+        auto mat{make_matrix(result)};
+        mat[0, 1] = xy;
+        mat[0, 2] = xz;
+        mat[1, 0] = yx;
+        mat[1, 2] = yz;
+        mat[2, 0] = zx;
+        mat[2, 1] = zy;
+        return result;
+    }
 }
 
 #endif //THE_RAYTRACER_CHALLENGE_MATRIX_IMPL_HPP
