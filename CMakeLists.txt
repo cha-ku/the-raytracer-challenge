@@ -37,6 +37,8 @@ add_library(matrix STATIC
     include/MatrixImpl.hpp
     include/Point.hpp
     include/Utils.hpp
+        include/Intersect.hpp
+        include/Intersect.cpp
 )
 target_include_directories(matrix PUBLIC include)
 

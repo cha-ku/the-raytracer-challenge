@@ -1,6 +1,7 @@
 add_executable(tests
         test_main.cpp
         test_transform.cpp
+        test_ray_sphere_intersection.cpp
 )
 target_include_directories(tests PUBLIC ${CMAKE_SOURCE_DIR}/include)
 
