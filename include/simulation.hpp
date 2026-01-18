@@ -9,4 +9,6 @@ void simulate_projectile();
 
 void simulate_clock();
 
+void simulate_sphere();
+
 #endif //THE_RAYTRACER_CHALLENGE_SIMULATION_HPP

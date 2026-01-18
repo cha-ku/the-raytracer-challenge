@@ -2,6 +2,7 @@
 // Created by chaku on 14/06/25.
 //
 
+// ReSharper disable CppTooWideScope
 #include <iostream>
 #include "Point.hpp"
 #include "Vector.hpp"
@@ -9,6 +10,7 @@
 #include "Canvas.hpp"
 #include <numbers>
 
+#include "Intersect.hpp"
 #include "MatrixImpl.hpp"
 
 // Projectile structure
@@ -28,6 +30,15 @@ Projectile tick(const Environment &env, const Projectile &proj) {
     raytracer::Point new_position = proj.position + proj.velocity;
     raytracer::Vector new_velocity = proj.velocity + env.gravity + env.wind;
     return {new_position, new_velocity};
+}
+
+void save_canvas(const raytracer::Canvas& canvas, const std::string& filename) {
+    const auto& retval = raytracer::canvas_to_ppm(canvas, filename);
+    if (retval.has_value()) {
+        std::cout << "Data written to " << filename << "\n";
+    } else if (retval.error() == raytracer::CanvasError::invalid_path) {
+        std::cout << "Cannot write file " << filename << " - invalid path\n";
+    }
 }
 
 
@@ -56,13 +67,7 @@ void simulate_projectile() {
         ++ticks;
     }
     std::cout << "Projectile hit the ground after " << ticks << " ticks.\n";
-    static constexpr std::string output{"projectile.ppm"};
-    const auto &retval = raytracer::canvas_to_ppm(canvas, output);
-    if (retval.has_value()) {
-        std::cout << "Data written to " << output << "\n";
-    } else if (retval.error() == raytracer::CanvasError::invalid_path) {
-        std::cout << "Cannot write file " << output << " - invalid path\n";
-    }
+    save_canvas(canvas, "projectile.ppm");
 }
 
 void simulate_clock() {
@@ -94,11 +99,34 @@ void simulate_clock() {
             std::cerr << "Error at hour " << i << ": " << e.what() << "\n";
         }
     }
-    static constexpr std::string clock{"clock.ppm"};
-    const auto& retval = canvas_to_ppm(canvas, clock);
-    if (retval.has_value()) {
-        std::cout << "Data written to " << clock << "\n";
-    } else if (retval.error() == raytracer::CanvasError::invalid_path) {
-        std::cout << "Cannot write file " << clock << " - invalid path\n";
+    save_canvas(canvas, "clock.ppm");
+}
+
+void simulate_sphere() {
+    using namespace raytracer;
+    constexpr auto canvas_pixels{256u};
+    constexpr auto wall_size{7.f};
+    constexpr auto pixel_size{wall_size/canvas_pixels};
+    constexpr auto half{wall_size / 2};
+    Canvas canvas{canvas_pixels, canvas_pixels};
+    constexpr Colour colour{.r=1.f};
+    const Sphere shape = Sphere::make_sphere();
+    constexpr auto wall_z{10.0f};
+    constexpr Point ray_origin{0, 0, -5};
+    // Convert canvas pixels to world coordinates:
+    // world_x: starts at -half (left edge) and increases with x
+    // world_y: starts at +half (top edge) and decreases with y (canvas y is inverted)
+    for (int y = 0; y < canvas.height; ++y) {
+        const auto world_y{half - pixel_size * static_cast<float>(y)};
+        for (int x = 0; x < canvas.width; ++x) {
+            const auto world_x{-half + pixel_size * static_cast<float>(x)};
+            Point position{.x = world_x, .y = world_y, .z = wall_z};
+            Ray r{ray_origin, Vector::normalize(Vector(position - ray_origin))};
+            auto xs{intersect(shape, r)};
+            if (hit(xs).has_value()) {
+                canvas.write_pixel(x, y, colour);
+            }
+        }
     }
+    save_canvas(canvas, "sphere.ppm");
 }
