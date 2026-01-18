@@ -110,7 +110,15 @@ void simulate_sphere() {
     constexpr auto half{wall_size / 2};
     Canvas canvas{canvas_pixels, canvas_pixels};
     constexpr Colour colour{.r=1.f};
-    const Sphere shape = Sphere::make_sphere();
+    Sphere shape = Sphere::make_sphere();
+    // shrink it along the y axis
+    set_transform(shape, scale<double>(1, 0.5, 1));
+    // shrink it along the x axis
+    set_transform(shape, scale<double>(0.5, 1, 1));
+    // shrink it, and rotate it
+    set_transform(shape, multiply(rotation_z(std::numbers::pi/4),  scale<double>(0.5, 1, 1)));
+    // shrink it, and skew it
+    set_transform(shape, multiply(shearing(1, 0, 0, 0, 0, 0), scale<double>(0.5, 1, 1)));
     constexpr auto wall_z{10.0f};
     constexpr Point ray_origin{0, 0, -5};
     // Convert canvas pixels to world coordinates:
