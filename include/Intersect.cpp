@@ -6,7 +6,6 @@
 #include "MatrixImpl.hpp"
 
 namespace raytracer {
-
     Point position(const Ray &ray, const float distance) {
         return ray.origin + ray.direction * distance;
     }
@@ -33,6 +32,28 @@ namespace raytracer {
         };
     }
 
+    Vector normal_at(const Sphere &s, const Point &world_point) {
+        const auto &sphere_transform_inverse_expected{inverse(s.transform)};
+        if (!sphere_transform_inverse_expected.has_value()) {
+            return {};
+        }
+        const Container sphere_transform_inverse{sphere_transform_inverse_expected.value()};
+        const Container object_point_container{multiply(sphere_transform_inverse, make_container(world_point))};
+        const Point object_point{
+            static_cast<float>(object_point_container.m_data[0]), static_cast<float>(object_point_container.m_data[1]),
+            static_cast<float>(object_point_container.m_data[2])
+        };
+        const Vector object_normal{object_point - Point(0, 0, 0)};
+        const Container world_normal_container = multiply(transpose(sphere_transform_inverse),
+                                                          make_container(object_normal));
+        const Vector world_normal{
+            static_cast<float>(world_normal_container.m_data[0]),
+            static_cast<float>(world_normal_container.m_data[1]),
+            static_cast<float>(world_normal_container.m_data[2])
+        };
+        return Vector::normalize(world_normal);
+    }
+
     std::vector<Intersection> intersect(const Sphere &sphere, const Ray &ray) {
         const auto inv = inverse(sphere.transform);
         if (!inv.has_value()) {
@@ -57,13 +78,17 @@ namespace raytracer {
         return Sphere(++sphere_id);
     }
 
-    void set_transform(Sphere& s, const Container<double> &t) {
-        s.transform = t;
+    Vector Sphere::normal_at(const Point &point) {
+        return {point - Point()};
+    }
+
+    void Sphere::set_transform(const Container<double> &t) {
+        transform = t;
     }
 
     std::optional<Intersection> hit(const std::vector<Intersection> &intersections) {
         std::optional<Intersection> result;
-        for (const auto &intersection : intersections) {
+        for (const auto &intersection: intersections) {
             if (intersection.t >= 0) {
                 if (!result.has_value() || intersection.t < result->t) {
                     result = intersection;
