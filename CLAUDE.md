@@ -59,3 +59,7 @@ This is a raytracer implementation in C++23, following "The Ray Tracer Challenge
 ## Feature Files
 
 Test specifications from "The Ray Tracer Challenge" book are in `tests/features/*.feature` (Gherkin format). When implementing new functionality, create Catch2 tests based on the scenarios in these files. Each `Scenario` becomes a `TEST_CASE` or `SECTION`, and `Given/When/Then` steps map to setup, action, and `REQUIRE` assertions.
+
+## Workflow Rules
+
+- When asked to add or implement tests, only add the test code. Do not implement the underlying functions or production code.

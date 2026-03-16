@@ -22,6 +22,7 @@ int main() {
     // simulate_projectile();
     // simulate_clock();
     // test();
-    simulate_sphere();
+    // simulate_sphere();
+    simulate_material_sphere();
     return 0;
 }
