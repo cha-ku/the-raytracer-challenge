@@ -51,8 +51,13 @@ namespace raytracer {
         return utils::is_almost_equal(mat1.m_data, mat2.m_data);
     }
 
-    constexpr Container<double> make_container(Point&& p) {
+    template<typename T=Point>
+    constexpr Container<double> make_container(T&& p) {
         return Container<double>{4, 1, std::vector{p.x, p.y, p.z, p.w}};
+    }
+
+    constexpr Container<double> make_container(const Vector& v) {
+        return Container<double>{4, 1, std::vector{static_cast<double>(v.x), static_cast<double>(v.y), static_cast<double>(v.z), 0.0}};
     }
 
     template<typename T>
