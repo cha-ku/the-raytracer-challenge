@@ -4,13 +4,15 @@
 
 #include <fstream>
 #include <print>
+#include <algorithm>
 #include "Canvas.hpp"
 
 namespace raytracer {
     void Canvas::write_pixel(uint32_t pix_w, uint32_t pix_h, const Colour &colour) {
         storage[pix_h * width + pix_w] = {
-            static_cast<uint8_t>(colour.r * 255), static_cast<uint8_t>(colour.g * 255),
-            static_cast<uint8_t>(colour.b * 255)
+            static_cast<uint8_t>(std::clamp(colour.r, 0.0f, 1.0f) * 255),
+            static_cast<uint8_t>(std::clamp(colour.g, 0.0f, 1.0f) * 255),
+            static_cast<uint8_t>(std::clamp(colour.b, 0.0f, 1.0f) * 255)
         };
     }
 

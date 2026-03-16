@@ -112,13 +112,13 @@ void simulate_sphere() {
     constexpr Colour colour{.r=1.f};
     Sphere shape = Sphere::make_sphere();
     // shrink it along the y axis
-    set_transform(shape, scale<double>(1, 0.5, 1));
+    shape.set_transform(scale<double>(1, 0.5, 1));
     // shrink it along the x axis
-    set_transform(shape, scale<double>(0.5, 1, 1));
+    shape.set_transform(scale<double>(0.5, 1, 1));
     // shrink it, and rotate it
-    set_transform(shape, multiply(rotation_z(std::numbers::pi/4),  scale<double>(0.5, 1, 1)));
+    shape.set_transform(multiply(rotation_z(std::numbers::pi/4),  scale<double>(0.5, 1, 1)));
     // shrink it, and skew it
-    set_transform(shape, multiply(shearing(1, 0, 0, 0, 0, 0), scale<double>(0.5, 1, 1)));
+    shape.set_transform(multiply(shearing(1, 0, 0, 0, 0, 0), scale<double>(0.5, 1, 1)));
     constexpr auto wall_z{10.0f};
     constexpr Point ray_origin{0, 0, -5};
     // Convert canvas pixels to world coordinates:
@@ -137,4 +137,41 @@ void simulate_sphere() {
         }
     }
     save_canvas(canvas, "sphere.ppm");
+}
+
+void simulate_material_sphere() {
+    using namespace raytracer;
+    constexpr auto canvas_pixels{256u};
+    constexpr auto wall_size{7.f};
+    constexpr auto pixel_size{wall_size/canvas_pixels};
+    constexpr auto half{wall_size / 2};
+    Canvas canvas{canvas_pixels, canvas_pixels};
+    Sphere sphere = Sphere::make_sphere();
+    sphere.material.colour = Colour(1, 0.2, 1);
+    constexpr auto wall_z{10.0f};
+
+    // camera(eye) is the origin of our rays
+    constexpr Point camera{0, 0, -5};
+    constexpr PointLight point_light{{-10, 10, -10}, {1, 1, 1}};
+    // Convert canvas pixels to world coordinates:
+    // world_x: starts at -half (left edge) and increases with x
+    // world_y: starts at +half (top edge) and decreases with y (canvas y is inverted)
+    for (int y = 0; y < canvas.height; ++y) {
+        const auto world_y{half - pixel_size * static_cast<float>(y)};
+        for (int x = 0; x < canvas.width; ++x) {
+            const auto world_x{-half + pixel_size * static_cast<float>(x)};
+            Point p{.x = world_x, .y = world_y, .z = wall_z};
+            Ray r{camera, Vector::normalize(Vector(p - camera))};
+            auto xs{intersect(sphere, r)};
+            if (hit(xs).has_value()) {
+                auto [object, t] = hit(xs).value();
+                Point point = position(r, t);
+                Vector normal = normal_at(object, point);
+                Vector eye = -r.direction;
+                Colour pixel_colour = lighting(object.material, point_light, point, eye, normal);
+                canvas.write_pixel(x, y, pixel_colour);
+            }
+        }
+    }
+    save_canvas(canvas, "material_sphere.ppm");
 }
