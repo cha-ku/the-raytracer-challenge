@@ -11,7 +11,7 @@
       "displayName": "Debug Configuration",
       "description": "Debug build with optimizations disabled and debug symbols",
       "inherits": "default",
-      "binaryDir": "${sourceDir}/cmake-build-debug",
+      "binaryDir": "${sourceDir}/build/debug",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug"
       }
@@ -21,7 +21,7 @@
       "displayName": "Release Configuration",
       "description": "Release build with optimizations enabled",
       "inherits": "default",
-      "binaryDir": "${sourceDir}/cmake-build-release",
+      "binaryDir": "${sourceDir}/build/release",
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
       }
