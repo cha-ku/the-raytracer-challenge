@@ -26,31 +26,32 @@ FetchContent_MakeAvailable(Catch2)
 
 add_subdirectory(tests)
 
-add_library(simulation STATIC src/simulation.cpp
-        include/simulation.hpp
-        include/Canvas.cpp)
-target_include_directories(simulation PUBLIC include)
+add_library(simulation STATIC raytracer/simulation.cpp
+        raytracer/simulation.hpp
+        raytracer/Canvas.cpp)
+target_include_directories(simulation PUBLIC raytracer)
 
 add_library(matrix STATIC
-        include/Matrix.cpp
-        include/Matrix.hpp
-        include/MatrixImpl.hpp
-        include/Point.hpp
-        include/Utils.hpp
-        include/Intersect.hpp
-        include/Intersect.cpp
-)
-target_include_directories(matrix PUBLIC include)
-
-add_library(lightAndShading STATIC
-        include/Light.hpp
-        include/Material.hpp
-        include/Material.cpp
+        raytracer/Matrix.cpp
+        raytracer/Matrix.hpp
+        raytracer/MatrixImpl.hpp
+        raytracer/Point.hpp
+        raytracer/Utils.hpp
+        raytracer/Intersect.hpp
+        raytracer/Intersect.cpp
 )
 
-add_executable(raytracer src/main.cpp
-        include/Canvas.cpp
+target_include_directories(matrix PUBLIC raytracer)
+
+add_library(scene STATIC
+        raytracer/Light.hpp
+        raytracer/Material.hpp
+        raytracer/Material.cpp
 )
 
-target_include_directories(raytracer PUBLIC include)
-target_link_libraries(raytracer simulation matrix lightAndShading)
+add_executable(raytracer raytracer/main.cpp
+        raytracer/Canvas.cpp
+)
+
+target_include_directories(raytracer PUBLIC raytracer)
+target_link_libraries(raytracer simulation matrix scene)
