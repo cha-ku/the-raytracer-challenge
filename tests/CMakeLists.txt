@@ -4,10 +4,13 @@ add_executable(tests
         test_ray_sphere_intersection.cpp
         test_lights.cpp
         test_materials.cpp
+        test_world.cpp
+        test_camera.cpp
 )
-target_include_directories(tests PUBLIC ${CMAKE_SOURCE_DIR}/include)
 
-target_link_libraries(tests PRIVATE Catch2::Catch2WithMain matrix lightAndShading)
+target_include_directories(tests PUBLIC ${CMAKE_SOURCE_DIR}/raytracer)
+
+target_link_libraries(tests PRIVATE Catch2::Catch2WithMain matrix scene)
 
 # Add custom target to build all tests
 add_custom_target(all_tests DEPENDS tests)

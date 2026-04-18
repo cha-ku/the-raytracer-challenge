@@ -26,8 +26,8 @@ FetchContent_MakeAvailable(Catch2)
 
 add_subdirectory(tests)
 
-add_library(simulation STATIC raytracer/simulation.cpp
-        raytracer/simulation.hpp
+add_library(simulation STATIC raytracer/Simulation.cpp
+        raytracer/Simulation.hpp
         raytracer/Canvas.cpp)
 target_include_directories(simulation PUBLIC raytracer)
 
@@ -47,7 +47,14 @@ add_library(scene STATIC
         raytracer/Light.hpp
         raytracer/Material.hpp
         raytracer/Material.cpp
+        raytracer/World.hpp
+        raytracer/World.cpp
+        raytracer/Camera.cpp
+        raytracer/Camera.hpp
 )
+
+target_include_directories(scene PUBLIC raytracer)
+target_link_libraries(scene PUBLIC matrix)
 
 add_executable(raytracer raytracer/main.cpp
         raytracer/Canvas.cpp

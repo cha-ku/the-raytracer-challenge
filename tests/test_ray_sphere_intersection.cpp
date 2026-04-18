@@ -431,6 +431,55 @@ SCENARIO("A sphere has a default material") {
     }
 }
 
+SCENARIO("Precomputing the state of an intersection") {
+    GIVEN("A ray, a sphere, and an intersection") {
+        const Ray r{Point(0, 0, -5), Vector(0, 0, 1)};
+        const Sphere shape = Sphere::make_sphere();
+        const Intersection i{shape, 4};
+        WHEN("comps = prepare_computations(i, r)") {
+            const auto comps = prepare_computations(i, r);
+            THEN("comps contains precomputed state") {
+                REQUIRE(comps.t == i.t);
+                REQUIRE(comps.object == i.object);
+                REQUIRE(comps.point == Point(0, 0, -1));
+                REQUIRE(Vector::areAlmostEqual(comps.eye_vector, Vector(0, 0, -1)));
+                REQUIRE(Vector::areAlmostEqual(comps.normal_vector, Vector(0, 0, -1)));
+            }
+        }
+    }
+}
+
+SCENARIO("The hit, when an intersection occurs on the outside") {
+    GIVEN("A ray, a sphere, and an intersection") {
+        const Ray r{Point(0, 0, -5), Vector(0, 0, 1)};
+        const Sphere shape = Sphere::make_sphere();
+        const Intersection i{shape, 4};
+        WHEN("comps = prepare_computations(i, r)") {
+            const auto comps = prepare_computations(i, r);
+            THEN("comps.inside is false") {
+                REQUIRE_FALSE(comps.inside);
+            }
+        }
+    }
+}
+
+SCENARIO("The hit, when an intersection occurs on the inside") {
+    GIVEN("A ray from origin, a sphere, and an intersection") {
+        constexpr Ray r{Point(0, 0, 0), Vector(0, 0, 1)};
+        const Sphere shape = Sphere::make_sphere();
+        const Intersection i{shape, 1};
+        WHEN("comps = prepare_computations(i, r)") {
+            const auto comps = prepare_computations(i, r);
+            THEN("comps reflects inside hit with inverted normal") {
+                REQUIRE(comps.point == Point(0, 0, 1));
+                REQUIRE(Vector::areAlmostEqual(comps.eye_vector, Vector(0, 0, -1)));
+                REQUIRE(comps.inside);
+                REQUIRE(Vector::areAlmostEqual(comps.normal_vector, Vector(0, 0, -1)));
+            }
+        }
+    }
+}
+
 SCENARIO("A sphere may be assigned a material") {
     GIVEN("Sphere and material") {
         Sphere s = Sphere::make_sphere();

@@ -2,15 +2,15 @@
 // Created by chaku on 14/06/25.
 //
 
-// ReSharper disable CppTooWideScope
 #include <iostream>
 #include "Point.hpp"
 #include "Vector.hpp"
-#include "simulation.hpp"
+#include "Simulation.hpp"
 #include "Canvas.hpp"
 #include <numbers>
 
 #include "Intersect.hpp"
+#include "World.hpp"
 #include "MatrixImpl.hpp"
 
 // Projectile structure
@@ -86,8 +86,8 @@ void simulate_clock() {
             // Rotate the point around origin
             const auto rotated = multiply(hour, twelve_oclock);
             // Translate to canvas center
-            auto x = rotated.m_data[0] + centre.x;
-            auto z = rotated.m_data[2] + centre.z;
+            const auto x = rotated.m_data[0] + centre.x;
+            const auto z = rotated.m_data[2] + centre.z;
 
             if (x >= 0.f && x < static_cast<float>(canvas.width) &&
                 z >= 0.f && z < static_cast<float>(canvas.height)) {
@@ -174,4 +174,62 @@ void simulate_material_sphere() {
         }
     }
     save_canvas(canvas, "material_sphere.ppm");
+}
+
+void simulate_multiple_spheres() {
+    using namespace raytracer;
+    using namespace std::numbers;
+
+    Sphere floor{Sphere::make_sphere()};
+    floor.transform = scale<double>(10, 0.01, 10);
+    floor.material.colour = Colour{1.f, 0.9f, 0.9f};
+    floor.material.specular = 0.0f;
+
+    Sphere left_wall{Sphere::make_sphere()};
+    left_wall.transform = multiply(
+        multiply(multiply(translation<double>(0, 0, 5), rotation_y(-pi_v<double>/4)),
+                 rotation_x(pi_v<double>/2)),
+        scale<double>(10, 0.01, 10));
+    left_wall.material = floor.material;
+
+    Sphere right_wall{Sphere::make_sphere()};
+    right_wall.transform = multiply(
+        multiply(multiply(translation<double>(0, 0, 5), rotation_y(pi_v<double>/4)),
+                 rotation_x(pi_v<double>/2)),
+        scale<double>(10, 0.01, 10));
+    right_wall.material = floor.material;
+
+    Sphere middle{Sphere::make_sphere()};
+    middle.transform = translation<double>(-0.5, 1, 0.5);
+    middle.material.colour = Colour{0.1f, 1.f, 0.5f};
+    middle.material.diffuse = 0.7f;
+    middle.material.specular = 0.3f;
+
+    Sphere right_sphere{Sphere::make_sphere()};
+    right_sphere.transform = multiply(translation<double>(1.5, 0.5, -0.5), scale<double>(0.5, 0.5, 0.5));
+    right_sphere.material.colour = Colour{0.5f, 1.f, 0.1f};
+    right_sphere.material.diffuse = 0.7f;
+    right_sphere.material.specular = 0.3f;
+
+    Sphere left_sphere{Sphere::make_sphere()};
+    left_sphere.transform = multiply(translation<double>(-1.5, 0.33, -0.75), scale<double>(0.33, 0.33, 0.33));
+    left_sphere.material.colour = Colour{1.f, 0.8f, 0.1f};
+    left_sphere.material.diffuse = 0.7f;
+    left_sphere.material.specular = 0.3f;
+
+    World world;
+    world.objects = {floor, left_wall, right_wall, middle, right_sphere, left_sphere};
+    world.light = PointLight{Point{-10, 10, -10}, Colour{1, 1, 1}};
+
+    Camera camera{200, 100, pi_v<double>/3};
+    camera.transform = view_transform(Point{0, 1.5f, -5}, Point{0, 1, 0}, Vector{0, 1, 0});
+
+    Canvas canvas{camera.hsize, camera.vsize};
+    for (uint32_t y = 0; y < camera.vsize; ++y) {
+        for (uint32_t x = 0; x < camera.hsize; ++x) {
+            const auto ray = World::ray_for_pixel(camera, x, y);
+            canvas.write_pixel(x, y, World::colour_at(world, ray));
+        }
+    }
+    save_canvas(canvas, "multiple_spheres.ppm");
 }

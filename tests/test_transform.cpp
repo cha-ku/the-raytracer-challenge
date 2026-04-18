@@ -1,5 +1,6 @@
 #include "MatrixImpl.hpp"
 #include "Point.hpp"
+#include "Intersect.hpp"
 #include <catch2/catch_all.hpp>
 #include <iostream>
 #include <numbers>
@@ -104,6 +105,77 @@ TEST_CASE("Shearing test") {
         const auto transform{shearing(0, 0, 0, 0, 0, 1)};
         const auto point{make_container(Point(2, 3, 4))};
         REQUIRE(multiply(transform, point) == make_container(Point(2, 3, 7)));
+    }
+}
+
+SCENARIO("The transformation matrix for the default orientation") {
+    GIVEN("from ← point(0, 0, 0), to ← point(0, 0, -1), up ← vector(0, 1, 0)") {
+        const Point from{0, 0, 0};
+        const Point to{0, 0, -1};
+        const Vector up{0, 1, 0};
+
+        WHEN("t ← view_transform(from, to, up)") {
+            const auto t = view_transform(from, to, up);
+
+            THEN("t = identity_matrix") {
+                REQUIRE(t == Container<double>::identity(4));
+            }
+        }
+    }
+}
+
+SCENARIO("A view transformation matrix looking in positive z direction") {
+    GIVEN("from ← point(0, 0, 0), to ← point(0, 0, 1), up ← vector(0, 1, 0)") {
+        const Point from{0, 0, 0};
+        const Point to{0, 0, 1};
+        const Vector up{0, 1, 0};
+
+        WHEN("t ← view_transform(from, to, up)") {
+            const auto t = view_transform(from, to, up);
+
+            THEN("t = scaling(-1, 1, -1)") {
+                REQUIRE(t == scale<double>(-1, 1, -1));
+            }
+        }
+    }
+}
+
+SCENARIO("The view transformation moves the world") {
+    GIVEN("from ← point(0, 0, 8), to ← point(0, 0, 0), up ← vector(0, 1, 0)") {
+        const Point from{0, 0, 8};
+        const Point to{0, 0, 0};
+        const Vector up{0, 1, 0};
+
+        WHEN("t ← view_transform(from, to, up)") {
+            const auto t = view_transform(from, to, up);
+
+            THEN("t = translation(0, 0, -8)") {
+                REQUIRE(t == translation<double>(0, 0, -8));
+            }
+        }
+    }
+}
+
+SCENARIO("An arbitrary view transformation") {
+    GIVEN("from ← point(1, 3, 2), to ← point(4, -2, 8), up ← vector(1, 1, 0)") {
+        const Point from{1, 3, 2};
+        const Point to{4, -2, 8};
+        const Vector up{1, 1, 0};
+
+        WHEN("t ← view_transform(from, to, up)") {
+            const auto t = view_transform(from, to, up);
+
+            THEN("t is the expected 4x4 matrix") {
+                const Container<double> expected{4, 4,
+                    std::array{-0.50709, 0.50709,  0.67612, -2.36643,
+                      0.76772, 0.60609,  0.12122, -2.82843,
+                     -0.35857, 0.59761, -0.71714,  0.00000,
+                      0.00000, 0.00000,  0.00000,  1.00000
+                    }
+                };
+                REQUIRE(t == expected);
+            }
+        }
     }
 }
 

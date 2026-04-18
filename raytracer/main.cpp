@@ -2,7 +2,7 @@
 #include <random>
 #include <print>
 #include "Canvas.hpp"
-#include "simulation.hpp"
+#include "Simulation.hpp"
 #include "Utils.hpp"
 
 void test() {
@@ -23,6 +23,7 @@ int main() {
     // simulate_clock();
     // test();
     // simulate_sphere();
-    simulate_material_sphere();
+    // simulate_material_sphere();
+    simulate_multiple_spheres();
     return 0;
 }
