@@ -4,6 +4,7 @@
 
 #include "Intersect.hpp"
 #include "MatrixImpl.hpp"
+#include "World.hpp"
 
 namespace raytracer {
     Point position(const Ray &ray, const float distance) {
@@ -96,5 +97,53 @@ namespace raytracer {
             }
         }
         return result;
+    }
+
+    Computations::Computations(const Intersection &intersection, const Ray &ray) : t{intersection.t},
+        object{intersection.object}, point{position(ray, intersection.t)}, eye_vector{-ray.direction},
+        normal_vector{normal_at(object, point)} {
+        if (Vector::dot(normal_vector, eye_vector) < 0) {
+            inside = true;
+            normal_vector = -normal_vector;
+        }
+        else {
+            inside = false;
+        }
+    }
+
+    Computations prepare_computations(const Intersection &intersection, const Ray &ray) {
+        return Computations(intersection, ray);
+    }
+
+    Colour shade_hit(const World &world, const Computations &computations) {
+        return lighting(computations.object.material, world.light.value(), computations.point, computations.eye_vector,
+                        computations.normal_vector);
+    }
+
+    // Coordinate system (right-handed):
+    //
+    //        +Y
+    //         |
+    //         |
+    //         +------+X
+    //        /
+    //       /
+    //     +Z (toward viewer)
+    //
+    // Camera looks down -Z by default.
+    // view_transform(from=(0,0,0), to=(0,0,-1), up=(0,1,0)) == identity
+    Container<double> view_transform(const Point &from, const Point &to, const Vector &up) {
+        const Vector forward{Vector::normalize(to - from)};
+        const Vector left{Vector::cross(forward, Vector::normalize(up))};
+        const Vector true_up{Vector::cross(left, forward)};
+
+        return multiply(Container<double>{
+                            4, 4, std::array<double, 16>{
+                                left.x, left.y, left.z, 0,
+                                true_up.x, true_up.y, true_up.z, 0,
+                                -forward.x, -forward.y, -forward.z, 0,
+                                0, 0, 0, 1
+                            }
+                        }, translation<double>(-from.x, -from.y, -from.z));
     }
 }

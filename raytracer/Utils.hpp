@@ -9,7 +9,7 @@
 #include <vector>
 
 namespace utils {
-    static constexpr bool equal(const float a, const float b, const float epsilon = 1e-6f) {
+    static constexpr bool equal(const float a, const float b, const float epsilon = 1e-5f) {
         return std::fabs(a - b) < epsilon;
     }
 

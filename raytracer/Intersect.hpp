@@ -9,10 +9,12 @@
 #include "Vector.hpp"
 #include "Matrix.hpp"
 #include "Material.hpp"
+
 #include <vector>
 #include <optional>
 
 namespace raytracer {
+    struct World;
     static uint32_t sphere_id{0};
 
     struct Ray {
@@ -57,6 +59,23 @@ namespace raytracer {
     std::vector<Intersection> intersect(const Sphere &sphere, const Ray &ray);
 
     std::optional<Intersection> hit(const std::vector<Intersection> &intersections);
+
+
+    struct Computations {
+        float t{};
+        Sphere object;
+        Point point{};
+        Vector eye_vector{};
+        Vector normal_vector{};
+        bool inside{};
+        explicit Computations(const Intersection& intersection, const Ray& ray);
+    };
+
+    Computations prepare_computations(const Intersection &intersection, const Ray &ray);
+
+    Colour shade_hit(const World& world, const Computations& computations);
+
+    Container<double> view_transform(const Point &from, const Point &to, const Vector &up);
 
 }
 
