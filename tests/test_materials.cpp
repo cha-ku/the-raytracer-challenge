@@ -14,40 +14,97 @@
 
 using namespace raytracer;
 
-TEST_CASE("Materials") {
-    // Background
-    constexpr Material m{};
-    constexpr Point position{0, 0, 0};
+SCENARIO("The default material") {
+    GIVEN("m ← material()") {
+        constexpr Material m{};
 
-    SECTION("The default material") {
-        REQUIRE(areAlmostEqual(m.colour, Colour{1, 1, 1}));
-        REQUIRE(m.ambient == 0.1f);
-        REQUIRE(m.diffuse == 0.9f);
-        REQUIRE(m.specular == 0.9f);
-        REQUIRE(m.shininess == 200.0f);
+        THEN("m.color = color(1, 1, 1)") {
+            REQUIRE(areAlmostEqual(m.colour, Colour{1, 1, 1}));
+        }
+        AND_THEN("m.ambient = 0.1") {
+            REQUIRE(m.ambient == 0.1f);
+        }
+        AND_THEN("m.diffuse = 0.9") {
+            REQUIRE(m.diffuse == 0.9f);
+        }
+        AND_THEN("m.specular = 0.9") {
+            REQUIRE(m.specular == 0.9f);
+        }
+        AND_THEN("m.shininess = 200.0") {
+            REQUIRE(m.shininess == 200.0f);
+        }
     }
+}
 
-    SECTION("Lighting with the eye between the light and the surface") {
+SCENARIO("Lighting with the eye between the light and the surface") {
+    GIVEN("m ← material() and position ← point(0, 0, 0)") {
+        constexpr Material m{};
+        constexpr Point position{0, 0, 0};
         constexpr Vector eye{0, 0, -1};
         constexpr Vector normal{0, 0, -1};
         constexpr PointLight light{Point{0, 0, -10}, Colour{1, 1, 1}};
-        const auto result = lighting(m, light, position, eye, normal);
-        REQUIRE(areAlmostEqual(result, Colour{1.9, 1.9, 1.9}));
-    }
 
-    SECTION("Lighting with the eye between light and surface, eye offset 45°") {
+        WHEN("result ← lighting(m, light, position, eyev, normalv)") {
+            const auto result = lighting(m, light, position, eye, normal, false);
+
+            THEN("result = color(1.9, 1.9, 1.9)") {
+                REQUIRE(areAlmostEqual(result, Colour{1.9, 1.9, 1.9}));
+            }
+        }
+    }
+}
+
+SCENARIO("Lighting with the eye between light and surface, eye offset 45 degrees") {
+    GIVEN("m ← material() and position ← point(0, 0, 0)") {
+        constexpr Material m{};
+        constexpr Point position{0, 0, 0};
         constexpr Vector eye{0, std::numbers::sqrt2 / 2, -std::numbers::sqrt2 / 2};
         constexpr Vector normal{0, 0, -1};
         constexpr PointLight light{Point{0, 0, -10}, Colour{1, 1, 1}};
-        const auto result = lighting(m, light, position, eye, normal);
-        REQUIRE(areAlmostEqual(result, Colour{1.0, 1.0, 1.0}));
-    }
 
-    SECTION("Lighting with the light behind the surface") {
+        WHEN("result ← lighting(m, light, position, eyev, normalv)") {
+            const auto result = lighting(m, light, position, eye, normal, false);
+
+            THEN("result = color(1.0, 1.0, 1.0)") {
+                REQUIRE(areAlmostEqual(result, Colour{1.0, 1.0, 1.0}));
+            }
+        }
+    }
+}
+
+SCENARIO("Lighting with the light behind the surface") {
+    GIVEN("m ← material() and position ← point(0, 0, 0)") {
+        constexpr Material m{};
+        constexpr Point position{0, 0, 0};
         constexpr Vector eye{0, 0, -1};
         constexpr Vector normal{0, 0, -1};
         constexpr PointLight light{Point{0, 0, 10}, Colour{1, 1, 1}};
-        const auto result = lighting(m, light, position, eye, normal);
-        REQUIRE(areAlmostEqual(result, Colour{0.1, 0.1, 0.1}));
+
+        WHEN("result ← lighting(m, light, position, eyev, normalv)") {
+            const auto result = lighting(m, light, position, eye, normal, false);
+
+            THEN("result = color(0.1, 0.1, 0.1)") {
+                REQUIRE(areAlmostEqual(result, Colour{0.1, 0.1, 0.1}));
+            }
+        }
+    }
+}
+
+SCENARIO("Lighting with the surface in shadow") {
+    GIVEN("m ← material() and position ← point(0, 0, 0)") {
+        constexpr Material m{};
+        constexpr Point position{0, 0, 0};
+        constexpr Vector eye{0, 0, -1};
+        constexpr Vector normal{0, 0, -1};
+        constexpr PointLight light{Point{0, 0, -10}, Colour{1, 1, 1}};
+        constexpr bool in_shadow = true;
+
+        WHEN("result ← lighting(m, light, position, eyev, normalv, in_shadow)") {
+            const auto result = lighting(m, light, position, eye, normal, in_shadow);
+
+            THEN("result = color(0.1, 0.1, 0.1)") {
+                REQUIRE(areAlmostEqual(result, Colour{0.1, 0.1, 0.1}));
+            }
+        }
     }
 }
