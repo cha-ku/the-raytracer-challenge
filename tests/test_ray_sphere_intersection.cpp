@@ -5,6 +5,7 @@
 #include "Intersect.hpp"
 #include "Material.hpp"
 #include "MatrixImpl.hpp"
+#include "Utils.hpp"
 
 #include "catch2/catch_test_macros.hpp"
 #include <cmath>
@@ -489,6 +490,24 @@ SCENARIO("A sphere may be assigned a material") {
             s.material = m;
             THEN("Sphere has the assigned material") {
                 REQUIRE(s.material == m);
+            }
+        }
+    }
+}
+
+SCENARIO("The hit should offset the point") {
+    GIVEN("r ← ray(point(0, 0, -5), vector(0, 0, 1)) and shape ← sphere with translation(0, 0, 1)") {
+        constexpr Ray r{Point(0, 0, -5), Vector(0, 0, 1)};
+        Sphere shape = Sphere::make_sphere();
+        shape.set_transform(translation<double>(0, 0, 1));
+        const Intersection i{shape, 5};
+
+        WHEN("comps ← prepare_computations(i, r)") {
+            const auto comps = prepare_computations(i, r);
+
+            THEN("comps.over_point.z < -EPSILON/2 and comps.point.z > comps.over_point.z") {
+                REQUIRE(comps.over_point.z < -utils::EPSILON / 2);
+                REQUIRE(comps.point.z > comps.over_point.z);
             }
         }
     }

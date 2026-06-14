@@ -68,6 +68,7 @@ namespace raytracer {
         Vector eye_vector{};
         Vector normal_vector{};
         bool inside{};
+        Point over_point{};
         explicit Computations(const Intersection& intersection, const Ray& ray);
     };
 

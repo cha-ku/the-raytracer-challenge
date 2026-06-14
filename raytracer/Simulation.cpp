@@ -168,7 +168,7 @@ void simulate_material_sphere() {
                 Point point = position(r, t);
                 Vector normal = normal_at(object, point);
                 Vector eye = -r.direction;
-                Colour pixel_colour = lighting(object.material, point_light, point, eye, normal);
+                Colour pixel_colour = lighting(object.material, point_light, point, eye, normal, false);
                 canvas.write_pixel(x, y, pixel_colour);
             }
         }

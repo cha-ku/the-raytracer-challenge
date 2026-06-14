@@ -153,6 +153,73 @@ SCENARIO("The color when a ray hits") {
     }
 }
 
+SCENARIO("There is no shadow when nothing is collinear with point and light") {
+    GIVEN("w ← default_world() and p ← point(0, 10, 0)") {
+        const auto w = World::create_default_world();
+        constexpr Point p{0, 10, 0};
+
+        THEN("is_shadowed(w, p) is false") {
+            REQUIRE_FALSE(w.is_shadowed(p));
+        }
+    }
+}
+
+SCENARIO("The shadow when an object is between the point and the light") {
+    GIVEN("w ← default_world() and p ← point(10, -10, 10)") {
+        const auto w = World::create_default_world();
+        constexpr Point p{10, -10, 10};
+
+        THEN("is_shadowed(w, p) is true") {
+            REQUIRE(w.is_shadowed(p));
+        }
+    }
+}
+
+SCENARIO("There is no shadow when an object is behind the light") {
+    GIVEN("w ← default_world() and p ← point(-20, 20, -20)") {
+        const auto w = World::create_default_world();
+        constexpr Point p{-20, 20, -20};
+
+        THEN("is_shadowed(w, p) is false") {
+            REQUIRE_FALSE(w.is_shadowed(p));
+        }
+    }
+}
+
+SCENARIO("There is no shadow when an object is behind the point") {
+    GIVEN("w ← default_world() and p ← point(-2, 2, -2)") {
+        const auto w = World::create_default_world();
+        constexpr Point p{-2, 2, -2};
+
+        THEN("is_shadowed(w, p) is false") {
+            REQUIRE_FALSE(w.is_shadowed(p));
+        }
+    }
+}
+
+SCENARIO("shade_hit() is given an intersection in shadow") {
+    GIVEN("w ← world() with a light and two spheres, s2 translated to z=10") {
+        World w;
+        w.light = PointLight{Point{0, 0, -10}, Colour{1, 1, 1}};
+        Sphere s1 = Sphere::make_sphere();
+        w.objects.push_back(s1);
+        Sphere s2 = Sphere::make_sphere();
+        s2.set_transform(translation<double>(0, 0, 10));
+        w.objects.push_back(s2);
+        constexpr Ray r{Point{0, 0, 5}, Vector{0, 0, 1}};
+        const Intersection i{s2, 4};
+
+        WHEN("comps ← prepare_computations(i, r) and c ← shade_hit(w, comps)") {
+            const auto comps = prepare_computations(i, r);
+            const auto c = shade_hit(w, comps);
+
+            THEN("c = color(0.1, 0.1, 0.1)") {
+                REQUIRE(areAlmostEqual(c, Colour{0.1f, 0.1f, 0.1f}));
+            }
+        }
+    }
+}
+
 SCENARIO("The color with an intersection behind the ray") {
     GIVEN("w ← default_world(), outer and inner spheres with ambient=1, r behind outer") {
         auto w = World::create_default_world();

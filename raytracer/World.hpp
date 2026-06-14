@@ -22,6 +22,8 @@ namespace raytracer {
         static Colour colour_at(const World& world, const Ray& ray);
 
         static Ray ray_for_pixel(const Camera& camera, double px, double py);
+
+        [[nodiscard]] bool is_shadowed(Point point) const;
     };
 }
 

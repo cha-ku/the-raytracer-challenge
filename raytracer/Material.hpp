@@ -20,7 +20,7 @@ namespace raytracer {
     };
 
     Colour lighting(const Material &material, const PointLight &light, const Point &point, const Vector &eye,
-                    const Vector &normal);
+                    const Vector &normal, bool in_shadow);
 }
 
 #endif //THE_RAYTRACER_CHALLENGE_MATERIAL_HPP

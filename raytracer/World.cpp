@@ -66,4 +66,17 @@ namespace raytracer {
         const auto direction{Vector::normalize(pixel - origin)};
         return {origin, direction};
     }
+
+    bool World::is_shadowed(const Point point) const {
+        if (!light.has_value())
+            return false;
+        const auto point_to_light{light.value().position - point};
+        const auto distance{Vector::magnitude(point_to_light)};
+        const Ray point_to_light_ray{.origin = point , .direction = Vector::normalize(point_to_light)};
+        const auto h{hit(intersect_world(*this, point_to_light_ray))};
+        if (!h.has_value() || h.value().t >= distance) {
+            return false;
+        }
+        return true;
+    }
 }
