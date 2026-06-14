@@ -6,7 +6,7 @@
 
 namespace raytracer {
     Colour lighting(const Material &material, const PointLight &light, const Point &point, const Vector &eye,
-        const Vector &normal)
+        const Vector &normal, const bool in_shadow)
     {
         // combine surface colour with the light's colour/intensity
         const auto &effective_colour{material.colour * light.intensity};
@@ -30,7 +30,7 @@ namespace raytracer {
                 specular = light.intensity * material.specular * factor;
             }
         }
-        return ambient + diffuse + specular;
+        return in_shadow ? ambient : ambient + diffuse + specular;
     }
 
 }

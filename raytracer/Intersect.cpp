@@ -109,6 +109,7 @@ namespace raytracer {
         else {
             inside = false;
         }
+        over_point = point + normal_vector * utils::EPSILON;
     }
 
     Computations prepare_computations(const Intersection &intersection, const Ray &ray) {
@@ -117,7 +118,7 @@ namespace raytracer {
 
     Colour shade_hit(const World &world, const Computations &computations) {
         return lighting(computations.object.material, world.light.value(), computations.point, computations.eye_vector,
-                        computations.normal_vector);
+                        computations.normal_vector, world.is_shadowed(computations.over_point));
     }
 
     // Coordinate system (right-handed):
