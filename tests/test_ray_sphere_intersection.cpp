@@ -255,7 +255,7 @@ SCENARIO("A sphere's default transformation") {
     GIVEN("Sphere") {
         const Sphere s = Sphere::make_sphere();
         THEN("Transform is identity matrix") {
-            REQUIRE(s.transform == Matrix<double>::identity(4));
+            REQUIRE(s.m_transform == Matrix<double>::identity(4));
         }
     }
 }
@@ -267,7 +267,7 @@ SCENARIO("Changing a sphere's transformation") {
         WHEN("set_transform is called") {
             s.set_transform(t);
             THEN("Transform equals the translation") {
-                REQUIRE(s.transform == t);
+                REQUIRE(s.m_transform == t);
             }
         }
     }
@@ -424,7 +424,7 @@ SCENARIO("A sphere has a default material") {
     GIVEN("Sphere") {
         const Sphere s = Sphere::make_sphere();
         WHEN("Material is retrieved") {
-            const auto m = s.material;
+            const auto m = s.m_material;
             THEN("Material equals the default material") {
                 REQUIRE(m == Material{});
             }
@@ -487,9 +487,9 @@ SCENARIO("A sphere may be assigned a material") {
         Material m{};
         m.ambient = 1;
         WHEN("Material is assigned to sphere") {
-            s.material = m;
+            s.m_material = m;
             THEN("Sphere has the assigned material") {
-                REQUIRE(s.material == m);
+                REQUIRE(s.m_material == m);
             }
         }
     }

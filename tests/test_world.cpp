@@ -32,9 +32,9 @@ SCENARIO("The default world") {
         constexpr PointLight light{Point{-10, 10, -10}, Colour{1, 1, 1}};
 
         Sphere s1 = Sphere::make_sphere();
-        s1.material.colour = Colour{0.8f, 1.0f, 0.6f};
-        s1.material.diffuse = 0.7f;
-        s1.material.specular = 0.2f;
+        s1.m_material.colour = Colour{0.8f, 1.0f, 0.6f};
+        s1.m_material.diffuse = 0.7f;
+        s1.m_material.specular = 0.2f;
 
         Sphere s2 = Sphere::make_sphere();
         s2.set_transform(scale<double>(0.5, 0.5, 0.5));
@@ -50,16 +50,16 @@ SCENARIO("The default world") {
 
             AND_THEN("w contains s1") {
                 const auto it = std::ranges::find_if(w.objects, [&](const Sphere& s) {
-                    return areAlmostEqual(s.material.colour, s1.material.colour)
-                        && s.material.diffuse == s1.material.diffuse
-                        && s.material.specular == s1.material.specular;
+                    return areAlmostEqual(s.m_material.colour, s1.m_material.colour)
+                        && s.m_material.diffuse == s1.m_material.diffuse
+                        && s.m_material.specular == s1.m_material.specular;
                 });
                 REQUIRE(it != w.objects.end());
             }
 
             AND_THEN("w contains s2") {
                 const auto it = std::ranges::find_if(w.objects, [&](const Sphere& s) {
-                    return s.transform == s2.transform;
+                    return s.m_transform == s2.m_transform;
                 });
                 REQUIRE(it != w.objects.end());
             }
@@ -223,10 +223,10 @@ SCENARIO("shade_hit() is given an intersection in shadow") {
 SCENARIO("The color with an intersection behind the ray") {
     GIVEN("w ← default_world(), outer and inner spheres with ambient=1, r behind outer") {
         auto w = World::create_default_world();
-        w.objects[0].material.ambient = 1.0f;
-        w.objects[1].material.ambient = 1.0f;
+        w.objects[0].m_material.ambient = 1.0f;
+        w.objects[1].m_material.ambient = 1.0f;
         constexpr Ray r{Point{0, 0, 0.75f}, Vector{0, 0, -1}};
-        const Colour inner_color = w.objects.at(1).material.colour;
+        const Colour inner_color = w.objects.at(1).m_material.colour;
 
         WHEN("c ← color_at(w, r)") {
             const auto c = World::colour_at(w, r);

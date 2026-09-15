@@ -34,7 +34,7 @@ namespace raytracer {
     }
 
     Vector normal_at(const Sphere &s, const Point &world_point) {
-        const auto &sphere_transform_inverse_expected{inverse(s.transform)};
+        const auto &sphere_transform_inverse_expected{inverse(s.m_transform)};
         if (!sphere_transform_inverse_expected.has_value()) {
             return {};
         }
@@ -56,7 +56,7 @@ namespace raytracer {
     }
 
     std::vector<Intersection> intersect(const Sphere &sphere, const Ray &ray) {
-        const auto inv = inverse(sphere.transform);
+        const auto inv = inverse(sphere.m_transform);
         if (!inv.has_value()) {
             return {};
         }
@@ -73,18 +73,6 @@ namespace raytracer {
         const float t1{(-b - std::sqrt(discriminant)) / (2 * a)};
         const float t2{(-b + std::sqrt(discriminant)) / (2 * a)};
         return {{sphere, t1}, {sphere, t2}};
-    }
-
-    Sphere Sphere::make_sphere() {
-        return Sphere(++sphere_id);
-    }
-
-    Vector Sphere::normal_at(const Point &point) {
-        return {point - Point()};
-    }
-
-    void Sphere::set_transform(const Matrix<double> &t) {
-        transform = t;
     }
 
     std::optional<Intersection> hit(const std::vector<Intersection> &intersections) {
@@ -117,7 +105,7 @@ namespace raytracer {
     }
 
     Colour shade_hit(const World &world, const Computations &computations) {
-        return lighting(computations.object.material, world.light.value(), computations.point, computations.eye_vector,
+        return lighting(computations.object.m_material, world.light.value(), computations.point, computations.eye_vector,
                         computations.normal_vector, world.is_shadowed(computations.over_point));
     }
 
