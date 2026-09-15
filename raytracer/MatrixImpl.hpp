@@ -12,15 +12,15 @@
 namespace raytracer {
     template<typename T>
     Matrix<T> multiply(Matrix<T> matrix1, Matrix<T> matrix2) {
-        if (matrix1.m_cols != matrix2.m_rows) {
+        if (matrix1.cols() != matrix2.rows()) {
             throw std::invalid_argument(std::format(
                 "Matrix dimensions do not allow multiplication: mat1 columns ({}) != mat2 rows ({})",
-                matrix1.m_cols, matrix2.m_rows
+                matrix1.cols(), matrix2.rows()
             ));
         }
-        const size_t inner = matrix1.m_cols;
-        size_t rows = matrix1.m_rows;
-        size_t cols = matrix2.m_cols;
+        const size_t inner = matrix1.cols();
+        size_t rows = matrix1.rows();
+        size_t cols = matrix2.cols();
 
         Matrix<T> result{rows, cols};
         for (size_t i = 0; i < rows; ++i) {
@@ -35,9 +35,9 @@ namespace raytracer {
 
     template<typename T>
     Matrix<T> transpose(Matrix<T> matrix) {
-        Matrix<T> result(matrix.m_cols, matrix.m_rows);
-        for (size_t row = 0; row < matrix.m_rows; ++row) {
-            for (size_t col = 0; col < matrix.m_cols; ++col) {
+        Matrix<T> result(matrix.cols(), matrix.rows());
+        for (size_t row = 0; row < matrix.rows(); ++row) {
+            for (size_t col = 0; col < matrix.cols(); ++col) {
                 result[col, row] = matrix[row, col];
             }
         }
@@ -46,17 +46,17 @@ namespace raytracer {
 
     template<typename T>
     T determinant(Matrix<T> matrix) {
-        if (matrix.m_rows != matrix.m_cols || matrix.m_rows < 2 || matrix.m_cols < 2) {
+        if (matrix.rows() != matrix.cols() || matrix.rows() < 2 || matrix.cols() < 2) {
             throw std::invalid_argument("Determinant is only implemented for square matrices of size 2 or more");
         }
-        if (matrix.m_rows == 2 && matrix.m_cols == 2) {
+        if (matrix.rows() == 2 && matrix.cols() == 2) {
             return matrix[0, 0] * matrix[1, 1] - matrix[0, 1] * matrix[1, 0];
         }
-        if (matrix.m_rows == 3 && matrix.m_cols == 3) {
+        if (matrix.rows() == 3 && matrix.cols() == 3) {
             return matrix[0, 0] * cofactor(matrix, 0, 0) + matrix[0, 1] * cofactor(matrix, 0, 1) +
                    matrix[0, 2] * cofactor(matrix, 0, 2);
         }
-        if (matrix.m_rows == 4 && matrix.m_cols == 4) {
+        if (matrix.rows() == 4 && matrix.cols() == 4) {
             return matrix[0, 0] * cofactor(matrix, 0, 0) +
                    matrix[0, 1] * cofactor(matrix, 0, 1) +
                    matrix[0, 2] * cofactor(matrix, 0, 2) +
@@ -66,29 +66,29 @@ namespace raytracer {
     }
 
     template<typename T>
-    Matrix<T> submatrix(Matrix<T> matrix, decltype(Matrix<T>::m_rows) row,
-                           decltype(Matrix<T>::m_cols) col) {
-        auto result = matrix;
-        result.m_data.clear();
-        result.m_rows = matrix.m_rows - 1;
-        result.m_cols = matrix.m_cols - 1;
-        for (size_t r = 0; r < matrix.m_rows; ++r) {
-            for (size_t c = 0; c < matrix.m_cols; ++c) {
-                if (r != row && c != col) {
-                    result.m_data.emplace_back(matrix[r, c]);
-                }
+    Matrix<T> submatrix(Matrix<T> matrix, size_t row, size_t col) {
+        Matrix<T> result{matrix.rows() - 1, matrix.cols() - 1};
+        size_t dest_row = 0;
+        for (size_t r = 0; r < matrix.rows(); ++r) {
+            if (r == row) continue;
+            size_t dest_col = 0;
+            for (size_t c = 0; c < matrix.cols(); ++c) {
+                if (c == col) continue;
+                result[dest_row, dest_col] = matrix[r, c];
+                ++dest_col;
             }
+            ++dest_row;
         }
         return result;
     }
 
     template<typename T>
-    T minor(Matrix<T> matrix, decltype(Matrix<T>::m_rows) row, decltype(Matrix<T>::m_cols) col) {
+    T minor(Matrix<T> matrix, size_t row, size_t col) {
         return determinant(submatrix(matrix, row, col));
     }
 
     template<typename T>
-    T cofactor(Matrix<T> matrix, decltype(Matrix<T>::m_rows) row, decltype(Matrix<T>::m_cols) col) {
+    T cofactor(Matrix<T> matrix, size_t row, size_t col) {
         T result = minor(matrix, row, col);
         return (row + col) % 2 == 0 ? result : -result;
     }
@@ -99,8 +99,8 @@ namespace raytracer {
         if (matrix_determinant == 0) {
             return std::unexpected(false);
         }
-        const size_t num_rows = matrix.m_rows;
-        const size_t num_cols = matrix.m_rows;
+        const size_t num_rows = matrix.rows();
+        const size_t num_cols = matrix.rows();
         auto cofactors = Matrix<double>(num_rows, num_cols, std::vector<T>(num_rows * num_cols, 0));
         for (size_t row = 0; row < num_rows; ++row) {
             for (size_t col = 0; col < num_cols; ++col) {

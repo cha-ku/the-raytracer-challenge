@@ -85,15 +85,15 @@ TEST_CASE("Colour multiplication test") {
 TEST_CASE("Create Matrix from range") {
     std::vector<double> tmp_vec{1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
     Matrix<double> matrix_vec(3, 3, tmp_vec);
-    REQUIRE(std::ranges::equal(matrix_vec.m_data, tmp_vec));
+    REQUIRE(std::ranges::equal(matrix_vec.data(), tmp_vec));
 
     std::array<int, 9> tmp_array{1, 2, 3, 4, 5, 6, 7, 8, 9};
     Matrix<int> matrix_array(3, 3, tmp_array);
-    REQUIRE(std::ranges::equal(matrix_array.m_data, tmp_array));
+    REQUIRE(std::ranges::equal(matrix_array.data(), tmp_array));
 
     constexpr char tmp_char_array[] = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'};
     Matrix<char> matrix_char(3, 3, tmp_char_array);
-    REQUIRE(std::ranges::equal(matrix_char.m_data, tmp_char_array));
+    REQUIRE(std::ranges::equal(matrix_char.data(), tmp_char_array));
 }
 
 TEST_CASE("Matrix throws on invalid size") {
@@ -105,9 +105,9 @@ TEST_CASE("Matrix constructor test") {
     constexpr auto r = 2;
     constexpr auto c = 3;
     Matrix<int> matrix{r, c};
-    REQUIRE(matrix.m_data == decltype(matrix.m_data)(2 * 3, 0));
-    REQUIRE(matrix.m_rows == 2);
-    REQUIRE(matrix.m_cols == 3);
+    REQUIRE(matrix.data() == std::vector<int>(2 * 3, 0));
+    REQUIRE(matrix.rows() == 2);
+    REQUIRE(matrix.cols() == 3);
 
     REQUIRE(matrix[0, 0] == 0);
     matrix[1, 1] = 42;
@@ -203,13 +203,12 @@ TEST_CASE("Identity matrix test") {
 }
 
 TEST_CASE("Matrix transpose test") {
-    Matrix<int> transpose_test{4, 4};
-    transpose_test.m_data = {
+    Matrix<int> transpose_test{4, 4, std::vector{
         0, 9, 3, 0,
         9, 8, 0, 8,
         1, 8, 5, 3,
         0, 0, 5, 8
-    };
+    }};
     auto transpose_mat{transpose(transpose_test)};
     REQUIRE(transpose_mat[0, 0] == 0);
     REQUIRE(transpose_mat[0, 1] == 9);
@@ -230,33 +229,31 @@ TEST_CASE("Matrix transpose test") {
 }
 
 TEST_CASE("Submatrix test 1") {
-    Matrix<int> submatrix_test{3, 3};
-    submatrix_test.m_data = {
+    Matrix<int> submatrix_test{3, 3, std::vector{
         1, 5, 0,
         -3, 2, 7,
         0, 6, -3
-    };
+    }};
     decltype(submatrix_test) minor{submatrix(submatrix_test, 0, 2)};
-    REQUIRE(minor.m_data == decltype(submatrix_test.m_data){-3, 2, 0, 6});
-    REQUIRE(minor.m_rows == submatrix_test.m_rows - 1);
-    REQUIRE(minor.m_cols == submatrix_test.m_cols - 1);
+    REQUIRE(minor.data() == std::vector{-3, 2, 0, 6});
+    REQUIRE(minor.rows() == submatrix_test.rows() - 1);
+    REQUIRE(minor.cols() == submatrix_test.cols() - 1);
 }
 
 TEST_CASE("Submatrix test 2") {
-    Matrix<int> submatrix_test{4, 4};
-    submatrix_test.m_data = {
+    Matrix<int> submatrix_test{4, 4, std::vector{
         -6, 1, 1, 6,
         -8, 5, 8, 6,
         -1, 0, 8, 2,
         -7, 1, -1, 1
-    };
+    }};
     decltype(submatrix_test) minor{submatrix(submatrix_test, 2, 1)};
-    REQUIRE(minor.m_data == decltype(submatrix_test.m_data){
+    REQUIRE(minor.data() == std::vector{
             -6, 1, 6,
             -8, 8, 6,
             -7, -1, 1});
-    REQUIRE(minor.m_rows == submatrix_test.m_rows - 1);
-    REQUIRE(minor.m_cols == submatrix_test.m_cols - 1);
+    REQUIRE(minor.rows() == submatrix_test.rows() - 1);
+    REQUIRE(minor.cols() == submatrix_test.cols() - 1);
 }
 
 TEST_CASE("Determinant test") {
@@ -299,7 +296,7 @@ TEST_CASE("Inverse test") {
         }
     };
 
-    REQUIRE(inverse(inverse_test).value() == Matrix<double>{inverse_test.m_rows, inverse_test.m_cols,
+    REQUIRE(inverse(inverse_test).value() == Matrix<double>{inverse_test.rows(), inverse_test.cols(),
             std::vector{0.21805, 0.45113, 0.24060, -0.04511,
             -0.80827, -1.45677, -0.44361, 0.52068,
             -0.07895, -0.22368, -0.05263, 0.19737,

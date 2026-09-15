@@ -24,12 +24,12 @@ namespace raytracer {
         const Matrix<double> new_direction{multiply(matrix, direction_matrix)};
 
         return Ray{
-            Point{static_cast<float>(new_origin.m_data[0]),
-                  static_cast<float>(new_origin.m_data[1]),
-                  static_cast<float>(new_origin.m_data[2])},
-            Vector{static_cast<float>(new_direction.m_data[0]),
-                   static_cast<float>(new_direction.m_data[1]),
-                   static_cast<float>(new_direction.m_data[2])}
+            Point{static_cast<float>(new_origin[0, 0]),
+                  static_cast<float>(new_origin[1, 0]),
+                  static_cast<float>(new_origin[2, 0])},
+            Vector{static_cast<float>(new_direction[0, 0]),
+                   static_cast<float>(new_direction[1, 0]),
+                   static_cast<float>(new_direction[2, 0])}
         };
     }
 
@@ -41,16 +41,16 @@ namespace raytracer {
         const Matrix sphere_transform_inverse{sphere_transform_inverse_expected.value()};
         const Matrix object_point_matrix{multiply(sphere_transform_inverse, make_matrix(world_point))};
         const Point object_point{
-            static_cast<float>(object_point_matrix.m_data[0]), static_cast<float>(object_point_matrix.m_data[1]),
-            static_cast<float>(object_point_matrix.m_data[2])
+            static_cast<float>(object_point_matrix[0, 0]), static_cast<float>(object_point_matrix[1, 0]),
+            static_cast<float>(object_point_matrix[2, 0])
         };
         const Vector object_normal{object_point - Point(0, 0, 0)};
         const Matrix world_normal_matrix = multiply(transpose(sphere_transform_inverse),
                                                           make_matrix(object_normal));
         const Vector world_normal{
-            static_cast<float>(world_normal_matrix.m_data[0]),
-            static_cast<float>(world_normal_matrix.m_data[1]),
-            static_cast<float>(world_normal_matrix.m_data[2])
+            static_cast<float>(world_normal_matrix[0, 0]),
+            static_cast<float>(world_normal_matrix[1, 0]),
+            static_cast<float>(world_normal_matrix[2, 0])
         };
         return Vector::normalize(world_normal);
     }
