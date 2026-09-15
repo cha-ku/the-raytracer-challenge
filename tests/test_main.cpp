@@ -82,42 +82,40 @@ TEST_CASE("Colour multiplication test") {
     REQUIRE(colour * 2.0 == Colour(0.4, 0.6, 0.8));
 }
 
-TEST_CASE("Create Container from range") {
+TEST_CASE("Create Matrix from range") {
     std::vector<double> tmp_vec{1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
-    Container<double> container_vec(3, 3, tmp_vec);
-    REQUIRE(std::ranges::equal(container_vec.m_data, tmp_vec));
+    Matrix<double> matrix_vec(3, 3, tmp_vec);
+    REQUIRE(std::ranges::equal(matrix_vec.m_data, tmp_vec));
 
     std::array<int, 9> tmp_array{1, 2, 3, 4, 5, 6, 7, 8, 9};
-    Container<int> container_array(3, 3, tmp_array);
-    REQUIRE(std::ranges::equal(container_array.m_data, tmp_array));
+    Matrix<int> matrix_array(3, 3, tmp_array);
+    REQUIRE(std::ranges::equal(matrix_array.m_data, tmp_array));
 
     constexpr char tmp_char_array[] = {'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i'};
-    Container<char> container_char(3, 3, tmp_char_array);
-    REQUIRE(std::ranges::equal(container_char.m_data, tmp_char_array));
+    Matrix<char> matrix_char(3, 3, tmp_char_array);
+    REQUIRE(std::ranges::equal(matrix_char.m_data, tmp_char_array));
 }
 
-TEST_CASE("Container throws on invalid size") {
+TEST_CASE("Matrix throws on invalid size") {
     std::array<double, 9> tmp{1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
-    REQUIRE_THROWS_AS(Container<double>(4, 3, tmp), std::invalid_argument);
+    REQUIRE_THROWS_AS(Matrix<double>(4, 3, tmp), std::invalid_argument);
 }
 
 TEST_CASE("Matrix constructor test") {
     constexpr auto r = 2;
     constexpr auto c = 3;
-    Container<int> container{r, c};
-    REQUIRE(container.m_data == decltype(container.m_data)(2 * 3, 0));
-    REQUIRE(container.m_rows == 2);
-    REQUIRE(container.m_cols == 3);
+    Matrix<int> matrix{r, c};
+    REQUIRE(matrix.m_data == decltype(matrix.m_data)(2 * 3, 0));
+    REQUIRE(matrix.m_rows == 2);
+    REQUIRE(matrix.m_cols == 3);
 
-    Matrix matrix{make_matrix(container)};
     REQUIRE(matrix[0, 0] == 0);
     matrix[1, 1] = 42;
     REQUIRE(matrix[1, 1] == 42);
 
     std::vector<double> tmp{1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
     REQUIRE(tmp.size() == 9);
-    Container<double> container1(3, 3, tmp);
-    Matrix matrix1{make_matrix(container1)};
+    Matrix<double> matrix1(3, 3, tmp);
     REQUIRE(matrix1[0, 0] == 1.0);
     REQUIRE(matrix1[0, 1] == 2.0);
     REQUIRE(matrix1[0, 2] == 3.0);
@@ -133,13 +131,12 @@ TEST_CASE("Matrix constructor test") {
 TEST_CASE("Matrix comparison test") {
     constexpr auto r = 3;
     constexpr auto c = 3;
-    Container<int> container1{r, c, std::vector{1, 3, 5, 5, 6, 8, 9, 10, 32}};
-    Matrix matrix1{make_matrix(container1)};
+    Matrix<int> matrix1{r, c, std::vector{1, 3, 5, 5, 6, 8, 9, 10, 32}};
 }
 
 TEST_CASE("Matrix multiplication test") {
     constexpr auto dim = 4;
-    Container<int> container1{
+    Matrix<int> matrix1{
         dim, dim, std::vector{
             1, 2, 3, 4,
             5, 6, 7, 8,
@@ -148,7 +145,7 @@ TEST_CASE("Matrix multiplication test") {
         }
     };
 
-    Container<int> container2{
+    Matrix<int> matrix2{
         dim, dim, std::vector{
             -2, 1, 2, 3,
             3, 2, 1, -1,
@@ -156,26 +153,25 @@ TEST_CASE("Matrix multiplication test") {
             1, 2, 7, 8
         }
     };
-    Container result{multiply(container1, container2)};
-    Matrix result_mat{make_matrix(result)};
-    REQUIRE(result_mat[0, 0] == 20);
-    REQUIRE(result_mat[0, 1] == 22);
-    REQUIRE(result_mat[0, 2] == 50);
-    REQUIRE(result_mat[0, 3] == 48);
-    REQUIRE(result_mat[1, 0] == 44);
-    REQUIRE(result_mat[1, 1] == 54);
-    REQUIRE(result_mat[1, 2] == 114);
-    REQUIRE(result_mat[1, 3] == 108);
-    REQUIRE(result_mat[2, 0] == 40);
-    REQUIRE(result_mat[2, 1] == 58);
-    REQUIRE(result_mat[2, 2] == 110);
-    REQUIRE(result_mat[2, 3] == 102);
-    REQUIRE(result_mat[3, 0] == 16);
-    REQUIRE(result_mat[3, 1] == 26);
-    REQUIRE(result_mat[3, 2] == 46);
-    REQUIRE(result_mat[3, 3] == 42);
+    Matrix result{multiply(matrix1, matrix2)};
+    REQUIRE(result[0, 0] == 20);
+    REQUIRE(result[0, 1] == 22);
+    REQUIRE(result[0, 2] == 50);
+    REQUIRE(result[0, 3] == 48);
+    REQUIRE(result[1, 0] == 44);
+    REQUIRE(result[1, 1] == 54);
+    REQUIRE(result[1, 2] == 114);
+    REQUIRE(result[1, 3] == 108);
+    REQUIRE(result[2, 0] == 40);
+    REQUIRE(result[2, 1] == 58);
+    REQUIRE(result[2, 2] == 110);
+    REQUIRE(result[2, 3] == 102);
+    REQUIRE(result[3, 0] == 16);
+    REQUIRE(result[3, 1] == 26);
+    REQUIRE(result[3, 2] == 46);
+    REQUIRE(result[3, 3] == 42);
 
-    Container<int> container3{
+    Matrix<int> matrix3{
         dim, dim, std::vector{
             1, 2, 3, 4,
             2, 4, 4, 2,
@@ -185,39 +181,36 @@ TEST_CASE("Matrix multiplication test") {
     };
 
     constexpr auto num_cols = 1;
-    Container<int> container4{dim, num_cols, std::vector{1, 2, 3, 1}};
-    Container result1{multiply(container3, container4)};
-    Matrix result_mat1{make_matrix(result1)};
-    REQUIRE(result_mat1[0, 0] == 18);
-    REQUIRE(result_mat1[0, 1] == 24);
-    REQUIRE(result_mat1[0, 2] == 33);
-    REQUIRE(result_mat1[0, 3] == 1);
+    Matrix<int> matrix4{dim, num_cols, std::vector{1, 2, 3, 1}};
+    Matrix result1{multiply(matrix3, matrix4)};
+    REQUIRE(result1[0, 0] == 18);
+    REQUIRE(result1[0, 1] == 24);
+    REQUIRE(result1[0, 2] == 33);
+    REQUIRE(result1[0, 3] == 1);
 }
 
 TEST_CASE("Identity matrix test") {
-    Container<int> ident_mat{Container<int>::identity(3)};
-    Matrix result_ident_mat{make_matrix(ident_mat)};
-    REQUIRE(result_ident_mat[0, 0] == 1);
-    REQUIRE(result_ident_mat[0, 1] == 0);
-    REQUIRE(result_ident_mat[0, 2] == 0);
-    REQUIRE(result_ident_mat[1, 0] == 0);
-    REQUIRE(result_ident_mat[1, 1] == 1);
-    REQUIRE(result_ident_mat[1, 2] == 0);
-    REQUIRE(result_ident_mat[2, 0] == 0);
-    REQUIRE(result_ident_mat[2, 1] == 0);
-    REQUIRE(result_ident_mat[2, 2] == 1);
+    Matrix<int> ident_mat{Matrix<int>::identity(3)};
+    REQUIRE(ident_mat[0, 0] == 1);
+    REQUIRE(ident_mat[0, 1] == 0);
+    REQUIRE(ident_mat[0, 2] == 0);
+    REQUIRE(ident_mat[1, 0] == 0);
+    REQUIRE(ident_mat[1, 1] == 1);
+    REQUIRE(ident_mat[1, 2] == 0);
+    REQUIRE(ident_mat[2, 0] == 0);
+    REQUIRE(ident_mat[2, 1] == 0);
+    REQUIRE(ident_mat[2, 2] == 1);
 }
 
 TEST_CASE("Matrix transpose test") {
-    Container<int> transpose_test{4, 4};
+    Matrix<int> transpose_test{4, 4};
     transpose_test.m_data = {
         0, 9, 3, 0,
         9, 8, 0, 8,
         1, 8, 5, 3,
         0, 0, 5, 8
     };
-    auto transposed{transpose(transpose_test)};
-    Matrix transpose_mat{make_matrix(transposed)};
+    auto transpose_mat{transpose(transpose_test)};
     REQUIRE(transpose_mat[0, 0] == 0);
     REQUIRE(transpose_mat[0, 1] == 9);
     REQUIRE(transpose_mat[0, 2] == 1);
@@ -237,7 +230,7 @@ TEST_CASE("Matrix transpose test") {
 }
 
 TEST_CASE("Submatrix test 1") {
-    Container<int> submatrix_test{3, 3};
+    Matrix<int> submatrix_test{3, 3};
     submatrix_test.m_data = {
         1, 5, 0,
         -3, 2, 7,
@@ -250,7 +243,7 @@ TEST_CASE("Submatrix test 1") {
 }
 
 TEST_CASE("Submatrix test 2") {
-    Container<int> submatrix_test{4, 4};
+    Matrix<int> submatrix_test{4, 4};
     submatrix_test.m_data = {
         -6, 1, 1, 6,
         -8, 5, 8, 6,
@@ -267,13 +260,13 @@ TEST_CASE("Submatrix test 2") {
 }
 
 TEST_CASE("Determinant test") {
-    const Container<int> determinant_test2x2{2, 2, std::vector{1, 5, -3, 2}};
+    const Matrix<int> determinant_test2x2{2, 2, std::vector{1, 5, -3, 2}};
     REQUIRE(determinant(determinant_test2x2) == 17);
-    const Container<int> bad_determinant_test{1, 2, std::vector{1, 5}};
+    const Matrix<int> bad_determinant_test{1, 2, std::vector{1, 5}};
     REQUIRE_THROWS_AS(determinant(bad_determinant_test), std::invalid_argument);
-    const Container<int> determinant_test3x3{3, 3, std::vector{1, 2, 6, -5, 8, -4, 2, 6, 4}};
+    const Matrix<int> determinant_test3x3{3, 3, std::vector{1, 2, 6, -5, 8, -4, 2, 6, 4}};
     REQUIRE(determinant(determinant_test3x3) == -196);
-    const Container<int> determinant_test4x4{
+    const Matrix<int> determinant_test4x4{
         4, 4,
         std::vector{
             -2, -8, 3, 5,
@@ -286,18 +279,18 @@ TEST_CASE("Determinant test") {
 }
 
 TEST_CASE("Minor test") {
-    const Container<int> minor_test{3, 3, std::vector{3, 5, 0, 2, -1, -7, 6, -1, 5}};
+    const Matrix<int> minor_test{3, 3, std::vector{3, 5, 0, 2, -1, -7, 6, -1, 5}};
     REQUIRE(minor(minor_test, 1, 0) == 25);
 }
 
 TEST_CASE("Cofactor test") {
-    const Container<int> cofactor_test{3, 3, std::vector{3, 5, 0, 2, -1, -7, 6, -1, 5}};
+    const Matrix<int> cofactor_test{3, 3, std::vector{3, 5, 0, 2, -1, -7, 6, -1, 5}};
     REQUIRE(cofactor(cofactor_test, 0, 0) == -12);
     REQUIRE(cofactor(cofactor_test, 1, 0) == -25);
 }
 
 TEST_CASE("Inverse test") {
-    const Container<int> inverse_test{
+    const Matrix<int> inverse_test{
         4, 4, std::vector{
             -5, 2, 6, -8,
             1, -5, 1, 8,
@@ -306,13 +299,13 @@ TEST_CASE("Inverse test") {
         }
     };
 
-    REQUIRE(inverse(inverse_test).value() == Container<double>{inverse_test.m_rows, inverse_test.m_cols,
+    REQUIRE(inverse(inverse_test).value() == Matrix<double>{inverse_test.m_rows, inverse_test.m_cols,
             std::vector{0.21805, 0.45113, 0.24060, -0.04511,
             -0.80827, -1.45677, -0.44361, 0.52068,
             -0.07895, -0.22368, -0.05263, 0.19737,
             -0.52256, -0.81391, -0.30075, 0.30639 }});
 
-    const Container<double> a{
+    const Matrix<double> a{
         4, 4, std::vector{
             3, -9, 7, 3,
             3, -8, 2, -9,
@@ -321,7 +314,7 @@ TEST_CASE("Inverse test") {
         }
     };
 
-    const Container<double> b{
+    const Matrix<double> b{
         4, 4, std::vector{
             8, 2, 2, 2,
             3, -1, 7, 0,
@@ -330,7 +323,7 @@ TEST_CASE("Inverse test") {
         }
     };
 
-    const Container c{multiply(a, b)};
+    const Matrix c{multiply(a, b)};
 
     REQUIRE(multiply(c, inverse(b).value()) == a);
 }

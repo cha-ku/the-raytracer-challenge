@@ -7,7 +7,6 @@
 
 #include <expected>
 #include <vector>
-#include <mdspan>
 
 #include "Point.hpp"
 #include "Utils.hpp"
@@ -15,16 +14,16 @@
 namespace raytracer {
     template<typename T>
         requires std::is_arithmetic_v<T>
-    struct Container {
+    struct Matrix {
         size_t m_rows;
         size_t m_cols;
         std::vector<T> m_data;
 
-        constexpr explicit Container(const size_t rows, const size_t cols) : m_rows(rows), m_cols(cols),
+        constexpr explicit Matrix(const size_t rows, const size_t cols) : m_rows(rows), m_cols(cols),
                                                                              m_data(rows * cols, 0) {
         };
 
-        constexpr explicit Container(const size_t rows, const size_t cols, auto &&custom_data) : m_rows(rows),
+        constexpr explicit Matrix(const size_t rows, const size_t cols, auto &&custom_data) : m_rows(rows),
             m_cols(cols),
             m_data(std::begin(custom_data), std::end(custom_data)) {
             if (std::ranges::size(custom_data) != rows * cols) {
@@ -34,8 +33,11 @@ namespace raytracer {
 
         constexpr auto data() -> decltype(m_data.data()) { return m_data.data(); }
 
-        static constexpr Container identity(const size_t dim) {
-            Container result(dim, dim);
+        constexpr T &operator[](const size_t row, const size_t col) { return m_data[row * m_cols + col]; }
+        constexpr const T &operator[](const size_t row, const size_t col) const { return m_data[row * m_cols + col]; }
+
+        static constexpr Matrix identity(const size_t dim) {
+            Matrix result(dim, dim);
             for (size_t i = 0; i < dim; ++i) {
                 result.m_data[i * dim + i] = 1;
             }
@@ -44,7 +46,7 @@ namespace raytracer {
     };
 
     template<typename T=double>
-    constexpr auto operator==(const Container<T> &mat1, const Container<T> &mat2) -> bool {
+    constexpr auto operator==(const Matrix<T> &mat1, const Matrix<T> &mat2) -> bool {
         if (mat1.m_rows != mat2.m_rows || mat1.m_cols != mat2.m_cols) {
             return false;
         }
@@ -52,47 +54,41 @@ namespace raytracer {
     }
 
     template<typename T=Point>
-    constexpr Container<double> make_container(T&& p) {
-        return Container<double>{4, 1, std::vector{p.x, p.y, p.z, p.w}};
+    constexpr Matrix<double> make_matrix(T&& p) {
+        return Matrix<double>{4, 1, std::vector{p.x, p.y, p.z, p.w}};
     }
 
-    constexpr Container<double> make_container(const Vector& v) {
-        return Container<double>{4, 1, std::vector{static_cast<double>(v.x), static_cast<double>(v.y), static_cast<double>(v.z), 0.0}};
+    constexpr Matrix<double> make_matrix(const Vector& v) {
+        return Matrix<double>{4, 1, std::vector{static_cast<double>(v.x), static_cast<double>(v.y), static_cast<double>(v.z), 0.0}};
     }
 
     template<typename T>
-    using Matrix = std::mdspan<T, std::dextents<size_t, 2> >;
+    Matrix<T> multiply(Matrix<T> matrix1, Matrix<T> matrix2);
 
     template<typename T>
-    Matrix<std::remove_cvref_t<T> > make_matrix(Container<T> &d);
+    Matrix<T> transpose(Matrix<T> matrix);
 
     template<typename T>
-    Container<T> multiply(Container<T> container1, Container<T> container2);
+    T determinant(Matrix<T> matrix);
 
     template<typename T>
-    Container<T> transpose(Container<T> container);
+    Matrix<T> submatrix(Matrix<T> matrix, decltype(Matrix<T>::m_rows) row,
+                           decltype(Matrix<T>::m_cols) col);
 
     template<typename T>
-    T determinant(Container<T> container);
+    T minor(Matrix<T> matrix, decltype(Matrix<T>::m_rows) row, decltype(Matrix<T>::m_cols) col);
 
     template<typename T>
-    Container<T> submatrix(Container<T> container, decltype(Container<T>::m_rows) row,
-                           decltype(Container<T>::m_cols) col);
+    T cofactor(Matrix<T> matrix, decltype(Matrix<T>::m_rows) row, decltype(Matrix<T>::m_cols) col);
 
     template<typename T>
-    T minor(Container<T> container, decltype(Container<T>::m_rows) row, decltype(Container<T>::m_cols) col);
+    std::expected<Matrix<double>, bool> inverse(Matrix<T> matrix);
 
     template<typename T>
-    T cofactor(Container<T> container, decltype(Container<T>::m_rows) row, decltype(Container<T>::m_cols) col);
-
-    template<typename T>
-    std::expected<Container<double>, bool> inverse(Container<T> container);
-
-    template<typename T>
-    constexpr Container<T> translation(T x, T y, T z);
+    constexpr Matrix<T> translation(T x, T y, T z);
 
     template <typename T>
-    constexpr Container<T> scale(T x, T y, T z);
+    constexpr Matrix<T> scale(T x, T y, T z);
 }
 
 #endif //THE_RAYTRACER_CHALLENGE_MATRIX_HPP

@@ -11,30 +11,22 @@
 
 namespace raytracer {
     template<typename T>
-    Matrix<std::remove_cvref_t<T> > make_matrix(Container<T> &d) {
-        using U = std::remove_cvref_t<T>; return Matrix<U>(d.data(), d.m_rows, d.m_cols);
-    }
-
-    template<typename T>
-    Container<T> multiply(Container<T> container1, Container<T> container2) {
-        Matrix mat1 = make_matrix(container1);
-        Matrix mat2 = make_matrix(container2);
-        if (mat1.extent(1) != mat2.extent(0)) {
+    Matrix<T> multiply(Matrix<T> matrix1, Matrix<T> matrix2) {
+        if (matrix1.m_cols != matrix2.m_rows) {
             throw std::invalid_argument(std::format(
                 "Matrix dimensions do not allow multiplication: mat1 columns ({}) != mat2 rows ({})",
-                mat1.extent(1), mat2.extent(0)
+                matrix1.m_cols, matrix2.m_rows
             ));
         }
-        const size_t inner = mat1.extent(1);
-        size_t rows = mat1.extent(0);
-        size_t cols = mat2.extent(1);
+        const size_t inner = matrix1.m_cols;
+        size_t rows = matrix1.m_rows;
+        size_t cols = matrix2.m_cols;
 
-        Container<T> result{rows, cols};
-        Matrix result_matrix{make_matrix(result)};
+        Matrix<T> result{rows, cols};
         for (size_t i = 0; i < rows; ++i) {
             for (size_t j = 0; j < cols; ++j) {
                 for (size_t k = 0; k < inner; ++k) {
-                    result_matrix[i, j] += mat1[i, k] * mat2[k, j];
+                    result[i, j] += matrix1[i, k] * matrix2[k, j];
                 }
             }
         }
@@ -42,49 +34,46 @@ namespace raytracer {
     }
 
     template<typename T>
-    Container<T> transpose(Container<T> container) {
-        const auto &matrix = make_matrix(container);
-        Container<T> result(container.m_cols, container.m_rows);
-        auto result_matrix = make_matrix(result);
-        for (size_t row = 0; row < container.m_rows; ++row) {
-            for (size_t col = 0; col < container.m_cols; ++col) {
-                result_matrix[col, row] = matrix[row, col];
+    Matrix<T> transpose(Matrix<T> matrix) {
+        Matrix<T> result(matrix.m_cols, matrix.m_rows);
+        for (size_t row = 0; row < matrix.m_rows; ++row) {
+            for (size_t col = 0; col < matrix.m_cols; ++col) {
+                result[col, row] = matrix[row, col];
             }
         }
         return result;
     }
 
     template<typename T>
-    T determinant(Container<T> container) {
-        if (container.m_rows != container.m_cols || container.m_rows < 2 || container.m_cols < 2) {
+    T determinant(Matrix<T> matrix) {
+        if (matrix.m_rows != matrix.m_cols || matrix.m_rows < 2 || matrix.m_cols < 2) {
             throw std::invalid_argument("Determinant is only implemented for square matrices of size 2 or more");
         }
-        if (container.m_rows == 2 && container.m_cols == 2) {
-            return container.m_data[0] * container.m_data[3] - container.m_data[1] * container.m_data[2];
+        if (matrix.m_rows == 2 && matrix.m_cols == 2) {
+            return matrix[0, 0] * matrix[1, 1] - matrix[0, 1] * matrix[1, 0];
         }
-        if (container.m_rows == 3 && container.m_cols == 3) {
-            return container.m_data[0] * cofactor(container, 0, 0) + container.m_data[1] * cofactor(container, 0, 1) +
-                   container.m_data[2] * cofactor(container, 0, 2);
+        if (matrix.m_rows == 3 && matrix.m_cols == 3) {
+            return matrix[0, 0] * cofactor(matrix, 0, 0) + matrix[0, 1] * cofactor(matrix, 0, 1) +
+                   matrix[0, 2] * cofactor(matrix, 0, 2);
         }
-        if (container.m_rows == 4 && container.m_cols == 4) {
-            return container.m_data[0] * cofactor(container, 0, 0) +
-                   container.m_data[1] * cofactor(container, 0, 1) +
-                   container.m_data[2] * cofactor(container, 0, 2) +
-                   container.m_data[3] * cofactor(container, 0, 3);
+        if (matrix.m_rows == 4 && matrix.m_cols == 4) {
+            return matrix[0, 0] * cofactor(matrix, 0, 0) +
+                   matrix[0, 1] * cofactor(matrix, 0, 1) +
+                   matrix[0, 2] * cofactor(matrix, 0, 2) +
+                   matrix[0, 3] * cofactor(matrix, 0, 3);
         }
         return {};
     }
 
     template<typename T>
-    Container<T> submatrix(Container<T> container, decltype(Container<T>::m_rows) row,
-                           decltype(Container<T>::m_cols) col) {
-        const auto &matrix{make_matrix(container)};
-        auto result = container;
+    Matrix<T> submatrix(Matrix<T> matrix, decltype(Matrix<T>::m_rows) row,
+                           decltype(Matrix<T>::m_cols) col) {
+        auto result = matrix;
         result.m_data.clear();
-        result.m_rows = container.m_rows - 1;
-        result.m_cols = container.m_cols - 1;
-        for (size_t r = 0; r < container.m_rows; ++r) {
-            for (size_t c = 0; c < container.m_cols; ++c) {
+        result.m_rows = matrix.m_rows - 1;
+        result.m_cols = matrix.m_cols - 1;
+        for (size_t r = 0; r < matrix.m_rows; ++r) {
+            for (size_t c = 0; c < matrix.m_cols; ++c) {
                 if (r != row && c != col) {
                     result.m_data.emplace_back(matrix[r, c]);
                 }
@@ -94,101 +83,92 @@ namespace raytracer {
     }
 
     template<typename T>
-    T minor(Container<T> container, decltype(Container<T>::m_rows) row, decltype(Container<T>::m_cols) col) {
-        return determinant(submatrix(container, row, col));
+    T minor(Matrix<T> matrix, decltype(Matrix<T>::m_rows) row, decltype(Matrix<T>::m_cols) col) {
+        return determinant(submatrix(matrix, row, col));
     }
 
     template<typename T>
-    T cofactor(Container<T> container, decltype(Container<T>::m_rows) row, decltype(Container<T>::m_cols) col) {
-        T result = minor(container, row, col);
+    T cofactor(Matrix<T> matrix, decltype(Matrix<T>::m_rows) row, decltype(Matrix<T>::m_cols) col) {
+        T result = minor(matrix, row, col);
         return (row + col) % 2 == 0 ? result : -result;
     }
 
     template<typename T>
-    std::expected<Container<double>, bool> inverse(Container<T> container) {
-        auto container_determinant = determinant(container);
-        if (container_determinant == 0) {
+    std::expected<Matrix<double>, bool> inverse(Matrix<T> matrix) {
+        auto matrix_determinant = determinant(matrix);
+        if (matrix_determinant == 0) {
             return std::unexpected(false);
         }
-        const size_t num_rows = container.m_rows;
-        const size_t num_cols = container.m_rows;
-        auto matrix = make_matrix(container);
-        auto cofactors = Container<double>(num_rows, num_cols, std::vector<T>(num_rows * num_cols, 0));
-        auto cofactor_matrix{make_matrix(cofactors)};
-        for (auto row = 0; row < num_rows; ++row) {
-            for (auto col = 0; col < num_cols; ++col) {
-                cofactor_matrix[row, col] = cofactor(container, row, col);
+        const size_t num_rows = matrix.m_rows;
+        const size_t num_cols = matrix.m_rows;
+        auto cofactors = Matrix<double>(num_rows, num_cols, std::vector<T>(num_rows * num_cols, 0));
+        for (size_t row = 0; row < num_rows; ++row) {
+            for (size_t col = 0; col < num_cols; ++col) {
+                cofactors[row, col] = cofactor(matrix, row, col);
             }
         }
         auto result{transpose(cofactors)};
-        auto result_matrix{make_matrix(result)};
-        for (auto row = 0; row < num_rows; ++row) {
-            for (auto col = 0; col < num_cols; ++col) {
-                result_matrix[row, col] /= container_determinant;
+        for (size_t row = 0; row < num_rows; ++row) {
+            for (size_t col = 0; col < num_cols; ++col) {
+                result[row, col] /= matrix_determinant;
             }
         }
         return result;
     }
 
     template <typename T>
-    constexpr Container<T> translation(T x, T y, T z) {
-        Container<T> result(Container<T>::identity(4));
-        auto mat{make_matrix(result)};
-        mat[0, 3] = x;
-        mat[1, 3] = y;
-        mat[2, 3] = z;
+    constexpr Matrix<T> translation(T x, T y, T z) {
+        Matrix<T> result(Matrix<T>::identity(4));
+        result[0, 3] = x;
+        result[1, 3] = y;
+        result[2, 3] = z;
         return result;
     }
 
     template <typename T>
-    constexpr Container<T> scale(T x, T y, T z) {
-        Container<T> result(Container<T>::identity(4));
-        auto mat{make_matrix(result)};
-        mat[0, 0] = x;
-        mat[1, 1] = y;
-        mat[2, 2] = z;
+    constexpr Matrix<T> scale(T x, T y, T z) {
+        Matrix<T> result(Matrix<T>::identity(4));
+        result[0, 0] = x;
+        result[1, 1] = y;
+        result[2, 2] = z;
         return result;
     }
 
-    constexpr Container<double> rotation_x(const double radians) {
-        Container result(Container<double>::identity(4));
-        auto mat{make_matrix(result)};
-        mat[1, 1] = std::cos(radians);
-        mat[1, 2] = -std::sin(radians);
-        mat[2, 1] = std::sin(radians);
-        mat[2, 2] = std::cos(radians);
+    constexpr Matrix<double> rotation_x(const double radians) {
+        Matrix result(Matrix<double>::identity(4));
+        result[1, 1] = std::cos(radians);
+        result[1, 2] = -std::sin(radians);
+        result[2, 1] = std::sin(radians);
+        result[2, 2] = std::cos(radians);
         return result;
     }
 
-    constexpr Container<double> rotation_y(const double radians) {
-        Container result(Container<double>::identity(4));
-        auto mat{make_matrix(result)};
-        mat[0, 0] = std::cos(radians);
-        mat[0, 2] = std::sin(radians);
-        mat[2, 0] = -std::sin(radians);
-        mat[2, 2] = std::cos(radians);
+    constexpr Matrix<double> rotation_y(const double radians) {
+        Matrix result(Matrix<double>::identity(4));
+        result[0, 0] = std::cos(radians);
+        result[0, 2] = std::sin(radians);
+        result[2, 0] = -std::sin(radians);
+        result[2, 2] = std::cos(radians);
         return result;
     }
 
-    constexpr Container<double> rotation_z(const double radians) {
-        Container result(Container<double>::identity(4));
-        auto mat{make_matrix(result)};
-        mat[0, 0] = std::cos(radians);
-        mat[0, 1] = -std::sin(radians);
-        mat[1, 0] = std::sin(radians);
-        mat[1, 1] = std::cos(radians);
+    constexpr Matrix<double> rotation_z(const double radians) {
+        Matrix result(Matrix<double>::identity(4));
+        result[0, 0] = std::cos(radians);
+        result[0, 1] = -std::sin(radians);
+        result[1, 0] = std::sin(radians);
+        result[1, 1] = std::cos(radians);
         return result;
     }
 
-    constexpr Container<double> shearing(const double xy, const double xz, const double yx, const double yz, const double zx, const double zy) {
-        Container result(Container<double>::identity(4));
-        auto mat{make_matrix(result)};
-        mat[0, 1] = xy;
-        mat[0, 2] = xz;
-        mat[1, 0] = yx;
-        mat[1, 2] = yz;
-        mat[2, 0] = zx;
-        mat[2, 1] = zy;
+    constexpr Matrix<double> shearing(const double xy, const double xz, const double yx, const double yz, const double zx, const double zy) {
+        Matrix result(Matrix<double>::identity(4));
+        result[0, 1] = xy;
+        result[0, 2] = xz;
+        result[1, 0] = yx;
+        result[1, 2] = yz;
+        result[2, 0] = zx;
+        result[2, 1] = zy;
         return result;
     }
 }

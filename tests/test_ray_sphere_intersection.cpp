@@ -255,7 +255,7 @@ SCENARIO("A sphere's default transformation") {
     GIVEN("Sphere") {
         const Sphere s = Sphere::make_sphere();
         THEN("Transform is identity matrix") {
-            REQUIRE(s.transform == Container<double>::identity(4));
+            REQUIRE(s.transform == Matrix<double>::identity(4));
         }
     }
 }
