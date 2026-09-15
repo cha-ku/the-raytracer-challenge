@@ -24,11 +24,11 @@ namespace raytracer {
 
     Point position(const Ray &ray, float distance);
 
-    Ray transform(const Ray &ray, const Container<double> &matrix);
+    Ray transform(const Ray &ray, const Matrix<double> &matrix);
 
     struct Sphere {
         uint32_t id;
-        Container<double> transform{Container<double>::identity(4)};
+        Matrix<double> transform{Matrix<double>::identity(4)};
         Material material;
 
         Sphere() = delete;
@@ -37,7 +37,7 @@ namespace raytracer {
 
         static Sphere make_sphere();
 
-        void set_transform(const Container<double> &t);
+        void set_transform(const Matrix<double> &t);
 
         bool operator==(const Sphere& other) const { return id == other.id; }
 
@@ -76,7 +76,7 @@ namespace raytracer {
 
     Colour shade_hit(const World& world, const Computations& computations);
 
-    Container<double> view_transform(const Point &from, const Point &to, const Vector &up);
+    Matrix<double> view_transform(const Point &from, const Point &to, const Vector &up);
 
 }
 

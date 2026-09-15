@@ -11,17 +11,17 @@ namespace raytracer {
         return ray.origin + ray.direction * distance;
     }
 
-    Ray transform(const Ray &ray, const Container<double> &matrix) {
-        const Container<double> origin_container{make_container(Point{ray.origin.x, ray.origin.y, ray.origin.z})};
-        const Container<double> direction_container{4, 1, std::vector{
+    Ray transform(const Ray &ray, const Matrix<double> &matrix) {
+        const Matrix<double> origin_matrix{make_matrix(Point{ray.origin.x, ray.origin.y, ray.origin.z})};
+        const Matrix<double> direction_matrix{4, 1, std::vector{
             static_cast<double>(ray.direction.x),
             static_cast<double>(ray.direction.y),
             static_cast<double>(ray.direction.z),
             0.0
         }};
 
-        const Container<double> new_origin{multiply(matrix, origin_container)};
-        const Container<double> new_direction{multiply(matrix, direction_container)};
+        const Matrix<double> new_origin{multiply(matrix, origin_matrix)};
+        const Matrix<double> new_direction{multiply(matrix, direction_matrix)};
 
         return Ray{
             Point{static_cast<float>(new_origin.m_data[0]),
@@ -38,19 +38,19 @@ namespace raytracer {
         if (!sphere_transform_inverse_expected.has_value()) {
             return {};
         }
-        const Container sphere_transform_inverse{sphere_transform_inverse_expected.value()};
-        const Container object_point_container{multiply(sphere_transform_inverse, make_container(world_point))};
+        const Matrix sphere_transform_inverse{sphere_transform_inverse_expected.value()};
+        const Matrix object_point_matrix{multiply(sphere_transform_inverse, make_matrix(world_point))};
         const Point object_point{
-            static_cast<float>(object_point_container.m_data[0]), static_cast<float>(object_point_container.m_data[1]),
-            static_cast<float>(object_point_container.m_data[2])
+            static_cast<float>(object_point_matrix.m_data[0]), static_cast<float>(object_point_matrix.m_data[1]),
+            static_cast<float>(object_point_matrix.m_data[2])
         };
         const Vector object_normal{object_point - Point(0, 0, 0)};
-        const Container world_normal_container = multiply(transpose(sphere_transform_inverse),
-                                                          make_container(object_normal));
+        const Matrix world_normal_matrix = multiply(transpose(sphere_transform_inverse),
+                                                          make_matrix(object_normal));
         const Vector world_normal{
-            static_cast<float>(world_normal_container.m_data[0]),
-            static_cast<float>(world_normal_container.m_data[1]),
-            static_cast<float>(world_normal_container.m_data[2])
+            static_cast<float>(world_normal_matrix.m_data[0]),
+            static_cast<float>(world_normal_matrix.m_data[1]),
+            static_cast<float>(world_normal_matrix.m_data[2])
         };
         return Vector::normalize(world_normal);
     }
@@ -83,7 +83,7 @@ namespace raytracer {
         return {point - Point()};
     }
 
-    void Sphere::set_transform(const Container<double> &t) {
+    void Sphere::set_transform(const Matrix<double> &t) {
         transform = t;
     }
 
@@ -133,12 +133,12 @@ namespace raytracer {
     //
     // Camera looks down -Z by default.
     // view_transform(from=(0,0,0), to=(0,0,-1), up=(0,1,0)) == identity
-    Container<double> view_transform(const Point &from, const Point &to, const Vector &up) {
+    Matrix<double> view_transform(const Point &from, const Point &to, const Vector &up) {
         const Vector forward{Vector::normalize(to - from)};
         const Vector left{Vector::cross(forward, Vector::normalize(up))};
         const Vector true_up{Vector::cross(left, forward)};
 
-        return multiply(Container<double>{
+        return multiply(Matrix<double>{
                             4, 4, std::array<double, 16>{
                                 left.x, left.y, left.z, 0,
                                 true_up.x, true_up.y, true_up.z, 0,

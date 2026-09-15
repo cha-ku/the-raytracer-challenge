@@ -46,21 +46,21 @@ namespace raytracer {
         const double world_x{camera.half_width - x_offset};
         const double world_y{camera.half_height - y_offset};
 
-        const Container pixel_container{
+        const Matrix pixel_matrix{
             multiply(inverse(camera.transform).value(),
-                make_container(Point{ static_cast<float>(world_x), static_cast<float>(world_y), -1.f}))
+                make_matrix(Point{ static_cast<float>(world_x), static_cast<float>(world_y), -1.f}))
         };
         const Point pixel{
-            static_cast<float>(pixel_container.m_data[0]),
-            static_cast<float>(pixel_container.m_data[1]),
-            static_cast<float>(pixel_container.m_data[2])
+            static_cast<float>(pixel_matrix.m_data[0]),
+            static_cast<float>(pixel_matrix.m_data[1]),
+            static_cast<float>(pixel_matrix.m_data[2])
         };
 
-        const Container origin_container{multiply(inverse(camera.transform).value(), make_container(Point{}))};
+        const Matrix origin_matrix{multiply(inverse(camera.transform).value(), make_matrix(Point{}))};
         const Point origin{
-            static_cast<float>(origin_container.m_data[0]),
-            static_cast<float>(origin_container.m_data[1]),
-            static_cast<float>(origin_container.m_data[2])
+            static_cast<float>(origin_matrix.m_data[0]),
+            static_cast<float>(origin_matrix.m_data[1]),
+            static_cast<float>(origin_matrix.m_data[2])
         };
 
         const auto direction{Vector::normalize(pixel - origin)};

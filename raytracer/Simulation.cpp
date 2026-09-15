@@ -77,7 +77,7 @@ void simulate_clock() {
     canvas.write_pixel(static_cast<uint32_t>(centre.x), static_cast<uint32_t>(centre.z),  Colour(1, 0, 0));
     const float radius{3/8.f * static_cast<float>(canvas.width)};
     // 12 o'clock position relative to origin
-    const auto twelve_oclock = make_container({0, 0, -radius});
+    const auto twelve_oclock = make_matrix({0, 0, -radius});
 
     for (int i = 0; i < 12; ++i) {
         const auto rad = static_cast<float>(i) * std::numbers::pi_v<float>/6.f;
