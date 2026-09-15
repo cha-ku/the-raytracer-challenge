@@ -86,8 +86,8 @@ void simulate_clock() {
             // Rotate the point around origin
             const auto rotated = multiply(hour, twelve_oclock);
             // Translate to canvas center
-            const auto x = rotated.m_data[0] + centre.x;
-            const auto z = rotated.m_data[2] + centre.z;
+            const auto x = rotated[0, 0] + centre.x;
+            const auto z = rotated[2, 0] + centre.z;
 
             if (x >= 0.f && x < static_cast<float>(canvas.width) &&
                 z >= 0.f && z < static_cast<float>(canvas.height)) {

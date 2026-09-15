@@ -51,16 +51,16 @@ namespace raytracer {
                 make_matrix(Point{ static_cast<float>(world_x), static_cast<float>(world_y), -1.f}))
         };
         const Point pixel{
-            static_cast<float>(pixel_matrix.m_data[0]),
-            static_cast<float>(pixel_matrix.m_data[1]),
-            static_cast<float>(pixel_matrix.m_data[2])
+            static_cast<float>(pixel_matrix[0, 0]),
+            static_cast<float>(pixel_matrix[1, 0]),
+            static_cast<float>(pixel_matrix[2, 0])
         };
 
         const Matrix origin_matrix{multiply(inverse(camera.transform).value(), make_matrix(Point{}))};
         const Point origin{
-            static_cast<float>(origin_matrix.m_data[0]),
-            static_cast<float>(origin_matrix.m_data[1]),
-            static_cast<float>(origin_matrix.m_data[2])
+            static_cast<float>(origin_matrix[0, 0]),
+            static_cast<float>(origin_matrix[1, 0]),
+            static_cast<float>(origin_matrix[2, 0])
         };
 
         const auto direction{Vector::normalize(pixel - origin)};
