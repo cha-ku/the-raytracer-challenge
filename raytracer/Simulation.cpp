@@ -147,7 +147,7 @@ void simulate_material_sphere() {
     constexpr auto half{wall_size / 2};
     Canvas canvas{canvas_pixels, canvas_pixels};
     Sphere sphere = Sphere::make_sphere();
-    sphere.material.colour = Colour(1, 0.2, 1);
+    sphere.m_material.colour = Colour(1, 0.2, 1);
     constexpr auto wall_z{10.0f};
 
     // camera(eye) is the origin of our rays
@@ -168,7 +168,7 @@ void simulate_material_sphere() {
                 Point point = position(r, t);
                 Vector normal = normal_at(object, point);
                 Vector eye = -r.direction;
-                Colour pixel_colour = lighting(object.material, point_light, point, eye, normal, false);
+                Colour pixel_colour = lighting(object.m_material, point_light, point, eye, normal, false);
                 canvas.write_pixel(x, y, pixel_colour);
             }
         }
@@ -181,41 +181,41 @@ void simulate_multiple_spheres() {
     using namespace std::numbers;
 
     Sphere floor{Sphere::make_sphere()};
-    floor.transform = scale<double>(10, 0.01, 10);
-    floor.material.colour = Colour{1.f, 0.9f, 0.9f};
-    floor.material.specular = 0.0f;
+    floor.m_transform = scale<double>(10, 0.01, 10);
+    floor.m_material.colour = Colour{1.f, 0.9f, 0.9f};
+    floor.m_material.specular = 0.0f;
 
     Sphere left_wall{Sphere::make_sphere()};
-    left_wall.transform = multiply(
+    left_wall.m_transform = multiply(
         multiply(multiply(translation<double>(0, 0, 5), rotation_y(-pi_v<double>/4)),
                  rotation_x(pi_v<double>/2)),
         scale<double>(10, 0.01, 10));
-    left_wall.material = floor.material;
+    left_wall.m_material = floor.m_material;
 
     Sphere right_wall{Sphere::make_sphere()};
-    right_wall.transform = multiply(
+    right_wall.m_transform = multiply(
         multiply(multiply(translation<double>(0, 0, 5), rotation_y(pi_v<double>/4)),
                  rotation_x(pi_v<double>/2)),
         scale<double>(10, 0.01, 10));
-    right_wall.material = floor.material;
+    right_wall.m_material = floor.m_material;
 
     Sphere middle{Sphere::make_sphere()};
-    middle.transform = translation<double>(-0.5, 1, 0.5);
-    middle.material.colour = Colour{0.1f, 1.f, 0.5f};
-    middle.material.diffuse = 0.7f;
-    middle.material.specular = 0.3f;
+    middle.m_transform = translation<double>(-0.5, 1, 0.5);
+    middle.m_material.colour = Colour{0.1f, 1.f, 0.5f};
+    middle.m_material.diffuse = 0.7f;
+    middle.m_material.specular = 0.3f;
 
     Sphere right_sphere{Sphere::make_sphere()};
-    right_sphere.transform = multiply(translation<double>(1.5, 0.5, -0.5), scale<double>(0.5, 0.5, 0.5));
-    right_sphere.material.colour = Colour{0.5f, 1.f, 0.1f};
-    right_sphere.material.diffuse = 0.7f;
-    right_sphere.material.specular = 0.3f;
+    right_sphere.m_transform = multiply(translation<double>(1.5, 0.5, -0.5), scale<double>(0.5, 0.5, 0.5));
+    right_sphere.m_material.colour = Colour{0.5f, 1.f, 0.1f};
+    right_sphere.m_material.diffuse = 0.7f;
+    right_sphere.m_material.specular = 0.3f;
 
     Sphere left_sphere{Sphere::make_sphere()};
-    left_sphere.transform = multiply(translation<double>(-1.5, 0.33, -0.75), scale<double>(0.33, 0.33, 0.33));
-    left_sphere.material.colour = Colour{1.f, 0.8f, 0.1f};
-    left_sphere.material.diffuse = 0.7f;
-    left_sphere.material.specular = 0.3f;
+    left_sphere.m_transform = multiply(translation<double>(-1.5, 0.33, -0.75), scale<double>(0.33, 0.33, 0.33));
+    left_sphere.m_material.colour = Colour{1.f, 0.8f, 0.1f};
+    left_sphere.m_material.diffuse = 0.7f;
+    left_sphere.m_material.specular = 0.3f;
 
     World world;
     world.objects = {floor, left_wall, right_wall, middle, right_sphere, left_sphere};

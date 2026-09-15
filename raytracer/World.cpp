@@ -11,7 +11,7 @@ namespace raytracer {
     World World::create_default_world() {
         World world;
         Sphere s1 = Sphere::make_sphere();
-        s1.material = {.colour = {0.8, 1.0, 0.6}, .diffuse = 0.7, .specular = 0.2};
+        s1.m_material = {.colour = {0.8, 1.0, 0.6}, .diffuse = 0.7, .specular = 0.2};
         Sphere s2 = Sphere::make_sphere();
         s2.set_transform(scale<double>(0.5, 0.5, 0.5));
         world.objects = {s1, s2};

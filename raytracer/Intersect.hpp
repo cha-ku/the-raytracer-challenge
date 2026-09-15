@@ -9,13 +9,13 @@
 #include "Vector.hpp"
 #include "Matrix.hpp"
 #include "Material.hpp"
+#include "Shape.hpp"
 
 #include <vector>
 #include <optional>
 
 namespace raytracer {
     struct World;
-    static uint32_t sphere_id{0};
 
     struct Ray {
         Point origin{};
@@ -26,22 +26,10 @@ namespace raytracer {
 
     Ray transform(const Ray &ray, const Matrix<double> &matrix);
 
-    struct Sphere {
-        uint32_t id;
-        Matrix<double> transform{Matrix<double>::identity(4)};
-        Material material;
+    struct Sphere : Shape, ShapeFactory<Sphere> {
+        explicit Sphere(const uint32_t id) : Shape(id, ShapeType::Sphere) {}
 
-        Sphere() = delete;
-
-        explicit Sphere(const uint32_t id) : id(id) {};
-
-        static Sphere make_sphere();
-
-        void set_transform(const Matrix<double> &t);
-
-        bool operator==(const Sphere& other) const { return id == other.id; }
-
-        static Vector normal_at(const Point& point) ;
+        static Sphere make_sphere() { return make(); }
     };
 
     struct Intersection {
