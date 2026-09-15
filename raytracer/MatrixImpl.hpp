@@ -43,11 +43,12 @@ namespace raytracer {
 
     template<typename T>
     Container<T> transpose(Container<T> container) {
-        auto result = container;
+        const auto &matrix = make_matrix(container);
+        Container<T> result(container.m_cols, container.m_rows);
+        auto result_matrix = make_matrix(result);
         for (size_t row = 0; row < container.m_rows; ++row) {
             for (size_t col = 0; col < container.m_cols; ++col) {
-                // result[col, row] = container[row, col]
-                std::swap(container.m_data[col * container.m_cols + row], result.m_data[row * container.m_cols + col]);
+                result_matrix[col, row] = matrix[row, col];
             }
         }
         return result;
