@@ -30,10 +30,10 @@ ctest --preset debug
 ctest --preset debug --output-on-failure
 
 # Run a specific test by name
-./cmake-build-debug/tests/tests "[Translation test]"
+./build/debug/tests/tests "[Translation test]"
 
 # Run tests matching a pattern
-./cmake-build-debug/tests/tests "Rotation*"
+./build/debug/tests/tests "Rotation*"
 ```
 
 ## Architecture
@@ -42,17 +42,17 @@ This is a raytracer implementation in C++23, following "The Ray Tracer Challenge
 
 ### Core Types (all in `raytracer` namespace)
 
-- **Point/Vector** (`include/Point.hpp`, `include/Vector.hpp`): 3D geometric primitives with w=1 for points, w=0 implicit for vectors. Support standard operations (add, subtract, dot, cross, normalize).
+- **Point/Vector** (`raytracer/Point.hpp`, `raytracer/Vector.hpp`): 3D geometric primitives with w=1 for points, w=0 implicit for vectors. Support standard operations (add, subtract, dot, cross, normalize).
 
-- **Matrix/Container** (`include/Matrix.hpp`, `include/MatrixImpl.hpp`): Matrix operations using `std::mdspan` for views over `Container<T>` storage. Supports multiply, transpose, determinant, inverse, and transformations (translation, scale, rotation_x/y/z, shearing).
+- **Matrix** (`raytracer/Matrix.hpp`, `raytracer/MatrixImpl.hpp`): `Matrix<T>` owns its data directly (a private `std::vector<T>`, no separate `Container` class) and exposes it via a custom multidimensional `operator[](row, col)`. Supports multiply, transpose, determinant, inverse, and transformations (translation, scale, rotation_x/y/z, shearing).
 
-- **Ray/Sphere/Intersection** (`include/Intersect.hpp`): Ray casting primitives. `intersect()` returns vector of intersections, `hit()` finds the visible intersection.
+- **Ray/Sphere/Intersection** (`raytracer/Intersect.hpp`): Ray casting primitives. `intersect()` returns vector of intersections, `hit()` finds the visible intersection.
 
-- **Colour/Canvas** (`include/Colour.hpp`, `include/Canvas.hpp`): RGB colors with Hadamard product; Canvas outputs to PPM format.
+- **Colour/Canvas** (`raytracer/Colour.hpp`, `raytracer/Canvas.hpp`): RGB colors with Hadamard product; Canvas outputs to PPM format.
 
 ### Key Patterns
 
-- Transformations are 4x4 matrices applied via `multiply(transform, make_container(point))`
+- Transformations are 4x4 matrices applied via `multiply(transform, make_matrix(point))`
 - Floating-point comparisons use `utils::equal()` with epsilon tolerance
 - Template implementations in `MatrixImpl.hpp` must be included where matrix operations are used
 
