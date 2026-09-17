@@ -1,6 +1,7 @@
 #ifndef THE_RAYTRACER_CHALLENGE_TEST_SHAPE_HPP
 #define THE_RAYTRACER_CHALLENGE_TEST_SHAPE_HPP
 
+#include "Intersect.hpp"
 #include "Shape.hpp"
 
 namespace raytracer {
@@ -10,9 +11,21 @@ namespace raytracer {
     // can never construct or depend on it.
     struct TestShape : Shape, ShapeFactory<TestShape> {
         explicit TestShape(const uint32_t id) : Shape(id, ShapeType::TestShape) {}
+
+        // Records the local-space ray passed to local_intersect, so tests
+        // can verify intersect() converted the world-space ray into this
+        // shape's object space correctly. mutable because recording it is
+        // an observation, not a change to the shape's own state, and
+        // local_intersect receives the shape by const reference.
+        mutable Ray saved_ray{};
     };
 
     inline TestShape test_shape() { return TestShape::make(); }
+
+    inline std::vector<Intersection> local_intersect(const TestShape &shape, const Ray &local_ray) {
+        shape.saved_ray = local_ray;
+        return {};
+    }
 }
 
 #endif //THE_RAYTRACER_CHALLENGE_TEST_SHAPE_HPP
