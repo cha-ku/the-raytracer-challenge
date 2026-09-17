@@ -20,3 +20,19 @@ Scenario: Assigning a material
     And m.ambient ← 1
   When s.material ← m
   Then s.material = m
+
+Scenario: Intersecting a scaled shape with a ray
+  Given r ← ray(point(0, 0, -5), vector(0, 0, 1))
+    And s ← test_shape()
+  When set_transform(s, scale(2, 2, 2))
+    And xs ← intersect(s, r)
+  Then s.saved_ray.origin = point(0, 0, -2.5)
+    And s.saved_ray.direction = vector(0, 0, 0.5)
+
+Scenario: Intersecting a translated shape with a ray
+  Given r ← ray(point(0, 0, -5), vector(0, 0, 1))
+    And s ← test_shape()
+  When set_transform(s, translation(5, 0, 0))
+    And xs ← intersect(s, r)
+  Then s.saved_ray.origin = point(-5, 0, -5)
+    And s.saved_ray.direction = vector(0, 0, 1)

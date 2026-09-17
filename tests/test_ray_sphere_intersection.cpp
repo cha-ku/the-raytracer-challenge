@@ -273,36 +273,6 @@ SCENARIO("Changing a sphere's transformation") {
     }
 }
 
-SCENARIO("Intersecting a scaled sphere with a ray") {
-    GIVEN("Ray and sphere") {
-        const Ray r{Point(0, 0, -5), Vector(0, 0, 1)};
-        Sphere s = Sphere::make_sphere();
-        WHEN("Sphere is scaled and intersected") {
-            s.set_transform(scale<double>(2, 2, 2));
-            const auto xs = intersect(s, r);
-            THEN("Intersections are at 3 and 7") {
-                REQUIRE(xs.size() == 2);
-                REQUIRE(xs[0].t == 3);
-                REQUIRE(xs[1].t == 7);
-            }
-        }
-    }
-}
-
-SCENARIO("Intersecting a translated sphere with a ray") {
-    GIVEN("Ray and sphere") {
-        const Ray r{Point(0, 0, -5), Vector(0, 0, 1)};
-        Sphere s = Sphere::make_sphere();
-        WHEN("Sphere is translated and intersected") {
-            s.set_transform(translation<double>(5, 0, 0));
-            const auto xs = intersect(s, r);
-            THEN("Ray misses the sphere") {
-                REQUIRE(xs.empty());
-            }
-        }
-    }
-}
-
 SCENARIO("The normal on a sphere at a point on the x axis") {
     GIVEN("Sphere") {
         const Sphere s = Sphere::make_sphere();

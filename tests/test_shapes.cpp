@@ -1,3 +1,4 @@
+#include "Intersect.hpp"
 #include "MatrixImpl.hpp"
 #include "TestShape.hpp"
 #include "Utils.hpp"
@@ -49,6 +50,36 @@ SCENARIO("Assigning a material to a shape") {
             s.m_material = m;
             THEN("Shape has the assigned material") {
                 REQUIRE(s.m_material == m);
+            }
+        }
+    }
+}
+
+SCENARIO("Intersecting a scaled shape with a ray") {
+    GIVEN("Ray and shape") {
+        const Ray r{Point(0, 0, -5), Vector(0, 0, 1)};
+        auto s = test_shape();
+        WHEN("Shape is scaled and intersected") {
+            s.set_transform(scale<double>(2, 2, 2));
+            const auto xs = intersect(s, r);
+            THEN("Saved ray is in the shape's object space") {
+                REQUIRE(s.saved_ray.origin == Point(0, 0, -2.5));
+                REQUIRE(s.saved_ray.direction == Vector(0, 0, 0.5));
+            }
+        }
+    }
+}
+
+SCENARIO("Intersecting a translated shape with a ray") {
+    GIVEN("Ray and shape") {
+        const Ray r{Point(0, 0, -5), Vector(0, 0, 1)};
+        auto s = test_shape();
+        WHEN("Shape is translated and intersected") {
+            s.set_transform(translation<double>(5, 0, 0));
+            const auto xs = intersect(s, r);
+            THEN("Saved ray is in the shape's object space") {
+                REQUIRE(s.saved_ray.origin == Point(-5, 0, -5));
+                REQUIRE(s.saved_ray.direction == Vector(0, 0, 1));
             }
         }
     }
