@@ -11,21 +11,14 @@
 namespace raytracer {
     static uint32_t shape_id{0};
 
-    enum class ShapeType {
-        Sphere,
-        Plane,
-        TestShape
-    };
-
     struct Shape {
         uint32_t m_id;
-        ShapeType m_type;
         Matrix<double> m_transform{Matrix<double>::identity(4)};
         Material m_material{};
 
         Shape() = delete;
 
-        explicit Shape(const uint32_t id, const ShapeType type) : m_id(id), m_type(type) {};
+        explicit Shape(const uint32_t id) : m_id(id) {};
 
         void set_transform(const Matrix<double> &t) {
             m_transform = t;

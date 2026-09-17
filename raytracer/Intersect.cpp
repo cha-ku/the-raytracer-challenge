@@ -62,6 +62,10 @@ namespace raytracer {
         return local_point - Point(0, 0, 0);
     }
 
+    Vector local_normal_at(const Plane &plane, const Point &local_point) {
+        return Vector(0, 1, 0);
+    }
+
     std::vector<Intersection> local_intersect(const Sphere &sphere, const Ray &local_ray) {
         const auto &[origin, direction] = local_ray;
 
@@ -78,6 +82,14 @@ namespace raytracer {
         return {{sphere, t1}, {sphere, t2}};
     }
 
+    std::vector<Intersection> local_intersect(const Plane &plane, const Ray &local_ray) {
+        if (std::abs(local_ray.direction.y) < utils::EPSILON) {
+            return {};
+        }
+        const float t{-local_ray.origin.y / local_ray.direction.y};
+        return {{plane, t}};
+    }
+
     std::optional<Intersection> hit(const std::vector<Intersection> &intersections) {
         std::optional<Intersection> result;
         for (const auto &intersection: intersections) {
@@ -92,7 +104,7 @@ namespace raytracer {
 
     Computations::Computations(const Intersection &intersection, const Ray &ray) : t{intersection.t},
         object{intersection.object}, point{position(ray, intersection.t)}, eye_vector{-ray.direction},
-        normal_vector{normal_at(object, point)} {
+        normal_vector{std::visit([this](const auto &shape) { return normal_at(shape, point); }, object)} {
         if (Vector::dot(normal_vector, eye_vector) < 0) {
             inside = true;
             normal_vector = -normal_vector;
@@ -108,7 +120,7 @@ namespace raytracer {
     }
 
     Colour shade_hit(const World &world, const Computations &computations) {
-        return lighting(computations.object.m_material, world.light.value(), computations.point, computations.eye_vector,
+        return lighting(material_of(computations.object), world.light.value(), computations.point, computations.eye_vector,
                         computations.normal_vector, world.is_shadowed(computations.over_point));
     }
 

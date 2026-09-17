@@ -120,7 +120,7 @@ SCENARIO("An intersection encapsulates t and object") {
             const auto [sphere, intersection] = Intersection(s, 3.5);
             THEN("") {
                 REQUIRE(intersection == 3.5);
-                REQUIRE(sphere == s);
+                REQUIRE(sphere == AnyShape{s});
             }
         }
     }
@@ -133,7 +133,7 @@ SCENARIO("Intersect sets the object on the intersection") {
             const Intersection i{s, 3.5};
             THEN("Intersection has correct t and object") {
                 REQUIRE(i.t == 3.5f);
-                REQUIRE(i.object == s);
+                REQUIRE(i.object == AnyShape{s});
             }
         }
     }
