@@ -68,12 +68,8 @@ namespace raytracer {
         return to_world_normal(object_normal, sphere_transform_inverse.value());
     }
 
-    std::vector<Intersection> intersect(const Sphere &sphere, const Ray &ray) {
-        const auto sphere_transform_inverse{inverse(sphere.m_transform)};
-        if (!sphere_transform_inverse.has_value()) {
-            return {};
-        }
-        const auto [origin, direction] = transform(ray, sphere_transform_inverse.value());
+    std::vector<Intersection> local_intersect(const Sphere &sphere, const Ray &local_ray) {
+        const auto &[origin, direction] = local_ray;
 
         const Vector sphere_to_ray{origin - Point(0, 0, 0)};
         const float a{Vector::dot(direction, direction)};
