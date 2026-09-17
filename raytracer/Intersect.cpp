@@ -33,20 +33,23 @@ namespace raytracer {
         };
     }
 
-    Vector normal_at(const Sphere &s, const Point &world_point) {
-        const auto &sphere_transform_inverse_expected{inverse(s.m_transform)};
-        if (!sphere_transform_inverse_expected.has_value()) {
-            return {};
-        }
-        const Matrix sphere_transform_inverse{sphere_transform_inverse_expected.value()};
-        const Matrix object_point_matrix{multiply(sphere_transform_inverse, make_matrix(world_point))};
-        const Point object_point{
-            static_cast<float>(object_point_matrix[0, 0]), static_cast<float>(object_point_matrix[1, 0]),
-            static_cast<float>(object_point_matrix[2, 0])
+    Point transform(const Point &point, const Matrix<double> &matrix) {
+        const Matrix point_matrix{multiply(matrix, make_matrix(point))};
+        return Point{
+            static_cast<float>(point_matrix[0, 0]),
+            static_cast<float>(point_matrix[1, 0]),
+            static_cast<float>(point_matrix[2, 0])
         };
-        const Vector object_normal{object_point - Point(0, 0, 0)};
-        const Matrix world_normal_matrix = multiply(transpose(sphere_transform_inverse),
-                                                          make_matrix(object_normal));
+    }
+
+    Point to_object_space(const Point &point, const Matrix<double> &inverse_transform) {
+        return transform(point, inverse_transform);
+    }
+
+    Vector to_world_normal(const Vector &object_normal, const Matrix<double> &inverse_transform) {
+        const Matrix world_normal_matrix{
+            multiply(transpose(inverse_transform), make_matrix(object_normal))
+        };
         const Vector world_normal{
             static_cast<float>(world_normal_matrix[0, 0]),
             static_cast<float>(world_normal_matrix[1, 0]),
@@ -55,12 +58,22 @@ namespace raytracer {
         return Vector::normalize(world_normal);
     }
 
-    std::vector<Intersection> intersect(const Sphere &sphere, const Ray &ray) {
-        const auto inv = inverse(sphere.m_transform);
-        if (!inv.has_value()) {
+    Vector normal_at(const Sphere &s, const Point &world_point) {
+        const auto sphere_transform_inverse{inverse(s.m_transform)};
+        if (!sphere_transform_inverse.has_value()) {
             return {};
         }
-        const auto [origin, direction] = transform(ray, inv.value());
+        const Point object_point{to_object_space(world_point, sphere_transform_inverse.value())};
+        const Vector object_normal{object_point - Point(0, 0, 0)};
+        return to_world_normal(object_normal, sphere_transform_inverse.value());
+    }
+
+    std::vector<Intersection> intersect(const Sphere &sphere, const Ray &ray) {
+        const auto sphere_transform_inverse{inverse(sphere.m_transform)};
+        if (!sphere_transform_inverse.has_value()) {
+            return {};
+        }
+        const auto [origin, direction] = transform(ray, sphere_transform_inverse.value());
 
         const Vector sphere_to_ray{origin - Point(0, 0, 0)};
         const float a{Vector::dot(direction, direction)};
