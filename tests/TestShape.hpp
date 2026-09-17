@@ -26,6 +26,10 @@ namespace raytracer {
         shape.saved_ray = local_ray;
         return {};
     }
+
+    inline Vector local_normal_at(const TestShape &shape, const Point &local_point) {
+        return Vector(local_point.x, local_point.y, local_point.z);
+    }
 }
 
 #endif //THE_RAYTRACER_CHALLENGE_TEST_SHAPE_HPP

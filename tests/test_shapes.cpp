@@ -4,6 +4,8 @@
 #include "Utils.hpp"
 
 #include "catch2/catch_test_macros.hpp"
+#include <cmath>
+#include <numbers>
 
 using namespace raytracer;
 
@@ -80,6 +82,34 @@ SCENARIO("Intersecting a translated shape with a ray") {
             THEN("Saved ray is in the shape's object space") {
                 REQUIRE(s.saved_ray.origin == Point(-5, 0, -5));
                 REQUIRE(s.saved_ray.direction == Vector(0, 0, 1));
+            }
+        }
+    }
+}
+
+SCENARIO("Computing the normal on a translated shape") {
+    GIVEN("Shape with translation") {
+        auto s = test_shape();
+        s.set_transform(translation<double>(0, 1, 0));
+        WHEN("Normal is computed") {
+            const auto n = normal_at(s, Point(0, 1.70711, -0.70711));
+            THEN("Normal accounts for translation") {
+                REQUIRE(Vector::areAlmostEqual(n, Vector(0, 0.707107, -0.707107)));
+            }
+        }
+    }
+}
+
+SCENARIO("Computing the normal on a transformed shape") {
+    GIVEN("Shape with scaling and rotation") {
+        auto s = test_shape();
+        const auto m = multiply(scale<double>(1, 0.5, 1), rotation_z(std::numbers::pi / 5));
+        s.set_transform(m);
+        WHEN("Normal is computed") {
+            const auto sqrt2_over_2 = std::sqrt(2) / 2;
+            const auto n = normal_at(s, Point(0, sqrt2_over_2, -sqrt2_over_2));
+            THEN("Normal accounts for transformation") {
+                REQUIRE(Vector::areAlmostEqual(n, Vector(0, 0.970143, -0.242536)));
             }
         }
     }
