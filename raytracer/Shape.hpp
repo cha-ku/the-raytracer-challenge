@@ -9,7 +9,12 @@
 #include "Matrix.hpp"
 
 namespace raytracer {
-    static uint32_t shape_id{0};
+    // inline (not static): a single shared counter across every translation
+    // unit. A namespace-scope `static` variable has internal linkage, which
+    // would silently give each .cpp file its own independent counter,
+    // letting shapes created in different TUs collide on id and compare
+    // equal via Shape::operator==.
+    inline uint32_t shape_id{0};
 
     struct Shape {
         uint32_t m_id;

@@ -59,16 +59,29 @@ namespace raytracer {
     // overloads), and nowhere else needs to change.
     using AnyShape = std::variant<Sphere, Plane>;
 
+    // Reaches through whichever concrete type an AnyShape currently holds to
+    // get at its common Shape subobject. This is the one place that knows
+    // how to do that; any Shape-level field or method (m_material,
+    // m_transform, m_id, set_transform, ...) is reachable through this
+    // without writing a new std::visit wrapper per field.
+    inline const Shape &as_shape(const AnyShape &shape) {
+        return std::visit([](const auto &s) -> const Shape & { return s; }, shape);
+    }
+
+    inline Shape &as_shape(AnyShape &shape) {
+        return std::visit([](auto &s) -> Shape & { return s; }, shape);
+    }
+
     inline const Material &material_of(const AnyShape &shape) {
-        return std::visit([](const auto &s) -> const Material & { return s.m_material; }, shape);
+        return as_shape(shape).m_material;
     }
 
     inline Material &material_of(AnyShape &shape) {
-        return std::visit([](auto &s) -> Material & { return s.m_material; }, shape);
+        return as_shape(shape).m_material;
     }
 
     inline const Matrix<double> &transform_of(const AnyShape &shape) {
-        return std::visit([](const auto &s) -> const Matrix<double> & { return s.m_transform; }, shape);
+        return as_shape(shape).m_transform;
     }
 
     struct Intersection {
