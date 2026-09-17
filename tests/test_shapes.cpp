@@ -27,3 +27,29 @@ SCENARIO("Assigning a transformation") {
         }
     }
 }
+
+SCENARIO("A shape's default material") {
+    GIVEN("Shape") {
+        const auto s = test_shape();
+        WHEN("Material is retrieved") {
+            const auto m = s.m_material;
+            THEN("Material equals the default material") {
+                REQUIRE(m == Material{});
+            }
+        }
+    }
+}
+
+SCENARIO("Assigning a material to a shape") {
+    GIVEN("Shape and material") {
+        auto s = test_shape();
+        Material m{};
+        m.ambient = 1;
+        WHEN("Material is assigned to shape") {
+            s.m_material = m;
+            THEN("Shape has the assigned material") {
+                REQUIRE(s.m_material == m);
+            }
+        }
+    }
+}
