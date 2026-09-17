@@ -180,24 +180,9 @@ void simulate_multiple_spheres() {
     using namespace raytracer;
     using namespace std::numbers;
 
-    Sphere floor{Sphere::make_sphere()};
-    floor.m_transform = scale<double>(10, 0.01, 10);
-    floor.m_material.colour = Colour{1.f, 0.9f, 0.9f};
+    Plane floor{Plane::make_plane()};
+    floor.m_material.colour = Colour{0.4f, 0.6f, 0.8f};
     floor.m_material.specular = 0.0f;
-
-    Sphere left_wall{Sphere::make_sphere()};
-    left_wall.m_transform = multiply(
-        multiply(multiply(translation<double>(0, 0, 5), rotation_y(-pi_v<double>/4)),
-                 rotation_x(pi_v<double>/2)),
-        scale<double>(10, 0.01, 10));
-    left_wall.m_material = floor.m_material;
-
-    Sphere right_wall{Sphere::make_sphere()};
-    right_wall.m_transform = multiply(
-        multiply(multiply(translation<double>(0, 0, 5), rotation_y(pi_v<double>/4)),
-                 rotation_x(pi_v<double>/2)),
-        scale<double>(10, 0.01, 10));
-    right_wall.m_material = floor.m_material;
 
     Sphere middle{Sphere::make_sphere()};
     middle.m_transform = translation<double>(-0.5, 1, 0.5);
@@ -218,10 +203,10 @@ void simulate_multiple_spheres() {
     left_sphere.m_material.specular = 0.3f;
 
     World world;
-    world.objects = {floor, left_wall, right_wall, middle, right_sphere, left_sphere};
+    world.objects = {floor, middle, right_sphere, left_sphere};
     world.light = PointLight{Point{-10, 10, -10}, Colour{1, 1, 1}};
 
-    Camera camera{200, 100, pi_v<double>/3};
+    Camera camera{600, 400, pi_v<double>/2};
     camera.transform = view_transform(Point{0, 1.5f, -5}, Point{0, 1, 0}, Vector{0, 1, 0});
 
     Canvas canvas{camera.hsize, camera.vsize};
