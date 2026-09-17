@@ -20,7 +20,7 @@ namespace raytracer {
         mutable Ray saved_ray{};
     };
 
-    inline TestShape test_shape() { return TestShape::make(); }
+    inline TestShape make_test_shape() { return TestShape::make(); }
 
     inline std::vector<Intersection> local_intersect(const TestShape &shape, const Ray &local_ray) {
         shape.saved_ray = local_ray;

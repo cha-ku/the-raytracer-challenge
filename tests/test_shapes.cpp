@@ -11,7 +11,7 @@ using namespace raytracer;
 
 SCENARIO("The default transformation") {
     GIVEN("Shape") {
-        const auto s = test_shape();
+        const auto s = make_test_shape();
         THEN("Transform is identity matrix") {
             REQUIRE(s.m_transform == Matrix<double>::identity(4));
         }
@@ -20,7 +20,7 @@ SCENARIO("The default transformation") {
 
 SCENARIO("Assigning a transformation") {
     GIVEN("Shape and translation") {
-        auto s = test_shape();
+        auto s = make_test_shape();
         const auto t = translation<double>(2, 3, 4);
         WHEN("set_transform is called") {
             s.set_transform(t);
@@ -33,7 +33,7 @@ SCENARIO("Assigning a transformation") {
 
 SCENARIO("A shape's default material") {
     GIVEN("Shape") {
-        const auto s = test_shape();
+        const auto s = make_test_shape();
         WHEN("Material is retrieved") {
             const auto m = s.m_material;
             THEN("Material equals the default material") {
@@ -45,7 +45,7 @@ SCENARIO("A shape's default material") {
 
 SCENARIO("Assigning a material to a shape") {
     GIVEN("Shape and material") {
-        auto s = test_shape();
+        auto s = make_test_shape();
         Material m{};
         m.ambient = 1;
         WHEN("Material is assigned to shape") {
@@ -60,7 +60,7 @@ SCENARIO("Assigning a material to a shape") {
 SCENARIO("Intersecting a scaled shape with a ray") {
     GIVEN("Ray and shape") {
         const Ray r{Point(0, 0, -5), Vector(0, 0, 1)};
-        auto s = test_shape();
+        auto s = make_test_shape();
         WHEN("Shape is scaled and intersected") {
             s.set_transform(scale<double>(2, 2, 2));
             const auto xs = intersect(s, r);
@@ -75,7 +75,7 @@ SCENARIO("Intersecting a scaled shape with a ray") {
 SCENARIO("Intersecting a translated shape with a ray") {
     GIVEN("Ray and shape") {
         const Ray r{Point(0, 0, -5), Vector(0, 0, 1)};
-        auto s = test_shape();
+        auto s = make_test_shape();
         WHEN("Shape is translated and intersected") {
             s.set_transform(translation<double>(5, 0, 0));
             const auto xs = intersect(s, r);
@@ -89,7 +89,7 @@ SCENARIO("Intersecting a translated shape with a ray") {
 
 SCENARIO("Computing the normal on a translated shape") {
     GIVEN("Shape with translation") {
-        auto s = test_shape();
+        auto s = make_test_shape();
         s.set_transform(translation<double>(0, 1, 0));
         WHEN("Normal is computed") {
             const auto n = normal_at(s, Point(0, 1.70711, -0.70711));
@@ -102,7 +102,7 @@ SCENARIO("Computing the normal on a translated shape") {
 
 SCENARIO("Computing the normal on a transformed shape") {
     GIVEN("Shape with scaling and rotation") {
-        auto s = test_shape();
+        auto s = make_test_shape();
         const auto m = multiply(scale<double>(1, 0.5, 1), rotation_z(std::numbers::pi / 5));
         s.set_transform(m);
         WHEN("Normal is computed") {
