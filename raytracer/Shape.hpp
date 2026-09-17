@@ -13,7 +13,8 @@ namespace raytracer {
 
     enum class ShapeType {
         Sphere,
-        Plane
+        Plane,
+        TestShape
     };
 
     struct Shape {

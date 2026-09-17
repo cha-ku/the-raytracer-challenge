@@ -46,22 +46,14 @@ namespace raytracer {
         const double world_x{camera.half_width - x_offset};
         const double world_y{camera.half_height - y_offset};
 
-        const Matrix pixel_matrix{
-            multiply(inverse(camera.transform).value(),
-                make_matrix(Point{ static_cast<float>(world_x), static_cast<float>(world_y), -1.f}))
-        };
+        const auto camera_transform_inverse{inverse(camera.transform)};
+        if (!camera_transform_inverse.has_value()) {
+            throw std::invalid_argument("Camera transform must be invertible");
+        }
         const Point pixel{
-            static_cast<float>(pixel_matrix[0, 0]),
-            static_cast<float>(pixel_matrix[1, 0]),
-            static_cast<float>(pixel_matrix[2, 0])
+            transform(Point{static_cast<float>(world_x), static_cast<float>(world_y), -1.f}, camera_transform_inverse.value())
         };
-
-        const Matrix origin_matrix{multiply(inverse(camera.transform).value(), make_matrix(Point{}))};
-        const Point origin{
-            static_cast<float>(origin_matrix[0, 0]),
-            static_cast<float>(origin_matrix[1, 0]),
-            static_cast<float>(origin_matrix[2, 0])
-        };
+        const Point origin{transform(Point{}, camera_transform_inverse.value())};
 
         const auto direction{Vector::normalize(pixel - origin)};
         return {origin, direction};
