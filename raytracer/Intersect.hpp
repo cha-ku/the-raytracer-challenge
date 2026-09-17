@@ -11,6 +11,7 @@
 #include "Material.hpp"
 #include "Shape.hpp"
 
+#include <concepts>
 #include <vector>
 #include <optional>
 
@@ -57,7 +58,35 @@ namespace raytracer {
 
     Vector normal_at(const Sphere& s, const Point& world_point);
 
-    std::vector<Intersection> intersect(const Sphere &sphere, const Ray &ray);
+    // Concrete, per-shape object-space intersection math. Takes the ray
+    // already converted into the shape's own object space (see intersect
+    // below). Adding a new shape type means adding its own overload here.
+    std::vector<Intersection> local_intersect(const Sphere &sphere, const Ray &local_ray);
+
+    // A shape type S is Intersectable if it has its own local_intersect
+    // overload, found via ADL, taking S and a local-space Ray and returning
+    // std::vector<Intersection>. This turns a missing/mismatched
+    // local_intersect overload into a clear "constraints not satisfied"
+    // error at the intersect() call site, instead of a confusing failure
+    // deep inside intersect()'s template body.
+    template<typename S>
+    concept Intersectable = requires(const S &shape, const Ray &local_ray) {
+        { local_intersect(shape, local_ray) } -> std::same_as<std::vector<Intersection>>;
+    };
+
+    // Shared by every concrete Shape: converts a world-space ray into the
+    // shape's object space (by the inverse of its transform), then
+    // dispatches to that shape's own local_intersect (resolved by overload
+    // resolution on the concrete shape type S).
+    template<Intersectable S>
+    std::vector<Intersection> intersect(const S &shape, const Ray &ray) {
+        const auto shape_transform_inverse{inverse(shape.m_transform)};
+        if (!shape_transform_inverse.has_value()) {
+            return {};
+        }
+        const Ray local_ray{transform(ray, shape_transform_inverse.value())};
+        return local_intersect(shape, local_ray);
+    }
 
     std::optional<Intersection> hit(const std::vector<Intersection> &intersections);
 
