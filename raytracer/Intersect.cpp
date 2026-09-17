@@ -58,14 +58,8 @@ namespace raytracer {
         return Vector::normalize(world_normal);
     }
 
-    Vector normal_at(const Sphere &s, const Point &world_point) {
-        const auto sphere_transform_inverse{inverse(s.m_transform)};
-        if (!sphere_transform_inverse.has_value()) {
-            return {};
-        }
-        const Point object_point{to_object_space(world_point, sphere_transform_inverse.value())};
-        const Vector object_normal{object_point - Point(0, 0, 0)};
-        return to_world_normal(object_normal, sphere_transform_inverse.value());
+    Vector local_normal_at(const Sphere &sphere, const Point &local_point) {
+        return local_point - Point(0, 0, 0);
     }
 
     std::vector<Intersection> local_intersect(const Sphere &sphere, const Ray &local_ray) {

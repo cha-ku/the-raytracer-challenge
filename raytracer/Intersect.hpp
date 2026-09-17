@@ -56,7 +56,34 @@ namespace raytracer {
         return std::vector<Intersection>{std::forward<Args>(args)...};
     }
 
-    Vector normal_at(const Sphere& s, const Point& world_point);
+    // Concrete, per-shape object-space normal math. Takes the point already
+    // converted into the shape's own object space (see normal_at below).
+    // Adding a new shape type means adding its own overload here.
+    Vector local_normal_at(const Sphere &sphere, const Point &local_point);
+
+    // A shape type S is Normalable if it has its own local_normal_at
+    // overload, found via ADL, taking S and a local-space Point and
+    // returning a Vector.
+    template<typename S>
+    concept Normalable = requires(const S &shape, const Point &local_point) {
+        { local_normal_at(shape, local_point) } -> std::same_as<Vector>;
+    };
+
+    // Shared by every concrete Shape: converts a world-space point into the
+    // shape's object space (by the inverse of its transform), dispatches to
+    // that shape's own local_normal_at, then converts the resulting
+    // object-space normal back into world space (by the inverse transpose
+    // of the transform) and normalizes it.
+    template<Normalable S>
+    Vector normal_at(const S& shape, const Point& point) {
+        const auto shape_transform_inverse{inverse(shape.m_transform)};
+        if (!shape_transform_inverse.has_value()) {
+            return {};
+        }
+        const Point local_point{to_object_space(point, shape_transform_inverse.value())};
+        const Vector local_normal{local_normal_at(shape, local_point)};
+        return to_world_normal(local_normal, shape_transform_inverse.value());
+    }
 
     // Concrete, per-shape object-space intersection math. Takes the ray
     // already converted into the shape's own object space (see intersect
