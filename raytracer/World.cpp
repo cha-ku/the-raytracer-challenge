@@ -22,7 +22,7 @@ namespace raytracer {
     std::vector<Intersection> World::intersect_world(const World& world, const Ray& ray) {
         std::vector<Intersection> intersections;
         for (const auto& obj : world.objects) {
-            intersections.append_range(intersect(obj, ray));
+            std::visit([&](const auto &shape) { intersections.append_range(intersect(shape, ray)); }, obj);
         }
         std::ranges::sort(intersections, [](const Intersection& a, const Intersection& b) {
             return (a.t < b.t);

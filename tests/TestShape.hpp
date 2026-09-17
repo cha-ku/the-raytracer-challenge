@@ -10,7 +10,7 @@ namespace raytracer {
     // shape like Sphere or Plane. Kept out of Shape.hpp so production code
     // can never construct or depend on it.
     struct TestShape : Shape, ShapeFactory<TestShape> {
-        explicit TestShape(const uint32_t id) : Shape(id, ShapeType::TestShape) {}
+        explicit TestShape(const uint32_t id) : Shape(id) {}
 
         // Records the local-space ray passed to local_intersect, so tests
         // can verify intersect() converted the world-space ray into this

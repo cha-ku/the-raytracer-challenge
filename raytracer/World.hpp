@@ -12,7 +12,7 @@
 
 namespace raytracer {
     struct World {
-        std::vector<Sphere> objects;
+        std::vector<AnyShape> objects;
         std::optional<PointLight> light;
 
         static World create_default_world();

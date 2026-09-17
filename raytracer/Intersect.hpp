@@ -12,6 +12,7 @@
 #include "Shape.hpp"
 
 #include <concepts>
+#include <variant>
 #include <vector>
 #include <optional>
 
@@ -41,13 +42,37 @@ namespace raytracer {
     Vector to_world_normal(const Vector &object_normal, const Matrix<double> &inverse_transform);
 
     struct Sphere : Shape, ShapeFactory<Sphere> {
-        explicit Sphere(const uint32_t id) : Shape(id, ShapeType::Sphere) {}
+        explicit Sphere(const uint32_t id) : Shape(id) {}
 
         static Sphere make_sphere() { return make(); }
     };
 
+    struct Plane : Shape, ShapeFactory<Plane> {
+        explicit Plane(const uint32_t id) : Shape(id) {}
+
+        static Plane make_plane() { return make(); }
+    };
+
+    // The closed set of concrete, renderable shape types. This is the single
+    // source of truth for "what kinds of shapes exist" — adding a new shape
+    // means adding it here (plus its own local_intersect/local_normal_at
+    // overloads), and nowhere else needs to change.
+    using AnyShape = std::variant<Sphere, Plane>;
+
+    inline const Material &material_of(const AnyShape &shape) {
+        return std::visit([](const auto &s) -> const Material & { return s.m_material; }, shape);
+    }
+
+    inline Material &material_of(AnyShape &shape) {
+        return std::visit([](auto &s) -> Material & { return s.m_material; }, shape);
+    }
+
+    inline const Matrix<double> &transform_of(const AnyShape &shape) {
+        return std::visit([](const auto &s) -> const Matrix<double> & { return s.m_transform; }, shape);
+    }
+
     struct Intersection {
-        Sphere object;
+        AnyShape object;
         float t{};
     };
 
@@ -60,6 +85,8 @@ namespace raytracer {
     // converted into the shape's own object space (see normal_at below).
     // Adding a new shape type means adding its own overload here.
     Vector local_normal_at(const Sphere &sphere, const Point &local_point);
+
+    Vector local_normal_at(const Plane &plane, const Point &local_point);
 
     // A shape type S is Normalable if it has its own local_normal_at
     // overload, found via ADL, taking S and a local-space Point and
@@ -89,6 +116,8 @@ namespace raytracer {
     // already converted into the shape's own object space (see intersect
     // below). Adding a new shape type means adding its own overload here.
     std::vector<Intersection> local_intersect(const Sphere &sphere, const Ray &local_ray);
+
+    std::vector<Intersection> local_intersect(const Plane &plane, const Ray &local_ray);
 
     // A shape type S is Intersectable if it has its own local_intersect
     // overload, found via ADL, taking S and a local-space Ray and returning
@@ -120,7 +149,7 @@ namespace raytracer {
 
     struct Computations {
         float t{};
-        Sphere object;
+        AnyShape object;
         Point point{};
         Vector eye_vector{};
         Vector normal_vector{};

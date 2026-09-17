@@ -49,17 +49,17 @@ SCENARIO("The default world") {
             }
 
             AND_THEN("w contains s1") {
-                const auto it = std::ranges::find_if(w.objects, [&](const Sphere& s) {
-                    return areAlmostEqual(s.m_material.colour, s1.m_material.colour)
-                        && s.m_material.diffuse == s1.m_material.diffuse
-                        && s.m_material.specular == s1.m_material.specular;
+                const auto it = std::ranges::find_if(w.objects, [&](const AnyShape& s) {
+                    return areAlmostEqual(material_of(s).colour, s1.m_material.colour)
+                        && material_of(s).diffuse == s1.m_material.diffuse
+                        && material_of(s).specular == s1.m_material.specular;
                 });
                 REQUIRE(it != w.objects.end());
             }
 
             AND_THEN("w contains s2") {
-                const auto it = std::ranges::find_if(w.objects, [&](const Sphere& s) {
-                    return s.m_transform == s2.m_transform;
+                const auto it = std::ranges::find_if(w.objects, [&](const AnyShape& s) {
+                    return transform_of(s) == s2.m_transform;
                 });
                 REQUIRE(it != w.objects.end());
             }
@@ -90,7 +90,7 @@ SCENARIO("Shading an intersection") {
     GIVEN("w ← default_world(), a ray, the first shape, and an intersection") {
         auto w = World::create_default_world();
         constexpr Ray r{Point{0, 0, -5}, Vector{0, 0, 1}};
-        const Sphere shape = w.objects[0];
+        const Sphere shape = std::get<Sphere>(w.objects[0]);
         const Intersection i{shape, 4};
 
         WHEN("comps ← prepare_computations(i, r) and c ← shade_hit(w, comps)") {
@@ -109,7 +109,7 @@ SCENARIO("Shading an intersection from the inside") {
         auto w = World::create_default_world();
         w.light = PointLight{Point{0, 0.25f, 0}, Colour{1, 1, 1}};
         constexpr Ray r{Point{0, 0, 0}, Vector{0, 0, 1}};
-        const Sphere shape = w.objects.at(1);
+        const Sphere shape = std::get<Sphere>(w.objects.at(1));
         const Intersection i{shape, 0.5f};
 
         WHEN("comps ← prepare_computations(i, r) and c ← shade_hit(w, comps)") {
@@ -223,10 +223,10 @@ SCENARIO("shade_hit() is given an intersection in shadow") {
 SCENARIO("The color with an intersection behind the ray") {
     GIVEN("w ← default_world(), outer and inner spheres with ambient=1, r behind outer") {
         auto w = World::create_default_world();
-        w.objects[0].m_material.ambient = 1.0f;
-        w.objects[1].m_material.ambient = 1.0f;
+        material_of(w.objects[0]).ambient = 1.0f;
+        material_of(w.objects[1]).ambient = 1.0f;
         constexpr Ray r{Point{0, 0, 0.75f}, Vector{0, 0, -1}};
-        const Colour inner_color = w.objects.at(1).m_material.colour;
+        const Colour inner_color = material_of(w.objects.at(1)).colour;
 
         WHEN("c ← color_at(w, r)") {
             const auto c = World::colour_at(w, r);
