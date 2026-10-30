@@ -27,9 +27,9 @@ namespace raytracer {
             }
         };
 
-        constexpr size_t rows() const { return m_rows; }
-        constexpr size_t cols() const { return m_cols; }
-        constexpr const std::vector<T> &data() const { return m_data; }
+        [[nodiscard]] constexpr size_t rows() const { return m_rows; }
+        [[nodiscard]] constexpr size_t cols() const { return m_cols; }
+        [[nodiscard]] constexpr const std::vector<T> &data() const { return m_data; }
 
         constexpr T &operator[](const size_t row, const size_t col) { return m_data[row * m_cols + col]; }
         constexpr const T &operator[](const size_t row, const size_t col) const { return m_data[row * m_cols + col]; }
@@ -65,25 +65,25 @@ namespace raytracer {
     }
 
     template<typename T>
-    Matrix<T> multiply(Matrix<T> matrix1, Matrix<T> matrix2);
+    constexpr Matrix<T> multiply(Matrix<T> matrix1, Matrix<T> matrix2);
 
     template<typename T>
-    Matrix<T> transpose(Matrix<T> matrix);
+    constexpr Matrix<T> transpose(Matrix<T> matrix);
 
     template<typename T>
-    T determinant(Matrix<T> matrix);
+    constexpr T determinant(Matrix<T> matrix);
 
     template<typename T>
-    Matrix<T> submatrix(Matrix<T> matrix, size_t row, size_t col);
+    constexpr Matrix<T> submatrix(Matrix<T> matrix, size_t row, size_t col);
 
     template<typename T>
-    T minor(Matrix<T> matrix, size_t row, size_t col);
+    constexpr T minor(Matrix<T> matrix, size_t row, size_t col);
 
     template<typename T>
-    T cofactor(Matrix<T> matrix, size_t row, size_t col);
+    constexpr T cofactor(Matrix<T> matrix, size_t row, size_t col);
 
     template<typename T>
-    std::expected<Matrix<double>, bool> inverse(Matrix<T> matrix);
+    constexpr std::expected<Matrix<double>, bool> inverse(Matrix<T> matrix);
 
     template<typename T>
     constexpr Matrix<T> translation(T x, T y, T z);

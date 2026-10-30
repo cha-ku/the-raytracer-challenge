@@ -11,11 +11,11 @@ namespace raytracer {
     World World::create_default_world() {
         World world;
         Sphere s1 = Sphere::make_sphere();
-        s1.m_material = {.colour = {0.8, 1.0, 0.6}, .diffuse = 0.7, .specular = 0.2};
+        s1.m_material = {.colour = {.r = 0.8, .g = 1.0, .b = 0.6}, .diffuse = 0.7, .specular = 0.2};
         Sphere s2 = Sphere::make_sphere();
         s2.set_transform(scale<double>(0.5, 0.5, 0.5));
         world.objects = {s1, s2};
-        world.light = {Point{-10, 10, -10}, Colour{1, 1, 1}};
+        world.light = {.position = Point{.x = -10, .y = 10, .z = -10}, .intensity = Colour{.r = 1, .g = 1, .b = 1}};
         return world;
     }
 
@@ -36,7 +36,7 @@ namespace raytracer {
             maybe_hit.has_value()) {
             return shade_hit(world, prepare_computations(maybe_hit.value(), ray));
         }
-        return Colour{0, 0, 0};
+        return Colour{.r = 0, .g = 0, .b = 0};
     }
 
     Ray World::ray_for_pixel(const Camera &camera, double px, double py) {
@@ -51,12 +51,12 @@ namespace raytracer {
             throw std::invalid_argument("Camera transform must be invertible");
         }
         const Point pixel{
-            transform(Point{static_cast<float>(world_x), static_cast<float>(world_y), -1.f}, camera_transform_inverse.value())
+            transform(Point{.x = static_cast<float>(world_x), .y = static_cast<float>(world_y), .z = -1.f}, camera_transform_inverse.value())
         };
         const Point origin{transform(Point{}, camera_transform_inverse.value())};
 
         const auto direction{Vector::normalize(pixel - origin)};
-        return {origin, direction};
+        return {.origin = origin, .direction = direction};
     }
 
     bool World::is_shadowed(const Point point) const {

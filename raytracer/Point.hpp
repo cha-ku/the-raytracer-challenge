@@ -17,20 +17,20 @@ namespace raytracer {
         constexpr auto operator<=>(const Point& p) const = default;
 
         constexpr Vector operator-(const Point& p) const {
-            return {x - p.x, y - p.y, z - p.z};
+            return {.x = x - p.x, .y = y - p.y, .z = z - p.z};
         }
 
         constexpr Point operator-(const Vector& v) const {
-            return {x - v.x, y - v.y, z - v.z};
+            return {.x = x - v.x, .y = y - v.y, .z = z - v.z};
         }
     };
 
     constexpr Point operator+(const Point& p, const Point& q) {
-        return {p.x + q.x, p.y + q.y, p.z + q.z};
+        return {.x = p.x + q.x, .y = p.y + q.y, .z = p.z + q.z};
     }
 
     constexpr Point operator+(const Point& p, const Vector& v) {
-        return {p.x + v.x, p.y + v.y, p.z + v.z};
+        return {.x = p.x + v.x, .y = p.y + v.y, .z = p.z + v.z};
     }
 }
 
