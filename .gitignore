@@ -6,3 +6,4 @@ build
 
 # Build artefacts
 *.ppm
+.clangd

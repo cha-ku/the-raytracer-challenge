@@ -11,7 +11,7 @@
 
 namespace raytracer {
     template<typename T>
-    Matrix<T> multiply(Matrix<T> matrix1, Matrix<T> matrix2) {
+    constexpr Matrix<T> multiply(Matrix<T> matrix1, Matrix<T> matrix2) {
         if (matrix1.cols() != matrix2.rows()) {
             throw std::invalid_argument(std::format(
                 "Matrix dimensions do not allow multiplication: mat1 columns ({}) != mat2 rows ({})",
@@ -34,7 +34,7 @@ namespace raytracer {
     }
 
     template<typename T>
-    Matrix<T> transpose(Matrix<T> matrix) {
+    constexpr Matrix<T> transpose(Matrix<T> matrix) {
         Matrix<T> result(matrix.cols(), matrix.rows());
         for (size_t row = 0; row < matrix.rows(); ++row) {
             for (size_t col = 0; col < matrix.cols(); ++col) {
@@ -45,7 +45,7 @@ namespace raytracer {
     }
 
     template<typename T>
-    T determinant(Matrix<T> matrix) {
+    constexpr T determinant(Matrix<T> matrix) {
         if (matrix.rows() != matrix.cols() || matrix.rows() < 2 || matrix.cols() < 2) {
             throw std::invalid_argument("Determinant is only implemented for square matrices of size 2 or more");
         }
@@ -66,7 +66,7 @@ namespace raytracer {
     }
 
     template<typename T>
-    Matrix<T> submatrix(Matrix<T> matrix, size_t row, size_t col) {
+    constexpr Matrix<T> submatrix(Matrix<T> matrix, size_t row, size_t col) {
         Matrix<T> result{matrix.rows() - 1, matrix.cols() - 1};
         size_t dest_row = 0;
         for (size_t r = 0; r < matrix.rows(); ++r) {
@@ -83,18 +83,18 @@ namespace raytracer {
     }
 
     template<typename T>
-    T minor(Matrix<T> matrix, size_t row, size_t col) {
+    constexpr T minor(Matrix<T> matrix, size_t row, size_t col) {
         return determinant(submatrix(matrix, row, col));
     }
 
     template<typename T>
-    T cofactor(Matrix<T> matrix, size_t row, size_t col) {
+    constexpr T cofactor(Matrix<T> matrix, size_t row, size_t col) {
         T result = minor(matrix, row, col);
         return (row + col) % 2 == 0 ? result : -result;
     }
 
     template<typename T>
-    std::expected<Matrix<double>, bool> inverse(Matrix<T> matrix) {
+    constexpr std::expected<Matrix<double>, bool> inverse(Matrix<T> matrix) {
         auto matrix_determinant = determinant(matrix);
         if (matrix_determinant == 0) {
             return std::unexpected(false);

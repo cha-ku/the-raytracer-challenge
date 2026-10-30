@@ -16,23 +16,23 @@ namespace raytracer {
         constexpr auto operator<=>(const Vector &v) const = default;
 
         constexpr Vector operator+(const Vector &v) const {
-            return {x + v.x, y + v.y, z + v.z};
+            return {.x = x + v.x, .y = y + v.y, .z = z + v.z};
         }
 
         constexpr Vector operator-(const Vector &v) const {
-            return {x - v.x, y - v.y, z - v.z};
+            return {.x = x - v.x, .y = y - v.y, .z = z - v.z};
         }
 
         constexpr Vector operator-() const {
-            return {-x, -y, -z};
+            return {.x = -x, .y = -y, .z = -z};
         }
 
         constexpr Vector operator*(const float &m) const {
-            return {m * x, m * y, m * z};
+            return {.x = m * x, .y = m * y, .z = m * z};
         }
 
         constexpr Vector operator/(const float &m) const {
-            return {1 / m * x, 1 / m * y, 1 / m * z};
+            return {.x = 1 / m * x, .y = 1 / m * y, .z = 1 / m * z};
         }
 
         static constexpr float magnitude(const Vector &v) {
@@ -41,7 +41,7 @@ namespace raytracer {
 
         static constexpr Vector normalize(const Vector &v) {
             const auto mag = magnitude(v);
-            return {v.x / mag, v.y / mag, v.z / mag};
+            return {.x = v.x / mag, .y = v.y / mag, .z = v.z / mag};
         }
 
         static constexpr bool areAlmostEqual(const Vector &v, const Vector &w) {
@@ -54,9 +54,9 @@ namespace raytracer {
 
         static constexpr Vector cross(const Vector &v, const Vector &w) {
             return {
-                v.y * w.z - v.z * w.y,
-                v.z * w.x - v.x * w.z,
-                v.x * w.y - v.y * w.x
+                .x = v.y * w.z - v.z * w.y,
+                .y = v.z * w.x - v.x * w.z,
+                .z = v.x * w.y - v.y * w.x
             };
         }
 

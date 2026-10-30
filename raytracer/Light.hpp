@@ -11,7 +11,7 @@
 namespace raytracer {
     struct PointLight {
         Point position;
-        Colour intensity{0, 0, 0};
+        Colour intensity{.r = 0, .g = 0, .b = 0};
     };
 }
 

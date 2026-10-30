@@ -16,24 +16,24 @@ namespace raytracer {
         constexpr auto operator<=>(const Colour& c) const = default;
 
         constexpr Colour operator*(const float f) const {
-            return {f * r, f * g, f* b};
+            return {.r = f * r, .g = f * g, .b = f * b};
         }
     };
 
     constexpr Colour operator+(const Colour& c1, const Colour& c2)  {
-        return {c1.r + c2.r, c1.g + c2.g, c1.b + c2.b};
+        return {.r = c1.r + c2.r, .g = c1.g + c2.g, .b = c1.b + c2.b};
     }
 
     constexpr Colour operator-(const Colour& c1, const Colour& c2)  {
-        return {c1.r - c2.r, c1.g - c2.g, c1.b - c2.b};
+        return {.r = c1.r - c2.r, .g = c1.g - c2.g, .b = c1.b - c2.b};
     }
 
     constexpr Colour operator*(const Colour& c1, const Colour& c2) {
-        return {c1.r * c2.r, c1.g * c2.g, c1.b * c2.b};
+        return {.r = c1.r * c2.r, .g = c1.g * c2.g, .b = c1.b * c2.b};
     }
 
     constexpr Colour hadamard_product(const Colour& c1, const Colour& c2) {
-        return {c1.r * c2.r, c1.g * c2.g, c1.b * c2.b};
+        return {.r = c1.r * c2.r, .g = c1.g * c2.g, .b = c1.b * c2.b};
     }
 
     static constexpr bool areAlmostEqual(const Colour& c1, const Colour& c2) {

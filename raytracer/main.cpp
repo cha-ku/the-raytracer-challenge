@@ -7,7 +7,7 @@
 
 void test() {
     raytracer::Canvas c(16, 16);
-    const raytracer::Colour color(0.66, 0.33, 0.33);
+    const raytracer::Colour color{.r = 0.66, .g = 0.33, .b = 0.33};
     for (int h = 0; h < c.height; ++h) {
         for (int w = 0; w < c.width; ++w) {
             if (h < 10 && w < 10) {

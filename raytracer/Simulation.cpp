@@ -13,31 +13,33 @@
 #include "World.hpp"
 #include "MatrixImpl.hpp"
 
-// Projectile structure
-struct Projectile {
-    raytracer::Point position{};
-    raytracer::Vector velocity{};
-};
+namespace {
+    // Projectile structure
+    struct Projectile {
+        raytracer::Point position{};
+        raytracer::Vector velocity{};
+    };
 
-// Environment structure
-struct Environment {
-    raytracer::Vector gravity;
-    raytracer::Vector wind;
-};
+    // Environment structure
+    struct Environment {
+        raytracer::Vector gravity;
+        raytracer::Vector wind;
+    };
 
-// Tick function
-Projectile tick(const Environment &env, const Projectile &proj) {
-    raytracer::Point new_position = proj.position + proj.velocity;
-    raytracer::Vector new_velocity = proj.velocity + env.gravity + env.wind;
-    return {new_position, new_velocity};
-}
+    // Tick function
+    Projectile tick(const Environment &env, const Projectile &proj) {
+        raytracer::Point new_position = proj.position + proj.velocity;
+        raytracer::Vector new_velocity = proj.velocity + env.gravity + env.wind;
+        return {.position = new_position, .velocity = new_velocity};
+    }
 
-void save_canvas(const raytracer::Canvas& canvas, const std::string& filename) {
-    const auto& retval = raytracer::canvas_to_ppm(canvas, filename);
-    if (retval.has_value()) {
-        std::cout << "Data written to " << filename << "\n";
-    } else if (retval.error() == raytracer::CanvasError::invalid_path) {
-        std::cout << "Cannot write file " << filename << " - invalid path\n";
+    void save_canvas(const raytracer::Canvas& canvas, const std::string& filename) {
+        const auto& retval = raytracer::canvas_to_ppm(canvas, filename);
+        if (retval.has_value()) {
+            std::cout << "Data written to " << filename << "\n";
+        } else if (retval.error() == raytracer::CanvasError::invalid_path) {
+            std::cout << "Cannot write file " << filename << " - invalid path\n";
+        }
     }
 }
 
@@ -45,10 +47,10 @@ void save_canvas(const raytracer::Canvas& canvas, const std::string& filename) {
 void simulate_projectile() {
     using namespace raytracer;
     // Initialize projectile and environment
-    Point start{0, 1, 0};
-    Vector velocity{Vector::normalize({1, 1.8, 0}) * 11.25};
-    Projectile projectile{start, velocity};
-    Environment environment{Vector(0, -0.1, 0), Vector(-0.01, 0, 0)};
+    constexpr Point start{.x = 0, .y = 1, .z = 0};
+    const Vector velocity{Vector::normalize({.x = 1, .y = 1.8, .z = 0}) * 11.25};
+    Projectile projectile{.position = start, .velocity = velocity};
+    constexpr Environment environment{.gravity = Vector{.x = 0, .y = -0.1, .z = 0}, .wind = Vector{.x = -0.01, .y = 0, .z = 0}};
     Canvas canvas{900, 900};
 
     int ticks = 0;
@@ -73,11 +75,11 @@ void simulate_projectile() {
 void simulate_clock() {
     using namespace raytracer;
     Canvas canvas{256, 256};
-    const Point centre{static_cast<float>(canvas.width)/2.f, 0, static_cast<float>(canvas.height)/2};
-    canvas.write_pixel(static_cast<uint32_t>(centre.x), static_cast<uint32_t>(centre.z),  Colour(1, 0, 0));
+    const Point centre{.x = static_cast<float>(canvas.width)/2.f, .y = 0, .z = static_cast<float>(canvas.height)/2};
+    canvas.write_pixel(static_cast<uint32_t>(centre.x), static_cast<uint32_t>(centre.z),  Colour{.r = 1, .g = 0, .b = 0});
     const float radius{3/8.f * static_cast<float>(canvas.width)};
     // 12 o'clock position relative to origin
-    const auto twelve_oclock = make_matrix({0, 0, -radius});
+    const auto twelve_oclock = make_matrix({.x = 0, .y = 0, .z = -radius});
 
     for (int i = 0; i < 12; ++i) {
         const auto rad = static_cast<float>(i) * std::numbers::pi_v<float>/6.f;
@@ -92,7 +94,7 @@ void simulate_clock() {
             if (x >= 0.f && x < static_cast<float>(canvas.width) &&
                 z >= 0.f && z < static_cast<float>(canvas.height)) {
                 canvas.write_pixel(static_cast<uint32_t>(x), static_cast<uint32_t>(z),
-                    Colour(1, 1, 1));
+                    Colour{.r = 1, .g = 1, .b = 1});
             }
         }
         catch (const std::invalid_argument& e) {
@@ -120,7 +122,7 @@ void simulate_sphere() {
     // shrink it, and skew it
     shape.set_transform(multiply(shearing(1, 0, 0, 0, 0, 0), scale<double>(0.5, 1, 1)));
     constexpr auto wall_z{10.0f};
-    constexpr Point ray_origin{0, 0, -5};
+    constexpr Point ray_origin{.x = 0, .y = 0, .z = -5};
     // Convert canvas pixels to world coordinates:
     // world_x: starts at -half (left edge) and increases with x
     // world_y: starts at +half (top edge) and decreases with y (canvas y is inverted)
@@ -129,7 +131,7 @@ void simulate_sphere() {
         for (int x = 0; x < canvas.width; ++x) {
             const auto world_x{-half + pixel_size * static_cast<float>(x)};
             Point position{.x = world_x, .y = world_y, .z = wall_z};
-            Ray r{ray_origin, Vector::normalize(Vector(position - ray_origin))};
+            Ray r{.origin = ray_origin, .direction = Vector::normalize(Vector(position - ray_origin))};
             auto xs{intersect(shape, r)};
             if (hit(xs).has_value()) {
                 canvas.write_pixel(x, y, colour);
@@ -147,12 +149,12 @@ void simulate_material_sphere() {
     constexpr auto half{wall_size / 2};
     Canvas canvas{canvas_pixels, canvas_pixels};
     Sphere sphere = Sphere::make_sphere();
-    sphere.m_material.colour = Colour(1, 0.2, 1);
+    sphere.m_material.colour = Colour{.r = 1, .g = 0.2, .b = 1};
     constexpr auto wall_z{10.0f};
 
     // camera(eye) is the origin of our rays
-    constexpr Point camera{0, 0, -5};
-    constexpr PointLight point_light{{-10, 10, -10}, {1, 1, 1}};
+    constexpr Point camera{.x = 0, .y = 0, .z = -5};
+    constexpr PointLight point_light{.position = {.x = -10, .y = 10, .z = -10}, .intensity = {.r = 1, .g = 1, .b = 1}};
     // Convert canvas pixels to world coordinates:
     // world_x: starts at -half (left edge) and increases with x
     // world_y: starts at +half (top edge) and decreases with y (canvas y is inverted)
@@ -161,7 +163,7 @@ void simulate_material_sphere() {
         for (int x = 0; x < canvas.width; ++x) {
             const auto world_x{-half + pixel_size * static_cast<float>(x)};
             Point p{.x = world_x, .y = world_y, .z = wall_z};
-            Ray r{camera, Vector::normalize(Vector(p - camera))};
+            Ray r{.origin = camera, .direction = Vector::normalize(Vector(p - camera))};
             auto xs{intersect(sphere, r)};
             if (hit(xs).has_value()) {
                 auto [object, t] = hit(xs).value();
@@ -181,33 +183,33 @@ void simulate_multiple_spheres() {
     using namespace std::numbers;
 
     Plane floor{Plane::make_plane()};
-    floor.m_material.colour = Colour{0.4f, 0.6f, 0.8f};
+    floor.m_material.colour = Colour{.r = 0.4f, .g = 0.6f, .b = 0.8f};
     floor.m_material.specular = 0.0f;
 
     Sphere middle{Sphere::make_sphere()};
     middle.m_transform = translation<double>(-0.5, 1, 0.5);
-    middle.m_material.colour = Colour{0.1f, 1.f, 0.5f};
+    middle.m_material.colour = Colour{.r = 0.1f, .g = 1.f, .b = 0.5f};
     middle.m_material.diffuse = 0.7f;
     middle.m_material.specular = 0.3f;
 
     Sphere right_sphere{Sphere::make_sphere()};
     right_sphere.m_transform = multiply(translation<double>(1.5, 0.5, -0.5), scale<double>(0.5, 0.5, 0.5));
-    right_sphere.m_material.colour = Colour{0.5f, 1.f, 0.1f};
+    right_sphere.m_material.colour = Colour{.r = 0.5f, .g = 1.f, .b = 0.1f};
     right_sphere.m_material.diffuse = 0.7f;
     right_sphere.m_material.specular = 0.3f;
 
     Sphere left_sphere{Sphere::make_sphere()};
     left_sphere.m_transform = multiply(translation<double>(-1.5, 0.33, -0.75), scale<double>(0.33, 0.33, 0.33));
-    left_sphere.m_material.colour = Colour{1.f, 0.8f, 0.1f};
+    left_sphere.m_material.colour = Colour{.r = 1.f, .g = 0.8f, .b = 0.1f};
     left_sphere.m_material.diffuse = 0.7f;
     left_sphere.m_material.specular = 0.3f;
 
     World world;
     world.objects = {floor, middle, right_sphere, left_sphere};
-    world.light = PointLight{Point{-10, 10, -10}, Colour{1, 1, 1}};
+    world.light = PointLight{.position = Point{.x = -10, .y = 10, .z = -10}, .intensity = Colour{.r = 1, .g = 1, .b = 1}};
 
-    Camera camera{600, 400, pi_v<double>/2};
-    camera.transform = view_transform(Point{0, 1.5f, -5}, Point{0, 1, 0}, Vector{0, 1, 0});
+    Camera camera{.hsize = 600, .vsize = 400, .field_of_view = pi_v<double>/2};
+    camera.transform = view_transform(Point{.x = 0, .y = 1.5f, .z = -5}, Point{.x = 0, .y = 1, .z = 0}, Vector{.x = 0, .y = 1, .z = 0});
 
     Canvas canvas{camera.hsize, camera.vsize};
     for (uint32_t y = 0; y < camera.vsize; ++y) {

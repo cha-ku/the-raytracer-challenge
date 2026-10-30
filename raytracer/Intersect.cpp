@@ -12,7 +12,7 @@ namespace raytracer {
     }
 
     Ray transform(const Ray &ray, const Matrix<double> &matrix) {
-        const Matrix<double> origin_matrix{make_matrix(Point{ray.origin.x, ray.origin.y, ray.origin.z})};
+        const Matrix<double> origin_matrix{make_matrix(Point{.x = ray.origin.x, .y = ray.origin.y, .z = ray.origin.z})};
         const Matrix<double> direction_matrix{4, 1, std::vector{
             static_cast<double>(ray.direction.x),
             static_cast<double>(ray.direction.y),
@@ -24,21 +24,21 @@ namespace raytracer {
         const Matrix<double> new_direction{multiply(matrix, direction_matrix)};
 
         return Ray{
-            Point{static_cast<float>(new_origin[0, 0]),
-                  static_cast<float>(new_origin[1, 0]),
-                  static_cast<float>(new_origin[2, 0])},
-            Vector{static_cast<float>(new_direction[0, 0]),
-                   static_cast<float>(new_direction[1, 0]),
-                   static_cast<float>(new_direction[2, 0])}
+            .origin = Point{.x = static_cast<float>(new_origin[0, 0]),
+                            .y = static_cast<float>(new_origin[1, 0]),
+                            .z = static_cast<float>(new_origin[2, 0])},
+            .direction = Vector{.x = static_cast<float>(new_direction[0, 0]),
+                                .y = static_cast<float>(new_direction[1, 0]),
+                                .z = static_cast<float>(new_direction[2, 0])}
         };
     }
 
     Point transform(const Point &point, const Matrix<double> &matrix) {
         const Matrix point_matrix{multiply(matrix, make_matrix(point))};
         return Point{
-            static_cast<float>(point_matrix[0, 0]),
-            static_cast<float>(point_matrix[1, 0]),
-            static_cast<float>(point_matrix[2, 0])
+            .x = static_cast<float>(point_matrix[0, 0]),
+            .y = static_cast<float>(point_matrix[1, 0]),
+            .z = static_cast<float>(point_matrix[2, 0])
         };
     }
 
@@ -51,25 +51,25 @@ namespace raytracer {
             multiply(transpose(inverse_transform), make_matrix(object_normal))
         };
         const Vector world_normal{
-            static_cast<float>(world_normal_matrix[0, 0]),
-            static_cast<float>(world_normal_matrix[1, 0]),
-            static_cast<float>(world_normal_matrix[2, 0])
+            .x = static_cast<float>(world_normal_matrix[0, 0]),
+            .y = static_cast<float>(world_normal_matrix[1, 0]),
+            .z = static_cast<float>(world_normal_matrix[2, 0])
         };
         return Vector::normalize(world_normal);
     }
 
     Vector local_normal_at(const Sphere &sphere, const Point &local_point) {
-        return local_point - Point(0, 0, 0);
+        return local_point - Point{.x = 0, .y = 0, .z = 0};
     }
 
     Vector local_normal_at(const Plane &plane, const Point &local_point) {
-        return Vector(0, 1, 0);
+        return Vector{.x = 0, .y = 1, .z = 0};
     }
 
     std::vector<Intersection> local_intersect(const Sphere &sphere, const Ray &local_ray) {
         const auto &[origin, direction] = local_ray;
 
-        const Vector sphere_to_ray{origin - Point(0, 0, 0)};
+        const Vector sphere_to_ray{origin - Point{.x = 0, .y = 0, .z = 0}};
         const float a{Vector::dot(direction, direction)};
         const float b{2 * Vector::dot(direction, sphere_to_ray)};
         const float c{Vector::dot(sphere_to_ray, sphere_to_ray) - 1};
@@ -79,7 +79,7 @@ namespace raytracer {
         }
         const float t1{(-b - std::sqrt(discriminant)) / (2 * a)};
         const float t2{(-b + std::sqrt(discriminant)) / (2 * a)};
-        return {{sphere, t1}, {sphere, t2}};
+        return {{.object = sphere, .t = t1}, {.object = sphere, .t = t2}};
     }
 
     std::vector<Intersection> local_intersect(const Plane &plane, const Ray &local_ray) {
@@ -87,7 +87,7 @@ namespace raytracer {
             return {};
         }
         const float t{-local_ray.origin.y / local_ray.direction.y};
-        return {{plane, t}};
+        return {{.object = plane, .t = t}};
     }
 
     std::optional<Intersection> hit(const std::vector<Intersection> &intersections) {

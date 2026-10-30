@@ -20,8 +20,8 @@ namespace raytracer {
         // this is the cosine of the angle between light vector and normal. Negative number means light is on the other
         // side of the surface
         const auto &light_dot_normal{Vector::dot(light_vector, normal)};
-        Colour diffuse{0, 0, 0};
-        Colour specular{0, 0, 0};
+        Colour diffuse{.r = 0, .g = 0, .b = 0};
+        Colour specular{.r = 0, .g = 0, .b = 0};
         if (light_dot_normal > 0) {
             diffuse = effective_colour * material.diffuse * light_dot_normal;
             const auto& reflect{Vector::reflect(-light_vector, normal)};
