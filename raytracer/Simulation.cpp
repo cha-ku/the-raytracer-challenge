@@ -186,6 +186,11 @@ void simulate_multiple_spheres() {
     floor.m_material.colour = Colour{.r = 0.4f, .g = 0.6f, .b = 0.8f};
     floor.m_material.specular = 0.0f;
 
+    Plane backdrop{Plane::make_plane()};
+    backdrop.set_transform(multiply(translation<double>(0, 0, 3.0), rotation_x(pi_v<double>/2)));
+    backdrop.m_material.colour = Colour{.r = 0.9f, .g = 0.85f, .b = 0.8f};
+    backdrop.m_material.specular = 0.0f;
+
     Sphere middle{Sphere::make_sphere()};
     middle.m_transform = translation<double>(-0.5, 1, 0.5);
     middle.m_material.colour = Colour{.r = 0.1f, .g = 1.f, .b = 0.5f};
@@ -205,7 +210,7 @@ void simulate_multiple_spheres() {
     left_sphere.m_material.specular = 0.3f;
 
     World world;
-    world.objects = {floor, middle, right_sphere, left_sphere};
+    world.objects = {floor, backdrop, middle, right_sphere, left_sphere};
     world.light = PointLight{.position = Point{.x = -10, .y = 10, .z = -10}, .intensity = Colour{.r = 1, .g = 1, .b = 1}};
 
     Camera camera{.hsize = 600, .vsize = 400, .field_of_view = pi_v<double>/2};
