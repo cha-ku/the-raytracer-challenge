@@ -27,6 +27,8 @@ namespace raytracer {
             }
         };
 
+        constexpr auto operator<=>(const Matrix &) const = default;
+
         [[nodiscard]] constexpr size_t rows() const { return m_rows; }
         [[nodiscard]] constexpr size_t cols() const { return m_cols; }
         [[nodiscard]] constexpr const std::vector<T> &data() const { return m_data; }

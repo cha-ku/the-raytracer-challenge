@@ -10,13 +10,19 @@
 
 #include <variant>
 
+#include "Matrix.hpp"
+
 namespace raytracer {
+    struct Shape;
+
     struct StripedPattern {
-        Colour a;
-        Colour b;
+        Colour m_colour_a{};
+        Colour m_colour_b{};
+        Matrix<double> m_transform{Matrix<double>::identity(4)};
 
         static StripedPattern create(Colour a, Colour b);
         static Colour stripe_at(const StripedPattern& pattern, const Point& point);
+        static Colour stripe_at(const StripedPattern& pattern, const Shape& shape, const Point& world_point);
 
         constexpr auto operator<=>(const StripedPattern &) const = default;
     };
@@ -25,7 +31,7 @@ namespace raytracer {
     using ColourOrPattern = std::variant<Colour, StripedPattern>;
 
     // The colour of a ColourOrPattern at the given point: the Colour itself, or the pattern's colour at that point
-    Colour colour_at(const ColourOrPattern &colour_or_pattern, const Point &point);
+    Colour colour_at(const ColourOrPattern &colour_or_pattern, const Shape& shape, const Point &point);
 
 }
 

@@ -15,10 +15,10 @@ SCENARIO("Creating a stripe pattern") {
         const auto pattern = StripedPattern::create(white, black);
 
         THEN("pattern.a = white") {
-            REQUIRE(areAlmostEqual(pattern.a, white));
+            REQUIRE(areAlmostEqual(pattern.m_colour_a, white));
         }
         AND_THEN("pattern.b = black") {
-            REQUIRE(areAlmostEqual(pattern.b, black));
+            REQUIRE(areAlmostEqual(pattern.m_colour_b, black));
         }
     }
 }

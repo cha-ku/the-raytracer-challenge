@@ -5,11 +5,11 @@
 #include "Material.hpp"
 
 namespace raytracer {
-    Colour lighting(const Material &material, const PointLight &light, const Point &point, const Vector &eye,
-        const Vector &normal, const bool in_shadow)
+    Colour lighting(const Shape &shape, const Material &material, const PointLight &light, const Point &point,
+                    const Vector &eye, const Vector &normal, const bool in_shadow)
     {
         // combine surface colour with the light's colour/intensity
-        const auto &effective_colour{colour_at(material.colour, point) * light.intensity};
+        const auto &effective_colour{colour_at(material.colour, shape, point) * light.intensity};
 
         // find direction to the light source
         const auto &light_vector{Vector::normalize(light.position - point)};

@@ -8,6 +8,7 @@
 #include "Point.hpp"
 #include "Vector.hpp"
 #include "Matrix.hpp"
+#include "MatrixImpl.hpp"
 #include "Material.hpp"
 #include "Shape.hpp"
 

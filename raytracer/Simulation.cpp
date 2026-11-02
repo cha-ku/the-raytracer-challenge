@@ -170,7 +170,7 @@ void simulate_material_sphere() {
                 Point point = position(r, t);
                 Vector normal = std::visit([&](const auto &shape) { return normal_at(shape, point); }, object);
                 Vector eye = -r.direction;
-                Colour pixel_colour = lighting(material_of(object), point_light, point, eye, normal, false);
+                Colour pixel_colour = lighting(as_shape(object), material_of(object), point_light, point, eye, normal, false);
                 canvas.write_pixel(x, y, pixel_colour);
             }
         }

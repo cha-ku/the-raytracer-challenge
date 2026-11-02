@@ -3,6 +3,7 @@
 //
 
 #include "Material.hpp"
+#include "Intersect.hpp"
 #include "Light.hpp"
 #include "Colour.hpp"
 #include "Pattern.hpp"
@@ -40,13 +41,14 @@ SCENARIO("The default material") {
 SCENARIO("Lighting with the eye between the light and the surface") {
     GIVEN("m ← material() and position ← point(0, 0, 0)") {
         constexpr Material m{};
+        const Sphere object = Sphere::make_sphere();
         constexpr Point position{0, 0, 0};
         constexpr Vector eye{0, 0, -1};
         constexpr Vector normal{0, 0, -1};
         constexpr PointLight light{Point{0, 0, -10}, Colour{1, 1, 1}};
 
         WHEN("result ← lighting(m, light, position, eyev, normalv)") {
-            const auto result = lighting(m, light, position, eye, normal, false);
+            const auto result = lighting(object, m, light, position, eye, normal, false);
 
             THEN("result = color(1.9, 1.9, 1.9)") {
                 REQUIRE(areAlmostEqual(result, Colour{1.9, 1.9, 1.9}));
@@ -58,13 +60,14 @@ SCENARIO("Lighting with the eye between the light and the surface") {
 SCENARIO("Lighting with the eye between light and surface, eye offset 45 degrees") {
     GIVEN("m ← material() and position ← point(0, 0, 0)") {
         constexpr Material m{};
+        const Sphere object = Sphere::make_sphere();
         constexpr Point position{0, 0, 0};
         constexpr Vector eye{0, std::numbers::sqrt2 / 2, -std::numbers::sqrt2 / 2};
         constexpr Vector normal{0, 0, -1};
         constexpr PointLight light{Point{0, 0, -10}, Colour{1, 1, 1}};
 
         WHEN("result ← lighting(m, light, position, eyev, normalv)") {
-            const auto result = lighting(m, light, position, eye, normal, false);
+            const auto result = lighting(object, m, light, position, eye, normal, false);
 
             THEN("result = color(1.0, 1.0, 1.0)") {
                 REQUIRE(areAlmostEqual(result, Colour{1.0, 1.0, 1.0}));
@@ -76,13 +79,14 @@ SCENARIO("Lighting with the eye between light and surface, eye offset 45 degrees
 SCENARIO("Lighting with the light behind the surface") {
     GIVEN("m ← material() and position ← point(0, 0, 0)") {
         constexpr Material m{};
+        const Sphere object = Sphere::make_sphere();
         constexpr Point position{0, 0, 0};
         constexpr Vector eye{0, 0, -1};
         constexpr Vector normal{0, 0, -1};
         constexpr PointLight light{Point{0, 0, 10}, Colour{1, 1, 1}};
 
         WHEN("result ← lighting(m, light, position, eyev, normalv)") {
-            const auto result = lighting(m, light, position, eye, normal, false);
+            const auto result = lighting(object, m, light, position, eye, normal, false);
 
             THEN("result = color(0.1, 0.1, 0.1)") {
                 REQUIRE(areAlmostEqual(result, Colour{0.1, 0.1, 0.1}));
@@ -94,6 +98,7 @@ SCENARIO("Lighting with the light behind the surface") {
 SCENARIO("Lighting with the surface in shadow") {
     GIVEN("m ← material() and position ← point(0, 0, 0)") {
         constexpr Material m{};
+        const Sphere object = Sphere::make_sphere();
         constexpr Point position{0, 0, 0};
         constexpr Vector eye{0, 0, -1};
         constexpr Vector normal{0, 0, -1};
@@ -101,7 +106,7 @@ SCENARIO("Lighting with the surface in shadow") {
         constexpr bool in_shadow = true;
 
         WHEN("result ← lighting(m, light, position, eyev, normalv, in_shadow)") {
-            const auto result = lighting(m, light, position, eye, normal, in_shadow);
+            const auto result = lighting(object, m, light, position, eye, normal, in_shadow);
 
             THEN("result = color(0.1, 0.1, 0.1)") {
                 REQUIRE(areAlmostEqual(result, Colour{0.1, 0.1, 0.1}));
@@ -113,6 +118,7 @@ SCENARIO("Lighting with the surface in shadow") {
 SCENARIO("Lighting with a pattern applied") {
     GIVEN("m.pattern ← stripe_pattern(color(1, 1, 1), color(0, 0, 0))") {
         Material m{};
+        const Sphere object = Sphere::make_sphere();
         m.colour = StripedPattern::create(Colour{.r = 1, .g = 1, .b = 1}, Colour{.r = 0, .g = 0, .b = 0});
         m.ambient = 1;
         m.diffuse = 0;
@@ -123,8 +129,8 @@ SCENARIO("Lighting with a pattern applied") {
 
         WHEN("c1 ← lighting(m, light, point(0.9, 0, 0), eyev, normalv, false) "
              "and c2 ← lighting(m, light, point(1.1, 0, 0), eyev, normalv, false)") {
-            const auto c1 = lighting(m, light, Point{.x = 0.9f, .y = 0, .z = 0}, eye, normal, false);
-            const auto c2 = lighting(m, light, Point{.x = 1.1f, .y = 0, .z = 0}, eye, normal, false);
+            const auto c1 = lighting(object, m, light, Point{.x = 0.9f, .y = 0, .z = 0}, eye, normal, false);
+            const auto c2 = lighting(object, m, light, Point{.x = 1.1f, .y = 0, .z = 0}, eye, normal, false);
 
             THEN("c1 = color(1, 1, 1)") {
                 REQUIRE(areAlmostEqual(c1, Colour{.r = 1, .g = 1, .b = 1}));

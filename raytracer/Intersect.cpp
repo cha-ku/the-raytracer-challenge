@@ -120,8 +120,8 @@ namespace raytracer {
     }
 
     Colour shade_hit(const World &world, const Computations &computations) {
-        return lighting(material_of(computations.object), world.light.value(), computations.point, computations.eye_vector,
-                        computations.normal_vector, world.is_shadowed(computations.over_point));
+        return lighting(as_shape(computations.object), material_of(computations.object), world.light.value(), computations.point,
+                        computations.eye_vector, computations.normal_vector, world.is_shadowed(computations.over_point));
     }
 
     // Coordinate system (right-handed):
