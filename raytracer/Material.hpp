@@ -7,10 +7,11 @@
 
 #include "Colour.hpp"
 #include "Light.hpp"
+#include "Pattern.hpp"
 
 namespace raytracer {
     struct Material {
-        Colour colour{.r = 1, .g = 1, .b = 1};
+        ColourOrPattern colour{Colour{.r = 1, .g = 1, .b = 1}};
         float ambient{0.1};
         float diffuse{0.9};
         float specular{0.9};

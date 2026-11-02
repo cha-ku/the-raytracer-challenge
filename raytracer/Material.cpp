@@ -9,7 +9,7 @@ namespace raytracer {
         const Vector &normal, const bool in_shadow)
     {
         // combine surface colour with the light's colour/intensity
-        const auto &effective_colour{material.colour * light.intensity};
+        const auto &effective_colour{colour_at(material.colour, point) * light.intensity};
 
         // find direction to the light source
         const auto &light_vector{Vector::normalize(light.position - point)};

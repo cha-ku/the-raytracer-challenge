@@ -52,6 +52,8 @@ add_library(scene STATIC
         raytracer/World.cpp
         raytracer/Camera.cpp
         raytracer/Camera.hpp
+        raytracer/Pattern.hpp
+        raytracer/Pattern.cpp
 )
 
 target_include_directories(scene PUBLIC raytracer)
