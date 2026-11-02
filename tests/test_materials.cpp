@@ -5,6 +5,7 @@
 #include "Material.hpp"
 #include "Light.hpp"
 #include "Colour.hpp"
+#include "Pattern.hpp"
 #include "Point.hpp"
 #include "Vector.hpp"
 
@@ -19,7 +20,7 @@ SCENARIO("The default material") {
         constexpr Material m{};
 
         THEN("m.color = color(1, 1, 1)") {
-            REQUIRE(areAlmostEqual(m.colour, Colour{1, 1, 1}));
+            REQUIRE(areAlmostEqual(std::get<Colour>(m.colour), Colour{1, 1, 1}));
         }
         AND_THEN("m.ambient = 0.1") {
             REQUIRE(m.ambient == 0.1f);
@@ -104,6 +105,32 @@ SCENARIO("Lighting with the surface in shadow") {
 
             THEN("result = color(0.1, 0.1, 0.1)") {
                 REQUIRE(areAlmostEqual(result, Colour{0.1, 0.1, 0.1}));
+            }
+        }
+    }
+}
+
+SCENARIO("Lighting with a pattern applied") {
+    GIVEN("m.pattern ← stripe_pattern(color(1, 1, 1), color(0, 0, 0))") {
+        Material m{};
+        m.colour = StripedPattern::create(Colour{.r = 1, .g = 1, .b = 1}, Colour{.r = 0, .g = 0, .b = 0});
+        m.ambient = 1;
+        m.diffuse = 0;
+        m.specular = 0;
+        constexpr Vector eye{.x = 0, .y = 0, .z = -1};
+        constexpr Vector normal{.x = 0, .y = 0, .z = -1};
+        constexpr PointLight light{.position = Point{.x = 0, .y = 0, .z = -10}, .intensity = Colour{.r = 1, .g = 1, .b = 1}};
+
+        WHEN("c1 ← lighting(m, light, point(0.9, 0, 0), eyev, normalv, false) "
+             "and c2 ← lighting(m, light, point(1.1, 0, 0), eyev, normalv, false)") {
+            const auto c1 = lighting(m, light, Point{.x = 0.9f, .y = 0, .z = 0}, eye, normal, false);
+            const auto c2 = lighting(m, light, Point{.x = 1.1f, .y = 0, .z = 0}, eye, normal, false);
+
+            THEN("c1 = color(1, 1, 1)") {
+                REQUIRE(areAlmostEqual(c1, Colour{.r = 1, .g = 1, .b = 1}));
+            }
+            AND_THEN("c2 = color(0, 0, 0)") {
+                REQUIRE(areAlmostEqual(c2, Colour{.r = 0, .g = 0, .b = 0}));
             }
         }
     }

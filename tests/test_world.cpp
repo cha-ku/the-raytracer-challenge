@@ -50,7 +50,7 @@ SCENARIO("The default world") {
 
             AND_THEN("w contains s1") {
                 const auto it = std::ranges::find_if(w.objects, [&](const AnyShape& s) {
-                    return areAlmostEqual(material_of(s).colour, s1.m_material.colour)
+                    return areAlmostEqual(std::get<Colour>(material_of(s).colour), std::get<Colour>(s1.m_material.colour))
                         && material_of(s).diffuse == s1.m_material.diffuse
                         && material_of(s).specular == s1.m_material.specular;
                 });
@@ -226,7 +226,7 @@ SCENARIO("The color with an intersection behind the ray") {
         material_of(w.objects[0]).ambient = 1.0f;
         material_of(w.objects[1]).ambient = 1.0f;
         constexpr Ray r{Point{0, 0, 0.75f}, Vector{0, 0, -1}};
-        const Colour inner_color = material_of(w.objects.at(1)).colour;
+        const Colour inner_color = std::get<Colour>(material_of(w.objects.at(1)).colour);
 
         WHEN("c ← color_at(w, r)") {
             const auto c = World::colour_at(w, r);
