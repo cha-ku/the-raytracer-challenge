@@ -9,15 +9,20 @@
 #include "Light.hpp"
 #include "Pattern.hpp"
 
+#include <optional>
+
 namespace raytracer {
+    struct Shape;
+
     struct Material {
-        ColourOrPattern colour{Colour{.r = 1, .g = 1, .b = 1}};
+        Colour colour{.r = 1, .g = 1, .b = 1};
+        std::optional<AnyPattern> pattern;
         float ambient{0.1};
         float diffuse{0.9};
         float specular{0.9};
         float shininess{200.0};
 
-        constexpr auto operator<=>(const Material &) const = default;
+        bool operator==(const Material &) const = default;
     };
 
     Colour lighting(const Shape &shape, const Material &material, const PointLight &light, const Point &point,
