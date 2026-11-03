@@ -33,15 +33,6 @@ namespace raytracer {
         };
     }
 
-    Point transform(const Point &point, const Matrix<double> &matrix) {
-        const Matrix point_matrix{multiply(matrix, make_matrix(point))};
-        return Point{
-            .x = static_cast<float>(point_matrix[0, 0]),
-            .y = static_cast<float>(point_matrix[1, 0]),
-            .z = static_cast<float>(point_matrix[2, 0])
-        };
-    }
-
     Point to_object_space(const Point &point, const Matrix<double> &inverse_transform) {
         return transform(point, inverse_transform);
     }

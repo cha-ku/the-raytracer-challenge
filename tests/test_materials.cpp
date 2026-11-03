@@ -21,7 +21,7 @@ SCENARIO("The default material") {
         constexpr Material m{};
 
         THEN("m.color = color(1, 1, 1)") {
-            REQUIRE(areAlmostEqual(std::get<Colour>(m.colour), Colour{1, 1, 1}));
+            REQUIRE(areAlmostEqual(m.colour, Colour{1, 1, 1}));
         }
         AND_THEN("m.ambient = 0.1") {
             REQUIRE(m.ambient == 0.1f);
@@ -119,7 +119,7 @@ SCENARIO("Lighting with a pattern applied") {
     GIVEN("m.pattern ← stripe_pattern(color(1, 1, 1), color(0, 0, 0))") {
         Material m{};
         const Sphere object = Sphere::make_sphere();
-        m.colour = StripedPattern::create(Colour{.r = 1, .g = 1, .b = 1}, Colour{.r = 0, .g = 0, .b = 0});
+        m.pattern = StripedPattern::create(Colour{.r = 1, .g = 1, .b = 1}, Colour{.r = 0, .g = 0, .b = 0});
         m.ambient = 1;
         m.diffuse = 0;
         m.specular = 0;

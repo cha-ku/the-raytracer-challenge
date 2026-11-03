@@ -161,6 +161,15 @@ namespace raytracer {
         return result;
     }
 
+    constexpr Point transform(const Point &point, const Matrix<double> &matrix) {
+        const Matrix point_matrix{multiply(matrix, make_matrix(point))};
+        return Point{
+            .x = static_cast<float>(point_matrix[0, 0]),
+            .y = static_cast<float>(point_matrix[1, 0]),
+            .z = static_cast<float>(point_matrix[2, 0])
+        };
+    }
+
     constexpr Matrix<double> shearing(const double xy, const double xz, const double yx, const double yz, const double zx, const double zy) {
         Matrix result(Matrix<double>::identity(4));
         result[0, 1] = xy;

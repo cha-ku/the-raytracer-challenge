@@ -29,8 +29,6 @@ namespace raytracer {
 
     Ray transform(const Ray &ray, const Matrix<double> &matrix);
 
-    Point transform(const Point &point, const Matrix<double> &matrix);
-
     // Shared by every concrete Shape: converts a world-space point into the
     // shape's object space, and a freshly-computed object-space normal back
     // into world space (by the inverse transpose of the transform), so

@@ -3,13 +3,22 @@
 //
 
 #include "Material.hpp"
+#include "Shape.hpp"
 
 namespace raytracer {
     Colour lighting(const Shape &shape, const Material &material, const PointLight &light, const Point &point,
                     const Vector &eye, const Vector &normal, const bool in_shadow)
     {
+        // use the pattern's colour at this point if the material has one, otherwise its solid colour
+        const Colour surface_colour{
+            material.pattern.has_value()
+                ? std::visit([&](const auto &pattern) { return pattern_at_shape(pattern, shape.m_transform, point); },
+                             material.pattern.value())
+                : material.colour
+        };
+
         // combine surface colour with the light's colour/intensity
-        const auto &effective_colour{colour_at(material.colour, shape, point) * light.intensity};
+        const auto &effective_colour{surface_colour * light.intensity};
 
         // find direction to the light source
         const auto &light_vector{Vector::normalize(light.position - point)};
