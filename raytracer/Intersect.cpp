@@ -116,7 +116,7 @@ namespace raytracer {
         }
         const Colour surface{
             lighting(as_shape(computations.object), material_of(computations.object), world.light.value(),
-                     computations.point,
+                     computations.over_point,
                      computations.eye_vector, computations.normal_vector, world.is_shadowed(computations.over_point))
         };
         const Colour reflected{World::reflected_colour(world, computations, --remaining)};
