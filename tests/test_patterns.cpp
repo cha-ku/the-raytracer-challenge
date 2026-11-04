@@ -158,3 +158,93 @@ SCENARIO("A pattern with both an object and a pattern transformation") {
         }
     }
 }
+
+SCENARIO("A gradient linearly interpolates between colors") {
+    GIVEN("pattern ← gradient_pattern(white, black)") {
+        const auto pattern = GradientPattern::create(white, black);
+
+        THEN("pattern_at(pattern, point(0, 0, 0)) = white") {
+            REQUIRE(areAlmostEqual(pattern_at(pattern, Point{.x = 0, .y = 0, .z = 0}), white));
+        }
+        AND_THEN("pattern_at(pattern, point(0.25, 0, 0)) = color(0.75, 0.75, 0.75)") {
+            REQUIRE(areAlmostEqual(pattern_at(pattern, Point{.x = 0.25f, .y = 0, .z = 0}),
+                                   Colour{.r = 0.75, .g = 0.75, .b = 0.75}));
+        }
+        AND_THEN("pattern_at(pattern, point(0.5, 0, 0)) = color(0.5, 0.5, 0.5)") {
+            REQUIRE(areAlmostEqual(pattern_at(pattern, Point{.x = 0.5f, .y = 0, .z = 0}),
+                                   Colour{.r = 0.5, .g = 0.5, .b = 0.5}));
+        }
+        AND_THEN("pattern_at(pattern, point(0.75, 0, 0)) = color(0.25, 0.25, 0.25)") {
+            REQUIRE(areAlmostEqual(pattern_at(pattern, Point{.x = 0.75f, .y = 0, .z = 0}),
+                                   Colour{.r = 0.25, .g = 0.25, .b = 0.25}));
+        }
+    }
+}
+
+SCENARIO("A ring should extend in both x and z") {
+    GIVEN("pattern ← ring_pattern(white, black)") {
+        const auto pattern = RingPattern::create(white, black);
+
+        THEN("pattern_at(pattern, point(0, 0, 0)) = white") {
+            REQUIRE(areAlmostEqual(pattern_at(pattern, Point{.x = 0, .y = 0, .z = 0}), white));
+        }
+        AND_THEN("pattern_at(pattern, point(1, 0, 0)) = black") {
+            REQUIRE(areAlmostEqual(pattern_at(pattern, Point{.x = 1, .y = 0, .z = 0}), black));
+        }
+        AND_THEN("pattern_at(pattern, point(0, 0, 1)) = black") {
+            REQUIRE(areAlmostEqual(pattern_at(pattern, Point{.x = 0, .y = 0, .z = 1}), black));
+        }
+        AND_THEN("pattern_at(pattern, point(0.708, 0, 0.708)) = black") {
+            // 0.708 = just slightly more than √2/2
+            REQUIRE(areAlmostEqual(pattern_at(pattern, Point{.x = 0.708f, .y = 0, .z = 0.708f}), black));
+        }
+    }
+}
+
+SCENARIO("Checkers should repeat in x") {
+    GIVEN("pattern ← checkers_pattern(white, black)") {
+        const auto pattern = CheckersPattern::create(white, black);
+
+        THEN("pattern_at(pattern, point(0, 0, 0)) = white") {
+            REQUIRE(areAlmostEqual(pattern_at(pattern, Point{.x = 0, .y = 0, .z = 0}), white));
+        }
+        AND_THEN("pattern_at(pattern, point(0.99, 0, 0)) = white") {
+            REQUIRE(areAlmostEqual(pattern_at(pattern, Point{.x = 0.99f, .y = 0, .z = 0}), white));
+        }
+        AND_THEN("pattern_at(pattern, point(1.01, 0, 0)) = black") {
+            REQUIRE(areAlmostEqual(pattern_at(pattern, Point{.x = 1.01f, .y = 0, .z = 0}), black));
+        }
+    }
+}
+
+SCENARIO("Checkers should repeat in y") {
+    GIVEN("pattern ← checkers_pattern(white, black)") {
+        const auto pattern = CheckersPattern::create(white, black);
+
+        THEN("pattern_at(pattern, point(0, 0, 0)) = white") {
+            REQUIRE(areAlmostEqual(pattern_at(pattern, Point{.x = 0, .y = 0, .z = 0}), white));
+        }
+        AND_THEN("pattern_at(pattern, point(0, 0.99, 0)) = white") {
+            REQUIRE(areAlmostEqual(pattern_at(pattern, Point{.x = 0, .y = 0.99f, .z = 0}), white));
+        }
+        AND_THEN("pattern_at(pattern, point(0, 1.01, 0)) = black") {
+            REQUIRE(areAlmostEqual(pattern_at(pattern, Point{.x = 0, .y = 1.01f, .z = 0}), black));
+        }
+    }
+}
+
+SCENARIO("Checkers should repeat in z") {
+    GIVEN("pattern ← checkers_pattern(white, black)") {
+        const auto pattern = CheckersPattern::create(white, black);
+
+        THEN("pattern_at(pattern, point(0, 0, 0)) = white") {
+            REQUIRE(areAlmostEqual(pattern_at(pattern, Point{.x = 0, .y = 0, .z = 0}), white));
+        }
+        AND_THEN("pattern_at(pattern, point(0, 0, 0.99)) = white") {
+            REQUIRE(areAlmostEqual(pattern_at(pattern, Point{.x = 0, .y = 0, .z = 0.99f}), white));
+        }
+        AND_THEN("pattern_at(pattern, point(0, 0, 1.01)) = black") {
+            REQUIRE(areAlmostEqual(pattern_at(pattern, Point{.x = 0, .y = 0, .z = 1.01f}), black));
+        }
+    }
+}

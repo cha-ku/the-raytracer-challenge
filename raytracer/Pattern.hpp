@@ -37,6 +37,7 @@ namespace raytracer {
         bool operator==(const Pattern &) const = default;
     };
 
+    // StripedPattern
     struct StripedPattern : Pattern {
         Colour m_colour_a{};
         Colour m_colour_b{};
@@ -47,11 +48,46 @@ namespace raytracer {
         bool operator==(const StripedPattern &) const = default;
     };
 
-    // Each entry in this variant needs to define a pattern_at method
-    using AnyPattern = std::variant<StripedPattern>;
-
     // StripedPattern pattern_at
     Colour pattern_at(const StripedPattern &pattern, const Point &pattern_point);
+
+    // GradientPattern
+    struct GradientPattern : Pattern {
+        Colour m_colour_a{};
+        Colour m_colour_b{};
+
+        static GradientPattern create(Colour a, Colour b);
+        bool operator==(const GradientPattern &) const = default;
+    };
+
+    // GradientPattern pattern_at
+    Colour pattern_at(const GradientPattern& pattern, const Point &pattern_point);
+
+    struct RingPattern : Pattern {
+        Colour m_colour_a{};
+        Colour m_colour_b{};
+
+        static RingPattern create(Colour a, Colour b);
+        bool operator==(const RingPattern &) const = default;
+    };
+
+    // RingPattern pattern_at
+    Colour pattern_at(const RingPattern& pattern, const Point &pattern_point);
+
+    // CheckersPattern
+    struct CheckersPattern : Pattern {
+        Colour m_colour_a{};
+        Colour m_colour_b{};
+
+        static CheckersPattern create(Colour a, Colour b);
+        bool operator==(const CheckersPattern &) const = default;
+    };
+
+    // CheckersPattern pattern_at
+    Colour pattern_at(const CheckersPattern& pattern, const Point &pattern_point);
+
+    // Each entry in this variant needs to define a pattern_at method
+    using AnyPattern = std::variant<StripedPattern, GradientPattern, RingPattern, CheckersPattern>;
 }
 
 #endif //THE_RAYTRACER_CHALLENGE_PATTERN_HPP
