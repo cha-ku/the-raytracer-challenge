@@ -30,11 +30,14 @@ namespace raytracer {
         return intersections;
     }
 
-    Colour World::colour_at(const World &world, const Ray &ray) {
+    Colour World::colour_at(const World &world, const Ray &ray, uint8_t remaining) {
+        if (remaining == 0) {
+            return colours::black;
+        }
         const auto ray_world_intersections{intersect_world(world, ray)};
         if (const auto& maybe_hit{hit(ray_world_intersections)};
             maybe_hit.has_value()) {
-            return shade_hit(world, prepare_computations(maybe_hit.value(), ray));
+            return shade_hit(world, prepare_computations(maybe_hit.value(), ray), --remaining);
         }
         return Colour{.r = 0, .g = 0, .b = 0};
     }
@@ -70,5 +73,16 @@ namespace raytracer {
             return false;
         }
         return true;
+    }
+
+    Colour World::reflected_colour(const World &world, const Computations &comps, uint8_t remaining) {
+        if (remaining == 0) {
+            return colours::black;
+        }
+        const auto& mat = as_shape(comps.object).m_material;
+        if (mat.reflective == 0.0f) return colours::black;
+        const Ray& reflect_ray{.origin = comps.over_point, .direction = comps.reflect_vector};
+        const auto& colour = colour_at(world, reflect_ray, --remaining);
+        return colour * mat.reflective;
     }
 }

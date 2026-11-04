@@ -14,6 +14,7 @@ add_executable(tests
 target_include_directories(tests PUBLIC ${CMAKE_SOURCE_DIR}/raytracer)
 
 target_link_libraries(tests PRIVATE Catch2::Catch2WithMain matrix scene)
+#target_compile_options(tests PRIVATE -Weverything -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-padded -Wno-pre-c++20-compat-pedantic)
 
 # Add custom target to build all tests
 add_custom_target(all_tests DEPENDS tests)

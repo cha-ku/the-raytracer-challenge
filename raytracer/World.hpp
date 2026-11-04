@@ -19,11 +19,13 @@ namespace raytracer {
 
         static std::vector<Intersection> intersect_world(const World& world, const Ray& ray);
 
-        static Colour colour_at(const World& world, const Ray& ray);
+        static Colour colour_at(const World& world, const Ray& ray, uint8_t remaining);
 
         static Ray ray_for_pixel(const Camera& camera, double px, double py);
 
         [[nodiscard]] bool is_shadowed(Point point) const;
+
+        static Colour reflected_colour(const World& world, const Computations& comps, uint8_t remaining = 255);
     };
 }
 

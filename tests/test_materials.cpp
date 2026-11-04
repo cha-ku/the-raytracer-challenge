@@ -38,6 +38,16 @@ SCENARIO("The default material") {
     }
 }
 
+SCENARIO("Reflectivity for the default material") {
+    GIVEN("m ← material()") {
+        constexpr Material m{};
+
+        THEN("m.reflective = 0.0") {
+            REQUIRE(m.reflective == 0.0f);
+        }
+    }
+}
+
 SCENARIO("Lighting with the eye between the light and the surface") {
     GIVEN("m ← material() and position ← point(0, 0, 0)") {
         constexpr Material m{};

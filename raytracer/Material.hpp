@@ -21,6 +21,7 @@ namespace raytracer {
         float diffuse{0.9};
         float specular{0.9};
         float shininess{200.0};
+        float reflective{0.0f};
 
         bool operator==(const Material &) const = default;
     };
