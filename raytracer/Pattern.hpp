@@ -88,6 +88,7 @@ namespace raytracer {
 
     // Each entry in this variant needs to define a pattern_at method
     using AnyPattern = std::variant<StripedPattern, GradientPattern, RingPattern, CheckersPattern>;
+    // TODO: See BlendedPattern, NestedPattern, RadialGradientPattern, PerturbedPatterns
 }
 
 #endif //THE_RAYTRACER_CHALLENGE_PATTERN_HPP
