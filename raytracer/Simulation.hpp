@@ -15,4 +15,6 @@ void simulate_material_sphere();
 
 void simulate_multiple_spheres();
 
+void simulate_reflections();
+
 #endif //THE_RAYTRACER_CHALLENGE_SIMULATION_HPP

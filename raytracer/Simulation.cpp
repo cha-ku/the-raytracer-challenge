@@ -227,3 +227,83 @@ void simulate_multiple_spheres() {
     }
     save_canvas(canvas, "multiple_spheres.ppm");
 }
+void simulate_reflections() {
+    using namespace raytracer;
+    using namespace std::numbers;
+
+    // colour_at, shade_hit and reflected_colour each decrement this, so every bounce costs 3: ~5 bounces
+    constexpr uint8_t max_depth = 15;
+
+    // Lightly reflective checkered floor, so the spheres show up in it
+    Plane floor{Plane::make_plane()};
+    floor.m_material.specular = 0.0f;
+    floor.m_material.reflective = 0.3f;
+    floor.m_material.pattern = CheckersPattern::create(colours::periwinkle, colours::vivid_blue);
+
+    // Non-reflective striped backdrop behind everything; stripes rotated to run vertically
+    Plane backdrop{Plane::make_plane()};
+    backdrop.set_transform(multiply(translation<double>(0, 0, 6.0), rotation_x(pi_v<double> / 2)));
+    backdrop.m_material.specular = 0.0f;
+    StripedPattern backdrop_pattern = StripedPattern::create(Colour{.r = 0.9f, .g = 0.85f, .b = 0.8f},
+                                                             Colour{.r = 0.75f, .g = 0.7f, .b = 0.65f});
+    backdrop_pattern.m_transform = scale<double>(0.5, 0.5, 0.5);
+    backdrop.m_material.pattern = backdrop_pattern;
+
+    // Large mirror sphere in the middle: dark base colour, almost fully reflective
+    Sphere mirror{Sphere::make_sphere()};
+    mirror.set_transform(translation<double>(0, 1, 0.5));
+    mirror.m_material.colour = Colour{.r = 0.05f, .g = 0.05f, .b = 0.05f};
+    mirror.m_material.diffuse = 0.2f;
+    mirror.m_material.specular = 1.0f;
+    mirror.m_material.shininess = 300.0f;
+    mirror.m_material.reflective = 0.9f;
+
+    // Gradient sphere on the left: one red → yellow fade across its width (x from -1 to 1 in object space)
+    Sphere gradient_sphere{Sphere::make_sphere()};
+    gradient_sphere.set_transform(multiply(translation<double>(-2.2, 0.7, -0.3), scale<double>(0.7, 0.7, 0.7)));
+    GradientPattern gradient = GradientPattern::create(colours::red, colours::yellow);
+    gradient.m_transform = multiply(translation<double>(-1, 0, 0), scale<double>(2, 1, 1));
+    gradient_sphere.m_material.pattern = gradient;
+    gradient_sphere.m_material.diffuse = 0.7f;
+    gradient_sphere.m_material.specular = 0.3f;
+
+    // Ring sphere on the right: tight rings tilted towards the camera, slightly reflective
+    Sphere ring_sphere{Sphere::make_sphere()};
+    ring_sphere.set_transform(multiply(translation<double>(2.1, 0.6, -0.4), scale<double>(0.6, 0.6, 0.6)));
+    RingPattern rings = RingPattern::create(colours::white, colours::magenta);
+    rings.m_transform = multiply(rotation_x(pi_v<double> / 2), scale<double>(0.2, 0.2, 0.2));
+    ring_sphere.m_material.pattern = rings;
+    ring_sphere.m_material.reflective = 0.2f;
+
+    // Small striped sphere in front: thin diagonal stripes, slightly reflective
+    Sphere striped_sphere{Sphere::make_sphere()};
+    striped_sphere.set_transform(multiply(translation<double>(-0.9, 0.35, -1.8), scale<double>(0.35, 0.35, 0.35)));
+    StripedPattern stripes = StripedPattern::create(colours::green, colours::white);
+    stripes.m_transform = multiply(rotation_z(pi_v<double> / 4), scale<double>(0.25, 0.25, 0.25));
+    striped_sphere.m_material.pattern = stripes;
+    striped_sphere.m_material.reflective = 0.15f;
+
+    // Small plain glossy sphere in front on the right, non-reflective for contrast
+    Sphere plain_sphere{Sphere::make_sphere()};
+    plain_sphere.set_transform(multiply(translation<double>(1.0, 0.3, -1.9), scale<double>(0.3, 0.3, 0.3)));
+    plain_sphere.m_material.colour = colours::cyan;
+    plain_sphere.m_material.diffuse = 0.7f;
+    plain_sphere.m_material.specular = 0.5f;
+
+    World world;
+    world.objects = {floor, backdrop, mirror, gradient_sphere, ring_sphere, striped_sphere, plain_sphere};
+    world.light = PointLight{.position = Point{.x = -10, .y = 10, .z = -10}, .intensity = colours::white};
+
+    Camera camera{.hsize = 600, .vsize = 400, .field_of_view = pi_v<double> / 3};
+    camera.transform = view_transform(Point{.x = 0, .y = 1.8f, .z = -6}, Point{.x = 0, .y = 0.8f, .z = 0},
+                                      Vector{.x = 0, .y = 1, .z = 0});
+
+    Canvas canvas{camera.hsize, camera.vsize};
+    for (uint32_t y = 0; y < camera.vsize; ++y) {
+        for (uint32_t x = 0; x < camera.hsize; ++x) {
+            const auto ray = World::ray_for_pixel(camera, x, y);
+            canvas.write_pixel(x, y, World::colour_at(world, ray, max_depth));
+        }
+    }
+    save_canvas(canvas, "reflections.ppm");
+}
