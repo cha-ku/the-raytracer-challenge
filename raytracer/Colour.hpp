@@ -52,6 +52,8 @@ namespace raytracer {
         inline constexpr Colour cyan{.r = 0, .g = 1, .b = 1};
         inline constexpr Colour magenta{.r = 1, .g = 0, .b = 1};
         inline constexpr Colour grey{.r = 0.5, .g = 0.5, .b = 0.5};
+        inline constexpr Colour periwinkle{.r = 175 / 255.0f, .g = 190 / 255.0f, .b = 255 / 255.0f}; // rgb(175, 190, 255)
+        inline constexpr Colour vivid_blue{.r = 4 / 255.0f, .g = 52 / 255.0f, .b = 255 / 255.0f};   // rgb(4, 52, 255)
     }
 }
 
