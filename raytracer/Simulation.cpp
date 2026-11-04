@@ -185,6 +185,9 @@ void simulate_multiple_spheres() {
     Plane floor{Plane::make_plane()};
     floor.m_material.colour = Colour{.r = 0.4f, .g = 0.6f, .b = 0.8f};
     floor.m_material.specular = 0.0f;
+    GradientPattern floor_pattern = GradientPattern::create(colours::red, colours::blue);
+    floor_pattern.m_transform = multiply(translation<double>(-10, 0, 0), scale<double>(20, 1, 1));
+    floor.m_material.pattern = floor_pattern;
 
     Plane backdrop{Plane::make_plane()};
     backdrop.set_transform(multiply(translation<double>(0, 0, 3.0), rotation_x(pi_v<double>/2)));
