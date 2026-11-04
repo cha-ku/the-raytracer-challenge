@@ -24,6 +24,7 @@ int main() {
     // test();
     // simulate_sphere();
     // simulate_material_sphere();
-    simulate_multiple_spheres();
+    // simulate_multiple_spheres();
+    simulate_reflections();
     return 0;
 }
