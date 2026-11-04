@@ -70,7 +70,7 @@ namespace raytracer {
     constexpr Matrix<T> multiply(Matrix<T> matrix1, Matrix<T> matrix2);
 
     template<typename T>
-    constexpr Matrix<T> transpose(Matrix<T> matrix);
+    constexpr Matrix<T> transpose(const Matrix<T>& matrix);
 
     template<typename T>
     constexpr T determinant(Matrix<T> matrix);

@@ -34,7 +34,7 @@ namespace raytracer {
     }
 
     template<typename T>
-    constexpr Matrix<T> transpose(Matrix<T> matrix) {
+    constexpr Matrix<T> transpose(const Matrix<T>& matrix) {
         Matrix<T> result(matrix.cols(), matrix.rows());
         for (size_t row = 0; row < matrix.rows(); ++row) {
             for (size_t col = 0; col < matrix.cols(); ++col) {
