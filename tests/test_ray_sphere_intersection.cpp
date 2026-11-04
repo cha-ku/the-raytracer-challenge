@@ -420,6 +420,26 @@ SCENARIO("Precomputing the state of an intersection") {
     }
 }
 
+SCENARIO("Precomputing the reflection vector") {
+    GIVEN("shape ← plane(), r ← ray(point(0, 1, -1), vector(0, -√2/2, √2/2)) and i ← intersection(√2, shape)") {
+        constexpr float half_sqrt2 = std::numbers::sqrt2_v<float> / 2;
+        const Plane shape = Plane::make_plane();
+        const Ray r{
+            .origin = Point{.x = 0, .y = 1, .z = -1},
+            .direction = Vector{.x = 0, .y = -half_sqrt2, .z = half_sqrt2}
+        };
+        const Intersection i{shape, std::numbers::sqrt2_v<float>};
+
+        WHEN("comps ← prepare_computations(i, r)") {
+            const auto comps = prepare_computations(i, r);
+
+            THEN("comps.reflectv = vector(0, √2/2, √2/2)") {
+                REQUIRE(Vector::areAlmostEqual(comps.reflect_vector, Vector{.x = 0, .y = half_sqrt2, .z = half_sqrt2}));
+            }
+        }
+    }
+}
+
 SCENARIO("The hit, when an intersection occurs on the outside") {
     GIVEN("A ray, a sphere, and an intersection") {
         const Ray r{Point(0, 0, -5), Vector(0, 0, 1)};

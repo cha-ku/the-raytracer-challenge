@@ -167,12 +167,13 @@ namespace raytracer {
         Vector normal_vector{};
         bool inside{};
         Point over_point{};
+        Vector reflect_vector{};
         explicit Computations(const Intersection& intersection, const Ray& ray);
     };
 
     Computations prepare_computations(const Intersection &intersection, const Ray &ray);
 
-    Colour shade_hit(const World& world, const Computations& computations);
+    Colour shade_hit(const World& world, const Computations& computations, uint8_t remaining);
 
     Matrix<double> view_transform(const Point &from, const Point &to, const Vector &up);
 

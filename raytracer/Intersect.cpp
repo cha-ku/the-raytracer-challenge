@@ -95,12 +95,12 @@ namespace raytracer {
 
     Computations::Computations(const Intersection &intersection, const Ray &ray) : t{intersection.t},
         object{intersection.object}, point{position(ray, intersection.t)}, eye_vector{-ray.direction},
-        normal_vector{std::visit([this](const auto &shape) { return normal_at(shape, point); }, object)} {
+        normal_vector{std::visit([this](const auto &shape) { return normal_at(shape, point); }, object)},
+        reflect_vector{Vector::reflect(ray.direction, normal_vector)} {
         if (Vector::dot(normal_vector, eye_vector) < 0) {
             inside = true;
             normal_vector = -normal_vector;
-        }
-        else {
+        } else {
             inside = false;
         }
         over_point = point + normal_vector * utils::EPSILON;
@@ -110,9 +110,17 @@ namespace raytracer {
         return Computations(intersection, ray);
     }
 
-    Colour shade_hit(const World &world, const Computations &computations) {
-        return lighting(as_shape(computations.object), material_of(computations.object), world.light.value(), computations.point,
-                        computations.eye_vector, computations.normal_vector, world.is_shadowed(computations.over_point));
+    Colour shade_hit(const World &world, const Computations &computations, uint8_t remaining) {
+        if (remaining == 0) {
+            return colours::black;
+        }
+        const Colour surface{
+            lighting(as_shape(computations.object), material_of(computations.object), world.light.value(),
+                     computations.point,
+                     computations.eye_vector, computations.normal_vector, world.is_shadowed(computations.over_point))
+        };
+        const Colour reflected{World::reflected_colour(world, computations, --remaining)};
+        return surface + reflected;
     }
 
     // Coordinate system (right-handed):

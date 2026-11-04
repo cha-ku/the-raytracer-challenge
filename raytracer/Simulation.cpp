@@ -222,7 +222,7 @@ void simulate_multiple_spheres() {
     for (uint32_t y = 0; y < camera.vsize; ++y) {
         for (uint32_t x = 0; x < camera.hsize; ++x) {
             const auto ray = World::ray_for_pixel(camera, x, y);
-            canvas.write_pixel(x, y, World::colour_at(world, ray));
+            canvas.write_pixel(x, y, World::colour_at(world, ray, 255));
         }
     }
     save_canvas(canvas, "multiple_spheres.ppm");
