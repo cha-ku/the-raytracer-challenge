@@ -36,7 +36,7 @@ namespace raytracer {
         }
 
         static constexpr float magnitude(const Vector &v) {
-            return std::sqrt(v.x * v.x + v.y * v.y + v.z * v.z);
+            return std::sqrt(utils::square(v.x) + utils::square(v.y) + utils::square(v.z));
         }
 
         static constexpr Vector normalize(const Vector &v) {

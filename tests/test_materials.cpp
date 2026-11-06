@@ -48,6 +48,19 @@ SCENARIO("Reflectivity for the default material") {
     }
 }
 
+SCENARIO("Transparency and Refractive Index for the default material") {
+    GIVEN("m ← material()") {
+        constexpr Material m{};
+
+        THEN("m.transparency = 0.0") {
+            REQUIRE(m.transparency == 0.0f);
+        }
+        AND_THEN("m.refractive_index = 1.0") {
+            REQUIRE(m.refractive_index == 1.0f);
+        }
+    }
+}
+
 SCENARIO("Lighting with the eye between the light and the surface") {
     GIVEN("m ← material() and position ← point(0, 0, 0)") {
         constexpr Material m{};

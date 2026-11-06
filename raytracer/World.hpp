@@ -25,7 +25,11 @@ namespace raytracer {
 
         [[nodiscard]] bool is_shadowed(Point point) const;
 
+        static Colour refracted_colour(const World & world, const Computations & comps, uint8_t remaining = 255);
+
         static Colour reflected_colour(const World& world, const Computations& comps, uint8_t remaining = 255);
+
+        static float schlick(const Computations& comps);
     };
 }
 

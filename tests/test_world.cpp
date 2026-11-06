@@ -9,6 +9,7 @@
 #include "Intersect.hpp"
 #include "Light.hpp"
 #include "MatrixImpl.hpp"
+#include "TestPattern.hpp"
 
 #include "catch2/catch_test_macros.hpp"
 
@@ -95,7 +96,7 @@ SCENARIO("Shading an intersection") {
         const Intersection i{shape, 4};
 
         WHEN("comps ← prepare_computations(i, r) and c ← shade_hit(w, comps)") {
-            const auto comps = prepare_computations(i, r);
+            const auto comps = prepare_computations(i, r, {i});
             const auto c = shade_hit(w, comps, 255);
 
             THEN("c = color(0.38066, 0.47583, 0.2855)") {
@@ -114,7 +115,7 @@ SCENARIO("Shading an intersection from the inside") {
         const Intersection i{shape, 0.5f};
 
         WHEN("comps ← prepare_computations(i, r) and c ← shade_hit(w, comps)") {
-            const auto comps = prepare_computations(i, r);
+            const auto comps = prepare_computations(i, r, {i});
             const auto c = shade_hit(w, comps, 255);
 
             THEN("c = color(0.90498, 0.90498, 0.90498)") {
@@ -211,7 +212,7 @@ SCENARIO("shade_hit() is given an intersection in shadow") {
         const Intersection i{s2, 4};
 
         WHEN("comps ← prepare_computations(i, r) and c ← shade_hit(w, comps)") {
-            const auto comps = prepare_computations(i, r);
+            const auto comps = prepare_computations(i, r, {i});
             const auto c = shade_hit(w, comps, 255);
 
             THEN("c = color(0.1, 0.1, 0.1)") {
@@ -249,7 +250,7 @@ SCENARIO("The reflected color for a nonreflective material") {
         const Intersection i{.object = shape, .t = 1};
 
         WHEN("comps ← prepare_computations(i, r) and color ← reflected_color(w, comps)") {
-            const auto comps = prepare_computations(i, r);
+            const auto comps = prepare_computations(i, r, {i});
             const auto colour = World::reflected_colour(w, comps, 255);
 
             THEN("color = color(0, 0, 0)") {
@@ -275,7 +276,7 @@ SCENARIO("The reflected color for a reflective material") {
         const Intersection i{.object = shape, .t = std::numbers::sqrt2_v<float>};
 
         WHEN("comps ← prepare_computations(i, r) and color ← reflected_color(w, comps)") {
-            const auto comps = prepare_computations(i, r);
+            const auto comps = prepare_computations(i, r, {i});
             const auto colour = World::reflected_colour(w, comps, 255);
 
             THEN("color = color(0.19032, 0.2379, 0.14274)") {
@@ -301,7 +302,7 @@ SCENARIO("shade_hit() with a reflective material") {
         const Intersection i{.object = shape, .t = std::numbers::sqrt2_v<float>};
 
         WHEN("comps ← prepare_computations(i, r) and color ← shade_hit(w, comps)") {
-            const auto comps = prepare_computations(i, r);
+            const auto comps = prepare_computations(i, r, {i});
             const auto colour = shade_hit(w, comps, 255);
 
             THEN("color = color(0.87677, 0.92436, 0.82918)") {
@@ -332,6 +333,167 @@ SCENARIO("color_at() with mutually reflective surfaces") {
             // Without a recursion limit the ray bounces between the two planes forever and this
             // overflows the stack (crashing the test binary) rather than throwing; returning at all is the pass
             REQUIRE_NOTHROW(World::colour_at(w, r, 255));
+        }
+    }
+}
+
+SCENARIO("The refracted color with an opaque surface") {
+    GIVEN("w ← default_world(), shape ← the first object in w, r ← ray(point(0, 0, -5), vector(0, 0, 1)) "
+          "and xs ← intersections(4:shape, 6:shape)") {
+        const auto w = World::create_default_world();
+        const AnyShape &shape = w.objects[0];
+        constexpr Ray r{.origin = Point{.x = 0, .y = 0, .z = -5}, .direction = Vector{.x = 0, .y = 0, .z = 1}};
+        const auto xs = intersections(Intersection{.object = shape, .t = 4}, Intersection{.object = shape, .t = 6});
+
+        WHEN("comps ← prepare_computations(xs[0], r, xs) and c ← refracted_color(w, comps, 5)") {
+            const auto comps = prepare_computations(xs[0], r, xs);
+            const auto c = World::refracted_colour(w, comps, 5);
+
+            THEN("c = color(0, 0, 0)") {
+                REQUIRE(areAlmostEqual(c, colours::black));
+            }
+        }
+    }
+}
+
+SCENARIO("The refracted color at the maximum recursive depth") {
+    GIVEN("w ← default_world(), shape ← the first object in w with transparency 1.0 and refractive_index 1.5, "
+          "r ← ray(point(0, 0, -5), vector(0, 0, 1)) and xs ← intersections(4:shape, 6:shape)") {
+        auto w = World::create_default_world();
+        AnyShape &shape = w.objects[0];
+        material_of(shape).transparency = 1.0f;
+        material_of(shape).refractive_index = 1.5f;
+        constexpr Ray r{.origin = Point{.x = 0, .y = 0, .z = -5}, .direction = Vector{.x = 0, .y = 0, .z = 1}};
+        const auto xs = intersections(Intersection{.object = shape, .t = 4}, Intersection{.object = shape, .t = 6});
+
+        WHEN("comps ← prepare_computations(xs[0], r, xs) and c ← refracted_color(w, comps, 0)") {
+            const auto comps = prepare_computations(xs[0], r, xs);
+            const auto c = World::refracted_colour(w, comps, 0);
+
+            THEN("c = color(0, 0, 0)") {
+                REQUIRE(areAlmostEqual(c, colours::black));
+            }
+        }
+    }
+}
+
+SCENARIO("The refracted color under total internal reflection") {
+    GIVEN("w ← default_world(), shape ← the first object in w with transparency 1.0 and refractive_index 1.5, "
+          "r ← ray(point(0, 0, √2/2), vector(0, 1, 0)) and xs ← intersections(-√2/2:shape, √2/2:shape)") {
+        constexpr float half_sqrt2 = std::numbers::sqrt2_v<float> / 2;
+        auto w = World::create_default_world();
+        AnyShape &shape = w.objects[0];
+        material_of(shape).transparency = 1.0f;
+        material_of(shape).refractive_index = 1.5f;
+        constexpr Ray r{.origin = Point{.x = 0, .y = 0, .z = half_sqrt2}, .direction = Vector{.x = 0, .y = 1, .z = 0}};
+        const auto xs = intersections(Intersection{.object = shape, .t = -half_sqrt2},
+                                      Intersection{.object = shape, .t = half_sqrt2});
+
+        // The ray starts inside the sphere, so the hit to look at is the second intersection, xs[1]
+        WHEN("comps ← prepare_computations(xs[1], r, xs) and c ← refracted_color(w, comps, 5)") {
+            const auto comps = prepare_computations(xs[1], r, xs);
+            const auto c = World::refracted_colour(w, comps, 5);
+
+            THEN("c = color(0, 0, 0)") {
+                REQUIRE(areAlmostEqual(c, colours::black));
+            }
+        }
+    }
+}
+
+SCENARIO("The refracted color with a refracted ray") {
+    GIVEN("w ← default_world(), A ← the first object in w with ambient 1.0 and pattern test_pattern(), "
+          "B ← the second object in w with transparency 1.0 and refractive_index 1.5, "
+          "r ← ray(point(0, 0, 0.1), vector(0, 1, 0)) and "
+          "xs ← intersections(-0.9899:A, -0.4899:B, 0.4899:B, 0.9899:A)") {
+        auto w = World::create_default_world();
+        AnyShape &a = w.objects[0];
+        material_of(a).ambient = 1.0f;
+        material_of(a).pattern = test_pattern();
+        AnyShape &b = w.objects[1];
+        material_of(b).transparency = 1.0f;
+        material_of(b).refractive_index = 1.5f;
+        constexpr Ray r{.origin = Point{.x = 0, .y = 0, .z = 0.1f}, .direction = Vector{.x = 0, .y = 1, .z = 0}};
+        const auto xs = intersections(Intersection{.object = a, .t = -0.9899f},
+                                      Intersection{.object = b, .t = -0.4899f},
+                                      Intersection{.object = b, .t = 0.4899f},
+                                      Intersection{.object = a, .t = 0.9899f});
+
+        WHEN("comps ← prepare_computations(xs[2], r, xs) and c ← refracted_color(w, comps, 5)") {
+            const auto comps = prepare_computations(xs[2], r, xs);
+            const auto c = World::refracted_colour(w, comps, 5);
+
+            THEN("c = color(0, 0.99888, 0.04725)") {
+                REQUIRE(areAlmostEqual(c, Colour{.r = 0, .g = 0.99888f, .b = 0.04725f}));
+            }
+        }
+    }
+}
+
+SCENARIO("shade_hit() with a transparent material") {
+    GIVEN("w ← default_world(), floor ← plane() with translation(0, -1, 0), transparency 0.5 and refractive_index 1.5, "
+          "ball ← sphere() with color (1, 0, 0), ambient 0.5 and translation(0, -3.5, -0.5), both added to w, "
+          "r ← ray(point(0, 0, -3), vector(0, -√2/2, √2/2)) and xs ← intersections(√2:floor)") {
+        constexpr float half_sqrt2 = std::numbers::sqrt2_v<float> / 2;
+        auto w = World::create_default_world();
+        Plane floor = Plane::make_plane();
+        floor.set_transform(translation<double>(0, -1, 0));
+        floor.m_material.transparency = 0.5f;
+        floor.m_material.refractive_index = 1.5f;
+        w.objects.emplace_back(floor);
+        Sphere ball = Sphere::make_sphere();
+        ball.m_material.colour = colours::red;
+        ball.m_material.ambient = 0.5f;
+        ball.set_transform(translation<double>(0, -3.5, -0.5));
+        w.objects.emplace_back(ball);
+        constexpr Ray r{
+            .origin = Point{.x = 0, .y = 0, .z = -3},
+            .direction = Vector{.x = 0, .y = -half_sqrt2, .z = half_sqrt2}
+        };
+        const auto xs = intersections(Intersection{.object = floor, .t = std::numbers::sqrt2_v<float>});
+
+        WHEN("comps ← prepare_computations(xs[0], r, xs) and color ← shade_hit(w, comps, 5)") {
+            const auto comps = prepare_computations(xs[0], r, xs);
+            const auto colour = shade_hit(w, comps, 5);
+
+            THEN("color = color(0.93642, 0.68642, 0.68642)") {
+                REQUIRE(areAlmostEqual(colour, Colour{.r = 0.93642f, .g = 0.68642f, .b = 0.68642f}));
+            }
+        }
+    }
+}
+
+SCENARIO("shade_hit() with a reflective, transparent material") {
+    GIVEN("w ← default_world(), r ← ray(point(0, 0, -3), vector(0, -√2/2, √2/2)), "
+          "floor ← plane() with translation(0, -1, 0), reflective 0.5, transparency 0.5 and refractive_index 1.5, "
+          "ball ← sphere() with color (1, 0, 0), ambient 0.5 and translation(0, -3.5, -0.5), both added to w, "
+          "and xs ← intersections(√2:floor)") {
+        constexpr float half_sqrt2 = std::numbers::sqrt2_v<float> / 2;
+        auto w = World::create_default_world();
+        constexpr Ray r{
+            .origin = Point{.x = 0, .y = 0, .z = -3},
+            .direction = Vector{.x = 0, .y = -half_sqrt2, .z = half_sqrt2}
+        };
+        Plane floor = Plane::make_plane();
+        floor.set_transform(translation<double>(0, -1, 0));
+        floor.m_material.reflective = 0.5f;
+        floor.m_material.transparency = 0.5f;
+        floor.m_material.refractive_index = 1.5f;
+        w.objects.emplace_back(floor);
+        Sphere ball = Sphere::make_sphere();
+        ball.m_material.colour = colours::red;
+        ball.m_material.ambient = 0.5f;
+        ball.set_transform(translation<double>(0, -3.5, -0.5));
+        w.objects.emplace_back(ball);
+        const auto xs = intersections(Intersection{.object = floor, .t = std::numbers::sqrt2_v<float>});
+
+        WHEN("comps ← prepare_computations(xs[0], r, xs) and color ← shade_hit(w, comps, 5)") {
+            const auto comps = prepare_computations(xs[0], r, xs);
+            const auto colour = shade_hit(w, comps, 5);
+
+            THEN("color = color(0.93391, 0.69643, 0.69243)") {
+                REQUIRE(areAlmostEqual(colour, Colour{.r = 0.93391f, .g = 0.69643f, .b = 0.69243f}));
+            }
         }
     }
 }

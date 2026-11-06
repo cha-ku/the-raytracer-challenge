@@ -9,12 +9,17 @@
 #include <vector>
 
 namespace utils {
-    static constexpr float EPSILON = 1e-2f;
+    static constexpr float EPSILON = 1e-4f;
 
     // std::abs/std::fabs are not constexpr in libc++ yet, so use our own to keep the comparisons usable at compile time
     template<typename T>
     constexpr T abs(const T value) {
         return value < 0 ? -value : value;
+    }
+
+    template<typename T>
+    constexpr T square(const T value) {
+        return value * value;
     }
 
     static constexpr bool equal(const float a, const float b, const float epsilon = EPSILON) {

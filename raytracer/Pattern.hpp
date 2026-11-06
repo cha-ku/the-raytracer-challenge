@@ -86,8 +86,18 @@ namespace raytracer {
     // CheckersPattern pattern_at
     Colour pattern_at(const CheckersPattern& pattern, const Point &pattern_point);
 
+    // TestPattern: colours each point by its pattern-space coordinates (r = x, g = y, b = z), so you can see
+    // exactly which point pattern_at received. Used by the tests (via test_pattern()), and handy for
+    // visualising object/pattern transforms in a render
+    struct TestPattern : Pattern {
+        bool operator==(const TestPattern &) const = default;
+    };
+
+    // TestPattern pattern_at
+    Colour pattern_at(const TestPattern &pattern, const Point &pattern_point);
+
     // Each entry in this variant needs to define a pattern_at method
-    using AnyPattern = std::variant<StripedPattern, GradientPattern, RingPattern, CheckersPattern>;
+    using AnyPattern = std::variant<StripedPattern, GradientPattern, RingPattern, CheckersPattern, TestPattern>;
     // TODO: See BlendedPattern, NestedPattern, RadialGradientPattern, PerturbedPatterns
 }
 
