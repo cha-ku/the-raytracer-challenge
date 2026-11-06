@@ -290,8 +290,21 @@ void simulate_reflections() {
     plain_sphere.m_material.diffuse = 0.7f;
     plain_sphere.m_material.specular = 0.5f;
 
+    // Glass sphere front and centre: almost no surface colour of its own, mostly transparent and reflective,
+    // with glass's refractive index, so the scene behind it shows through bent and flipped
+    Sphere glass_sphere{Sphere::make_sphere()};
+    glass_sphere.set_transform(multiply(translation<double>(0.1, 0.5, -3.0), scale<double>(0.5, 0.5, 0.5)));
+    glass_sphere.m_material.colour = colours::black;
+    glass_sphere.m_material.ambient = 0.0f;
+    glass_sphere.m_material.diffuse = 0.1f;
+    glass_sphere.m_material.specular = 1.0f;
+    glass_sphere.m_material.shininess = 300.0f;
+    glass_sphere.m_material.reflective = 0.9f;
+    glass_sphere.m_material.transparency = 0.9f;
+    glass_sphere.m_material.refractive_index = 1.5f;
+
     World world;
-    world.objects = {floor, backdrop, mirror, gradient_sphere, ring_sphere, striped_sphere, plain_sphere};
+    world.objects = {floor, backdrop, mirror, gradient_sphere, ring_sphere, striped_sphere, plain_sphere, glass_sphere};
     world.light = PointLight{.position = Point{.x = -10, .y = 10, .z = -10}, .intensity = colours::white};
 
     Camera camera{.hsize = 600, .vsize = 400, .field_of_view = pi_v<double> / 3};

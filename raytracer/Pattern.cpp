@@ -3,6 +3,7 @@
 //
 
 #include "Pattern.hpp"
+#include "Utils.hpp"
 
 #include <cmath>
 
@@ -35,7 +36,7 @@ namespace raytracer {
 
     Colour pattern_at(const RingPattern &pattern, const Point &pattern_point) {
         const auto distance_from_origin = std::sqrtf(
-            pattern_point.x * pattern_point.x + pattern_point.z * pattern_point.z);
+            utils::square(pattern_point.x) + utils::square(pattern_point.z));
         return std::fmod(std::floor(distance_from_origin), 2) == 0 ? pattern.m_colour_a : pattern.m_colour_b;
     }
 
@@ -48,5 +49,9 @@ namespace raytracer {
                0
                    ? pattern.m_colour_a
                    : pattern.m_colour_b;
+    }
+
+    Colour pattern_at(const TestPattern &, const Point &pattern_point) {
+        return Colour{.r = pattern_point.x, .g = pattern_point.y, .b = pattern_point.z};
     }
 }

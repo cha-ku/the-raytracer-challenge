@@ -41,13 +41,15 @@ namespace raytracer {
     Vector to_world_normal(const Vector &object_normal, const Matrix<double> &inverse_transform);
 
     struct Sphere : Shape, ShapeFactory<Sphere> {
-        explicit Sphere(const uint32_t id) : Shape(id) {}
+        explicit Sphere(const uint32_t id) : Shape(id) {
+        }
 
         static Sphere make_sphere() { return make(); }
     };
 
     struct Plane : Shape, ShapeFactory<Plane> {
-        explicit Plane(const uint32_t id) : Shape(id) {}
+        explicit Plane(const uint32_t id) : Shape(id) {
+        }
 
         static Plane make_plane() { return make(); }
     };
@@ -86,10 +88,12 @@ namespace raytracer {
     struct Intersection {
         AnyShape object;
         float t{};
+
+        bool operator==(const Intersection &) const = default;
     };
 
     template<typename... Args>
-    std::vector<Intersection> intersections(Args&&... args) {
+    std::vector<Intersection> intersections(Args &&... args) {
         return std::vector<Intersection>{std::forward<Args>(args)...};
     }
 
@@ -104,7 +108,8 @@ namespace raytracer {
     // overload, found via ADL, taking S and a local-space Point and
     // returning a Vector.
     template<typename S>
-    concept Normalable = requires(const S &shape, const Point &local_point) {
+    concept Normalable = requires(const S &shape, const Point &local_point)
+    {
         { local_normal_at(shape, local_point) } -> std::same_as<Vector>;
     };
 
@@ -114,7 +119,7 @@ namespace raytracer {
     // object-space normal back into world space (by the inverse transpose
     // of the transform) and normalizes it.
     template<Normalable S>
-    Vector normal_at(const S& shape, const Point& point) {
+    Vector normal_at(const S &shape, const Point &point) {
         const auto shape_transform_inverse{inverse(shape.m_transform)};
         if (!shape_transform_inverse.has_value()) {
             return {};
@@ -138,8 +143,9 @@ namespace raytracer {
     // error at the intersect() call site, instead of a confusing failure
     // deep inside intersect()'s template body.
     template<typename S>
-    concept Intersectable = requires(const S &shape, const Ray &local_ray) {
-        { local_intersect(shape, local_ray) } -> std::same_as<std::vector<Intersection>>;
+    concept Intersectable = requires(const S &shape, const Ray &local_ray)
+    {
+        { local_intersect(shape, local_ray) } -> std::same_as<std::vector<Intersection> >;
     };
 
     // Shared by every concrete Shape: converts a world-space ray into the
@@ -167,16 +173,20 @@ namespace raytracer {
         Vector normal_vector{};
         bool inside{};
         Point over_point{};
+        Point under_point{};
         Vector reflect_vector{};
-        explicit Computations(const Intersection& intersection, const Ray& ray);
+        float n1{1.0f};
+        float n2{1.0f};
+
+        explicit Computations(const Intersection &intersection, const Ray &ray);
     };
 
-    Computations prepare_computations(const Intersection &intersection, const Ray &ray);
+    Computations prepare_computations(const Intersection &intersection, const Ray &ray,
+                                      const std::vector<Intersection>& intersections);
 
-    Colour shade_hit(const World& world, const Computations& computations, uint8_t remaining);
+    Colour shade_hit(const World &world, const Computations &computations, uint8_t remaining);
 
     Matrix<double> view_transform(const Point &from, const Point &to, const Vector &up);
-
 }
 
 #endif //THE_RAYTRACER_CHALLENGE_INTERSECT_HPP

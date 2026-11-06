@@ -8,10 +8,23 @@
 #include "Utils.hpp"
 
 #include "catch2/catch_test_macros.hpp"
+#include "catch2/generators/catch_generators.hpp"
 #include <cmath>
 #include <numbers>
+#include <string>
+
+#include "World.hpp"
 
 using namespace raytracer;
+
+namespace {
+    Sphere make_glass_sphere() {
+        Sphere s = Sphere::make_sphere();
+        s.m_material.transparency = 1.0f;
+        s.m_material.refractive_index = 1.5f;
+        return s;
+    }
+}
 
 SCENARIO("Creating and querying a ray") {
     GIVEN("Origin") {
@@ -408,7 +421,7 @@ SCENARIO("Precomputing the state of an intersection") {
         const Sphere shape = Sphere::make_sphere();
         const Intersection i{shape, 4};
         WHEN("comps = prepare_computations(i, r)") {
-            const auto comps = prepare_computations(i, r);
+            const auto comps = prepare_computations(i, r, {i});
             THEN("comps contains precomputed state") {
                 REQUIRE(comps.t == i.t);
                 REQUIRE(comps.object == i.object);
@@ -431,7 +444,7 @@ SCENARIO("Precomputing the reflection vector") {
         const Intersection i{shape, std::numbers::sqrt2_v<float>};
 
         WHEN("comps ← prepare_computations(i, r)") {
-            const auto comps = prepare_computations(i, r);
+            const auto comps = prepare_computations(i, r, {i});
 
             THEN("comps.reflectv = vector(0, √2/2, √2/2)") {
                 REQUIRE(Vector::areAlmostEqual(comps.reflect_vector, Vector{.x = 0, .y = half_sqrt2, .z = half_sqrt2}));
@@ -446,7 +459,7 @@ SCENARIO("The hit, when an intersection occurs on the outside") {
         const Sphere shape = Sphere::make_sphere();
         const Intersection i{shape, 4};
         WHEN("comps = prepare_computations(i, r)") {
-            const auto comps = prepare_computations(i, r);
+            const auto comps = prepare_computations(i, r, {i});
             THEN("comps.inside is false") {
                 REQUIRE_FALSE(comps.inside);
             }
@@ -460,13 +473,29 @@ SCENARIO("The hit, when an intersection occurs on the inside") {
         const Sphere shape = Sphere::make_sphere();
         const Intersection i{shape, 1};
         WHEN("comps = prepare_computations(i, r)") {
-            const auto comps = prepare_computations(i, r);
+            const auto comps = prepare_computations(i, r, {i});
             THEN("comps reflects inside hit with inverted normal") {
                 REQUIRE(comps.point == Point(0, 0, 1));
                 REQUIRE(Vector::areAlmostEqual(comps.eye_vector, Vector(0, 0, -1)));
                 REQUIRE(comps.inside);
                 REQUIRE(Vector::areAlmostEqual(comps.normal_vector, Vector(0, 0, -1)));
             }
+        }
+    }
+}
+
+SCENARIO("A helper for producing a sphere with a glassy material") {
+    GIVEN("s ← glass_sphere()") {
+        const Sphere s = make_glass_sphere();
+
+        THEN("s.transform = identity_matrix") {
+            REQUIRE(s.m_transform == Matrix<double>::identity(4));
+        }
+        AND_THEN("s.material.transparency = 1.0") {
+            REQUIRE(s.m_material.transparency == 1.0f);
+        }
+        AND_THEN("s.material.refractive_index = 1.5") {
+            REQUIRE(s.m_material.refractive_index == 1.5f);
         }
     }
 }
@@ -493,11 +522,135 @@ SCENARIO("The hit should offset the point") {
         const Intersection i{shape, 5};
 
         WHEN("comps ← prepare_computations(i, r)") {
-            const auto comps = prepare_computations(i, r);
+            const auto comps = prepare_computations(i, r, {i});
 
             THEN("comps.over_point.z < -EPSILON/2 and comps.point.z > comps.over_point.z") {
                 REQUIRE(comps.over_point.z < -utils::EPSILON / 2);
                 REQUIRE(comps.point.z > comps.over_point.z);
+            }
+        }
+    }
+}
+
+SCENARIO("The under point is offset below the surface") {
+    GIVEN("r ← ray(point(0, 0, -5), vector(0, 0, 1)), shape ← glass_sphere() with translation(0, 0, 1), "
+          "i ← intersection(5, shape) and xs ← intersections(i)") {
+        constexpr Ray r{.origin = Point{.x = 0, .y = 0, .z = -5}, .direction = Vector{.x = 0, .y = 0, .z = 1}};
+        Sphere shape = make_glass_sphere();
+        shape.set_transform(translation<double>(0, 0, 1));
+        const Intersection i{.object = shape, .t = 5};
+        const auto xs = intersections(i);
+
+        WHEN("comps ← prepare_computations(i, r, xs)") {
+            const auto comps = prepare_computations(i, r, xs);
+
+            THEN("comps.under_point.z > EPSILON/2") {
+                REQUIRE(comps.under_point.z > utils::EPSILON / 2);
+            }
+            AND_THEN("comps.point.z < comps.under_point.z") {
+                REQUIRE(comps.point.z < comps.under_point.z);
+            }
+        }
+    }
+}
+
+SCENARIO("Finding n1 and n2 at various intersections") {
+    GIVEN("A ← glass_sphere() with scaling(2, 2, 2) and refractive_index 1.5, "
+          "B ← glass_sphere() with translation(0, 0, -0.25) and refractive_index 2.0, "
+          "C ← glass_sphere() with translation(0, 0, 0.25) and refractive_index 2.5, "
+          "r ← ray(point(0, 0, -4), vector(0, 0, 1)) and "
+          "xs ← intersections(2:A, 2.75:B, 3.25:C, 4.75:B, 5.25:C, 6:A)") {
+        Sphere a = make_glass_sphere();
+        a.set_transform(scale<double>(2, 2, 2));
+        a.m_material.refractive_index = 1.5f;
+        Sphere b = make_glass_sphere();
+        b.set_transform(translation<double>(0, 0, -0.25));
+        b.m_material.refractive_index = 2.0f;
+        Sphere c = make_glass_sphere();
+        c.set_transform(translation<double>(0, 0, 0.25));
+        c.m_material.refractive_index = 2.5f;
+        constexpr Ray r{.origin = Point{.x = 0, .y = 0, .z = -4}, .direction = Vector{.x = 0, .y = 0, .z = 1}};
+        const auto xs = intersections(Intersection{.object = a, .t = 2},
+                                      Intersection{.object = b, .t = 2.75f},
+                                      Intersection{.object = c, .t = 3.25f},
+                                      Intersection{.object = b, .t = 4.75f},
+                                      Intersection{.object = c, .t = 5.25f},
+                                      Intersection{.object = a, .t = 6});
+
+        // Scenario Outline examples: | index | n1 | n2 |
+        const auto [index, n1, n2] = GENERATE(table<std::size_t, float, float>({
+            {0, 1.0f, 1.5f},
+            {1, 1.5f, 2.0f},
+            {2, 2.0f, 2.5f},
+            {3, 2.5f, 2.5f},
+            {4, 2.5f, 1.5f},
+            {5, 1.5f, 1.0f},
+        }));
+
+        WHEN("comps ← prepare_computations(xs[" + std::to_string(index) + "], r, xs)") {
+            const auto comps = prepare_computations(xs[index], r, xs);
+
+            THEN("comps.n1 = " + std::to_string(n1)) {
+                REQUIRE(comps.n1 == n1);
+            }
+            AND_THEN("comps.n2 = " + std::to_string(n2)) {
+                REQUIRE(comps.n2 == n2);
+            }
+        }
+    }
+}
+
+SCENARIO("The Schlick approximation under total internal reflection") {
+    GIVEN("shape ← glass_sphere(), r ← ray(point(0, 0, √2/2), vector(0, 1, 0)) "
+          "and xs ← intersections(-√2/2:shape, √2/2:shape)") {
+        constexpr float half_sqrt2 = std::numbers::sqrt2_v<float> / 2;
+        const Sphere shape = make_glass_sphere();
+        constexpr Ray r{.origin = Point{.x = 0, .y = 0, .z = half_sqrt2}, .direction = Vector{.x = 0, .y = 1, .z = 0}};
+        const auto xs = intersections(Intersection{.object = shape, .t = -half_sqrt2},
+                                      Intersection{.object = shape, .t = half_sqrt2});
+
+        WHEN("comps ← prepare_computations(xs[1], r, xs) and reflectance ← schlick(comps)") {
+            const auto comps = prepare_computations(xs[1], r, xs);
+            const auto reflectance = World::schlick(comps);
+
+            THEN("reflectance = 1.0") {
+                REQUIRE(utils::equal(reflectance, 1.0f));
+            }
+        }
+    }
+}
+
+SCENARIO("The Schlick approximation with a perpendicular viewing angle") {
+    GIVEN("shape ← glass_sphere(), r ← ray(point(0, 0, 0), vector(0, 1, 0)) "
+          "and xs ← intersections(-1:shape, 1:shape)") {
+        const Sphere shape = make_glass_sphere();
+        constexpr Ray r{.origin = Point{.x = 0, .y = 0, .z = 0}, .direction = Vector{.x = 0, .y = 1, .z = 0}};
+        const auto xs = intersections(Intersection{.object = shape, .t = -1}, Intersection{.object = shape, .t = 1});
+
+        WHEN("comps ← prepare_computations(xs[1], r, xs) and reflectance ← schlick(comps)") {
+            const auto comps = prepare_computations(xs[1], r, xs);
+            const auto reflectance = World::schlick(comps);
+
+            THEN("reflectance = 0.04") {
+                REQUIRE(utils::equal(reflectance, 0.04f));
+            }
+        }
+    }
+}
+
+SCENARIO("The Schlick approximation with small angle and n2 > n1") {
+    GIVEN("shape ← glass_sphere(), r ← ray(point(0, 0.99, -2), vector(0, 0, 1)) "
+          "and xs ← intersections(1.8589:shape)") {
+        const Sphere shape = make_glass_sphere();
+        constexpr Ray r{.origin = Point{.x = 0, .y = 0.99f, .z = -2}, .direction = Vector{.x = 0, .y = 0, .z = 1}};
+        const auto xs = intersections(Intersection{.object = shape, .t = 1.8589f});
+
+        WHEN("comps ← prepare_computations(xs[0], r, xs) and reflectance ← schlick(comps)") {
+            const auto comps = prepare_computations(xs[0], r, xs);
+            const auto reflectance = World::schlick(comps);
+
+            THEN("reflectance = 0.48873") {
+                REQUIRE(utils::equal(reflectance, 0.48873f));
             }
         }
     }

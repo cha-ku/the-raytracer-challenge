@@ -3,8 +3,12 @@
 //
 
 #include "Intersect.hpp"
+
+#include <algorithm>
+
 #include "MatrixImpl.hpp"
 #include "World.hpp"
+#include "Utils.hpp"
 
 namespace raytracer {
     Point position(const Ray &ray, const float distance) {
@@ -13,23 +17,29 @@ namespace raytracer {
 
     Ray transform(const Ray &ray, const Matrix<double> &matrix) {
         const Matrix<double> origin_matrix{make_matrix(Point{.x = ray.origin.x, .y = ray.origin.y, .z = ray.origin.z})};
-        const Matrix<double> direction_matrix{4, 1, std::vector{
-            static_cast<double>(ray.direction.x),
-            static_cast<double>(ray.direction.y),
-            static_cast<double>(ray.direction.z),
-            0.0
-        }};
+        const Matrix<double> direction_matrix{
+            4, 1, std::vector{
+                static_cast<double>(ray.direction.x),
+                static_cast<double>(ray.direction.y),
+                static_cast<double>(ray.direction.z),
+                0.0
+            }
+        };
 
         const Matrix<double> new_origin{multiply(matrix, origin_matrix)};
         const Matrix<double> new_direction{multiply(matrix, direction_matrix)};
 
         return Ray{
-            .origin = Point{.x = static_cast<float>(new_origin[0, 0]),
-                            .y = static_cast<float>(new_origin[1, 0]),
-                            .z = static_cast<float>(new_origin[2, 0])},
-            .direction = Vector{.x = static_cast<float>(new_direction[0, 0]),
-                                .y = static_cast<float>(new_direction[1, 0]),
-                                .z = static_cast<float>(new_direction[2, 0])}
+            .origin = Point{
+                .x = static_cast<float>(new_origin[0, 0]),
+                .y = static_cast<float>(new_origin[1, 0]),
+                .z = static_cast<float>(new_origin[2, 0])
+            },
+            .direction = Vector{
+                .x = static_cast<float>(new_direction[0, 0]),
+                .y = static_cast<float>(new_direction[1, 0]),
+                .z = static_cast<float>(new_direction[2, 0])
+            }
         };
     }
 
@@ -64,7 +74,7 @@ namespace raytracer {
         const float a{Vector::dot(direction, direction)};
         const float b{2 * Vector::dot(direction, sphere_to_ray)};
         const float c{Vector::dot(sphere_to_ray, sphere_to_ray) - 1};
-        const float discriminant{b * b - (4 * a * c)};
+        const float discriminant{utils::square(b) - (4 * a * c)};
         if (discriminant < 0) {
             return {};
         }
@@ -104,10 +114,36 @@ namespace raytracer {
             inside = false;
         }
         over_point = point + normal_vector * utils::EPSILON;
+        under_point = point - normal_vector * utils::EPSILON;
     }
 
-    Computations prepare_computations(const Intersection &intersection, const Ray &ray) {
-        return Computations(intersection, ray);
+    Computations prepare_computations(const Intersection &intersection, const Ray &ray,
+                                      const std::vector<Intersection>& intersections) {
+        Computations comp{intersection, ray};
+        // Objects the ray is currently inside, innermost last. Pointers into `intersections` (not copies), so
+        // there's no per-intersection allocation; they stay valid for the whole loop since the vector isn't modified
+        std::vector<const AnyShape *> shape_container;
+        for (const auto &ixn: intersections) {
+            // check if intersection is hit
+            if (ixn == intersection) {
+                comp.n1 = shape_container.empty() ? 1.0f : material_of(*shape_container.back()).refractive_index;
+            }
+            const auto it = std::ranges::find_if(shape_container, [&ixn](const AnyShape *shape) {
+                return *shape == ixn.object;
+            });
+            // intersection at the exit of the material - remove it
+            if (it != shape_container.end()) {
+                shape_container.erase(it);
+            } else {
+                // intersection when entering the material - add it
+                shape_container.push_back(&ixn.object);
+            }
+            if (ixn == intersection) {
+                comp.n2 = shape_container.empty() ? 1.0f : material_of(*shape_container.back()).refractive_index;
+                break;
+            }
+        }
+        return comp;
     }
 
     Colour shade_hit(const World &world, const Computations &computations, uint8_t remaining) {
@@ -119,8 +155,16 @@ namespace raytracer {
                      computations.over_point,
                      computations.eye_vector, computations.normal_vector, world.is_shadowed(computations.over_point))
         };
-        const Colour reflected{World::reflected_colour(world, computations, --remaining)};
-        return surface + reflected;
+        --remaining;
+        const Colour reflected{World::reflected_colour(world, computations, remaining)};
+        const Colour refracted{World::refracted_colour(world, computations, remaining)};
+
+        const auto& mat{material_of(computations.object)};
+        if (mat.reflective > 0.f && mat.transparency > 0.f) {
+            const auto reflectance = World::schlick(computations);
+            return surface + reflected * reflectance + refracted * (1.0f - reflectance);
+        }
+        return surface + reflected + refracted;
     }
 
     // Coordinate system (right-handed):
