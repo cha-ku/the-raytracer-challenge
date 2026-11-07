@@ -303,13 +303,32 @@ void simulate_reflections() {
     glass_sphere.m_material.transparency = 0.9f;
     glass_sphere.m_material.refractive_index = 1.5f;
 
+    // Green glass cube front right, turned 45° about y so an edge faces the camera. Refracted light isn't
+    // tinted by the material, so the green comes from the surface colour; it needs more diffuse than the
+    // clear glass sphere to show, and correspondingly a bit less transparency
+    Cube glass_cube{Cube::make_cube()};
+    glass_cube.set_transform(multiply(translation<double>(1.9, 0.4, -2.6),
+                                      multiply(rotation_y(pi_v<double> / 4), scale<double>(0.4, 0.4, 0.4))));
+    glass_cube.m_material.colour = Colour{.r = 0.1f, .g = 0.6f, .b = 0.2f};
+    glass_cube.m_material.ambient = 0.1f;
+    glass_cube.m_material.diffuse = 0.3f;
+    glass_cube.m_material.specular = 1.0f;
+    glass_cube.m_material.shininess = 300.0f;
+    glass_cube.m_material.reflective = 0.5f;
+    glass_cube.m_material.transparency = 0.7f;
+    glass_cube.m_material.refractive_index = 1.5f;
+
     World world;
-    world.objects = {floor, backdrop, mirror, gradient_sphere, ring_sphere, striped_sphere, plain_sphere, glass_sphere};
+    world.objects = {
+        floor, backdrop, mirror, gradient_sphere, ring_sphere, striped_sphere, plain_sphere, glass_sphere, glass_cube
+    };
     world.light = PointLight{.position = Point{.x = -10, .y = 10, .z = -10}, .intensity = colours::white};
 
     Camera camera{.hsize = 600, .vsize = 400, .field_of_view = pi_v<double> / 3};
-    camera.transform = view_transform(Point{.x = 0, .y = 1.8f, .z = -6}, Point{.x = 0, .y = 0.8f, .z = 0},
-                                      Vector{.x = 0, .y = 1, .z = 0});
+    // pull back camera
+    constexpr Point to{.x = 0, .y = 0.8f, .z = 0};
+    constexpr Point from{to + Vector{.x = 0, .y = 1, .z = -6} * 1.4f};   // = (0, 2.2, -8.4)
+    camera.transform = view_transform(from, to, Vector{.x = 0, .y = 1, .z = 0});
 
     Canvas canvas{camera.hsize, camera.vsize};
     for (uint32_t y = 0; y < camera.vsize; ++y) {
