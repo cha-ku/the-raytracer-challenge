@@ -67,6 +67,20 @@ namespace raytracer {
         return Vector{.x = 0, .y = 1, .z = 0};
     }
 
+    Vector local_normal_at(const Cube &cube, const Point &local_point) {
+        // The face is always the one matching the component whose absolute value is a 1!
+        // could also use utils::equal to see which component is closest to 1.f, but wanna avoid floating point comparisons
+        const auto& maxc = std::max({std::abs(local_point.x), std::abs(local_point.y), std::abs(local_point.z)});
+        if (maxc == std::abs(local_point.x)) {
+            return {.x=local_point.x, .y=0, .z=0};
+        }
+        if (maxc == std::abs(local_point.y)) {
+            return {.x = 0, .y=local_point.y, .z=0};
+        }
+        return {.x = 0, .y=0, .z=local_point.z};
+    }
+
+
     std::vector<Intersection> local_intersect(const Sphere &sphere, const Ray &local_ray) {
         const auto &[origin, direction] = local_ray;
 
@@ -89,6 +103,38 @@ namespace raytracer {
         }
         const float t{-local_ray.origin.y / local_ray.direction.y};
         return {{.object = plane, .t = t}};
+    }
+
+    // helper for local_intersect - Cube
+    std::pair<float, float> check_axis(const float& direction_component, const float& origin_component) {
+        // generalized formula for ray-plane intersection
+        const auto tmin_numerator = -1.f - origin_component;
+        const auto tmax_numerator = 1.f - origin_component;
+        float tmin, tmax;
+        if (std::abs(direction_component) < utils::EPSILON) {
+            tmin = tmin_numerator * std::numeric_limits<float>::infinity();
+            tmax = tmax_numerator * std::numeric_limits<float>::infinity();
+        }
+        else {
+            tmin = tmin_numerator/direction_component;
+            tmax = tmax_numerator/direction_component;
+        }
+        return tmin > tmax ? std::make_pair(tmax, tmin) : std::make_pair(tmin, tmax);
+    }
+
+    std::vector<Intersection> local_intersect(const Cube &cube, const Ray &local_ray) {
+        // cube is made up of 6 planes of size 2 that intersect each other
+        // xy planes at z = 1 and z = -1
+        // xz planes at y = 1 and y = -1
+        // yz planes at x = 1 and x = -1
+        const auto& [xtmin, xtmax] = check_axis(local_ray.direction.x, local_ray.origin.x);
+        const auto& [ytmin, ytmax] = check_axis(local_ray.direction.y, local_ray.origin.y);
+        const auto& [ztmin, ztmax] = check_axis(local_ray.direction.z, local_ray.origin.z);
+        const auto& tmin = std::max({xtmin, ytmin, ztmin});
+        const auto& tmax = std::min({xtmax, ytmax, ztmax});
+        return tmin > tmax
+                   ? std::vector<Intersection>{}
+                   : std::vector{Intersection{.object = cube, .t = tmin}, Intersection{.object = cube, .t = tmax}};
     }
 
     std::optional<Intersection> hit(const std::vector<Intersection> &intersections) {

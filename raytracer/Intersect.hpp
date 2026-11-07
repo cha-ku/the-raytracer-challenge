@@ -54,11 +54,18 @@ namespace raytracer {
         static Plane make_plane() { return make(); }
     };
 
+    struct Cube : Shape, ShapeFactory<Cube> {
+        explicit Cube(const uint32_t id) : Shape(id) {
+        }
+
+        static Cube make_cube() { return make(); }
+    };
+
     // The closed set of concrete, renderable shape types. This is the single
     // source of truth for "what kinds of shapes exist" — adding a new shape
     // means adding it here (plus its own local_intersect/local_normal_at
     // overloads), and nowhere else needs to change.
-    using AnyShape = std::variant<Sphere, Plane>;
+    using AnyShape = std::variant<Sphere, Plane, Cube>;
 
     // Reaches through whichever concrete type an AnyShape currently holds to
     // get at its common Shape subobject. This is the one place that knows
@@ -104,6 +111,8 @@ namespace raytracer {
 
     Vector local_normal_at(const Plane &plane, const Point &local_point);
 
+    Vector local_normal_at(const Cube &cube, const Point &local_point);
+
     // A shape type S is Normalable if it has its own local_normal_at
     // overload, found via ADL, taking S and a local-space Point and
     // returning a Vector.
@@ -135,6 +144,8 @@ namespace raytracer {
     std::vector<Intersection> local_intersect(const Sphere &sphere, const Ray &local_ray);
 
     std::vector<Intersection> local_intersect(const Plane &plane, const Ray &local_ray);
+
+    std::vector<Intersection> local_intersect(const Cube &cube, const Ray &local_ray);
 
     // A shape type S is Intersectable if it has its own local_intersect
     // overload, found via ADL, taking S and a local-space Ray and returning
