@@ -129,9 +129,13 @@ namespace raytracer {
         // yz planes at x = 1 and x = -1
         const auto& [xtmin, xtmax] = check_axis(local_ray.direction.x, local_ray.origin.x);
         const auto& [ytmin, ytmax] = check_axis(local_ray.direction.y, local_ray.origin.y);
+        auto tmin = std::max(xtmin, ytmin);
+        auto tmax = std::min(xtmax, ytmax);
+        // check if ray passes outside the xy boundaries, if it does, then return empty because no z value can fix it
+        if (tmin > tmax) return std::vector<Intersection>{};
         const auto& [ztmin, ztmax] = check_axis(local_ray.direction.z, local_ray.origin.z);
-        const auto& tmin = std::max({xtmin, ytmin, ztmin});
-        const auto& tmax = std::min({xtmax, ytmax, ztmax});
+        tmin = std::max({tmin, ztmin});
+        tmax = std::min({tmax, ztmax});
         return tmin > tmax
                    ? std::vector<Intersection>{}
                    : std::vector{Intersection{.object = cube, .t = tmin}, Intersection{.object = cube, .t = tmax}};
