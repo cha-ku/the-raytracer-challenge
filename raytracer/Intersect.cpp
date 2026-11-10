@@ -80,6 +80,18 @@ namespace raytracer {
         return {.x = 0, .y=0, .z=local_point.z};
     }
 
+    Vector local_normal_at(const Cylinder &cylinder, const Point &local_point) {
+        const auto distance = utils::square(local_point.x) + utils::square(local_point.z);
+        // if point is on the end planes, return normal to the planes
+        if (distance < 1.f && local_point.y >= cylinder.maximum - utils::EPSILON) {
+            return {.x = 0, .y = 1, .z = 0};
+        }
+        if (distance < 1.f && local_point.y <= cylinder.minimum + utils::EPSILON) {
+            return {.x = 0, .y = -1, .z = 0};
+        }
+        return {.x = local_point.x, .y = 0, .z = local_point.z};
+    }
+
 
     std::vector<Intersection> local_intersect(const Sphere &sphere, const Ray &local_ray) {
         const auto &[origin, direction] = local_ray;
@@ -106,8 +118,8 @@ namespace raytracer {
     }
 
     // helper for local_intersect - Cube
-    std::pair<float, float> check_axis(const float& direction_component, const float& origin_component) {
-        // generalized formula for ray-plane intersection
+    static std::pair<float, float> check_axis(const float& direction_component, const float& origin_component) {
+        // generalized formula for ray-plane intersection, the plane
         const auto tmin_numerator = -1.f - origin_component;
         const auto tmax_numerator = 1.f - origin_component;
         float tmin, tmax;
@@ -139,6 +151,60 @@ namespace raytracer {
         return tmin > tmax
                    ? std::vector<Intersection>{}
                    : std::vector{Intersection{.object = cube, .t = tmin}, Intersection{.object = cube, .t = tmax}};
+    }
+
+    // helper function to reduce duplication. Checks to see if the intersection at `t` is within radius of 1 (the radius of cylinders) from the y axis
+    static bool check_cap(const Ray &ray, const float &t) {
+        const auto x = ray.origin.x + ray.direction.x * t;
+        const auto z = ray.origin.z + ray.direction.z * t;
+        return utils::square(x) + utils::square(z) <= 1 + utils::EPSILON;
+    }
+
+    static void intersect_caps(const Cylinder &cylinder, const Ray &ray, std::vector<Intersection> &intersections) {
+        // doesn't matter if cylinder is closed or ray is parallel to y
+        if (!cylinder.closed or std::abs(ray.direction.y) < utils::EPSILON) {
+            return;
+        }
+        // check for an intersection with the lower end cap by intersecting the ray with the plane at y=cyl.minimum
+        float t = (cylinder.minimum - ray.origin.y) / ray.direction.y;
+        if (check_cap(ray, t)) {
+            intersections.emplace_back(cylinder, t);
+        }
+        // check for an intersection with the upper end cap by intersecting the ray with the plane at y=cyl.maximum
+        t = (cylinder.maximum - ray.origin.y) / ray.direction.y;
+        if (check_cap(ray, t)) {
+            intersections.emplace_back(cylinder, t);
+        }
+    }
+
+    std::vector<Intersection> local_intersect(const Cylinder &cylinder, const Ray &local_ray) {
+        const auto a = utils::square(local_ray.direction.x) + utils::square(local_ray.direction.z);
+        std::vector<Intersection> intersections;
+        // ray is parallel to y axis, only check caps
+        if (a > utils::EPSILON) {
+            const auto b = 2 * local_ray.origin.x * local_ray.direction.x + 2 * local_ray.origin.z * local_ray.direction.z;
+            const auto c = utils::square(local_ray.origin.x) + utils::square(local_ray.origin.z) - 1;
+            // same as sphere
+            const auto discriminant{utils::square(b) - (4 * a * c)};
+            if (discriminant < 0) {
+                return {};
+            }
+            float t0{(-b - std::sqrt(discriminant)) / (2 * a)};
+            float t1{(-b + std::sqrt(discriminant)) / (2 * a)};
+            if (t0 > t1) {
+                std::swap(t0, t1);
+            }
+            const float y0 = local_ray.origin.y + local_ray.direction.y * t0;
+            if (cylinder.minimum < y0 && y0 < cylinder.maximum) {
+                intersections.emplace_back(cylinder, t0);
+            }
+            const float y1 = local_ray.origin.y + local_ray.direction.y * t1;
+            if (cylinder.maximum > y1 && y1 > cylinder.minimum) {
+                intersections.emplace_back(cylinder, t1);
+            }
+        }
+        intersect_caps(cylinder, local_ray, intersections);
+        return intersections;
     }
 
     std::optional<Intersection> hit(const std::vector<Intersection> &intersections) {
