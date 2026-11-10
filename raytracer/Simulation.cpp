@@ -318,9 +318,43 @@ void simulate_reflections() {
     glass_cube.m_material.transparency = 0.7f;
     glass_cube.m_material.refractive_index = 1.5f;
 
+    // Closed gold cylinder front left: a short, slightly reflective metal post standing on the floor.
+    // In object space it runs from y = 0 to y = 1 with radius 1; the scale makes it 1.2 tall and 0.35 wide
+    Cylinder gold_cylinder{Cylinder::make_cylinder()};
+    gold_cylinder.minimum = 0.0f;
+    gold_cylinder.maximum = 1.0f;
+    gold_cylinder.closed = true;
+    gold_cylinder.set_transform(multiply(translation<double>(-2.0, 0.0, -2.4), scale<double>(0.35, 1.2, 0.35)));
+    gold_cylinder.m_material.colour = Colour{.r = 0.8f, .g = 0.6f, .b = 0.2f};
+    gold_cylinder.m_material.diffuse = 0.6f;
+    gold_cylinder.m_material.specular = 0.9f;
+    gold_cylinder.m_material.shininess = 200.0f;
+    gold_cylinder.m_material.reflective = 0.3f;
+
+    // Traffic cone front left, nearest the camera: only the lower half of the double cone (y from -1 to 0), so the
+    // apex is at the top and the radius grows to 1 at the base. Scaled to 1.0 tall with a 0.4 base radius and lifted
+    // by its height so the base sits on the floor. Placed left of the camera's line to the striped sphere so it
+    // doesn't hide it. Left open: the base is flat on the floor and never seen, and local_normal_at for cones has
+    // no cap normals
+    Cone traffic_cone{Cone::make_cone()};
+    traffic_cone.minimum = -1.0f;
+    traffic_cone.maximum = 0.0f;
+    traffic_cone.set_transform(multiply(translation<double>(-1.0, 1.0, -4.2), scale<double>(0.4, 1.0, 0.4)));
+    traffic_cone.m_material.diffuse = 0.8f;
+    traffic_cone.m_material.specular = 0.3f;
+    // Horizontal bands: stripes vary along pattern-space x, so rotating the pattern 90° about z makes them vary along
+    // the cone's own y instead. Scaling by 0.2 gives 5 bands over the cone's height of 1 (y = -1 to 0). Patterns
+    // are looked up in object space, so the cone's own scale doesn't stretch them. floor(5y) runs -5..-1 and
+    // stripe_at picks colour a for even values, so the bands from the base up are orange, white, orange, white,
+    // orange tip
+    StripedPattern cone_bands = StripedPattern::create(colours::white, Colour{.r = 1.0f, .g = 0.4f, .b = 0.1f});
+    cone_bands.m_transform = multiply(rotation_z(pi_v<double> / 2), scale<double>(0.2, 0.2, 0.2));
+    traffic_cone.m_material.pattern = cone_bands;
+
     World world;
     world.objects = {
-        floor, backdrop, mirror, gradient_sphere, ring_sphere, striped_sphere, plain_sphere, glass_sphere, glass_cube
+        floor, backdrop, mirror, gradient_sphere, ring_sphere, striped_sphere, plain_sphere, glass_sphere, glass_cube,
+        gold_cylinder, traffic_cone
     };
     world.light = PointLight{.position = Point{.x = -10, .y = 10, .z = -10}, .intensity = colours::white};
 
