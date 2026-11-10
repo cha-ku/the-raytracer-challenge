@@ -92,6 +92,11 @@ namespace raytracer {
         return {.x = local_point.x, .y = 0, .z = local_point.z};
     }
 
+    Vector local_normal_at(const Cone &cone, const Point &local_point) {
+        const auto y = std::sqrt(utils::square(local_point.x) + utils::square(local_point.z));
+        return {.x = local_point.x, .y = local_point.y > 0.f ? -y : y, .z = local_point.z};
+    }
+
 
     std::vector<Intersection> local_intersect(const Sphere &sphere, const Ray &local_ray) {
         const auto &[origin, direction] = local_ray;
@@ -153,27 +158,30 @@ namespace raytracer {
                    : std::vector{Intersection{.object = cube, .t = tmin}, Intersection{.object = cube, .t = tmax}};
     }
 
-    // helper function to reduce duplication. Checks to see if the intersection at `t` is within radius of 1 (the radius of cylinders) from the y axis
-    static bool check_cap(const Ray &ray, const float &t) {
+    // helper for intersect_caps. Checks whether the ray at `t` is within `radius` of the y axis, i.e. inside the cap
+    static bool check_cap(const Ray &ray, const float t, const float radius) {
         const auto x = ray.origin.x + ray.direction.x * t;
         const auto z = ray.origin.z + ray.direction.z * t;
-        return utils::square(x) + utils::square(z) <= 1 + utils::EPSILON;
+        return utils::square(x) + utils::square(z) <= utils::square(radius) + utils::EPSILON;
     }
 
-    static void intersect_caps(const Cylinder &cylinder, const Ray &ray, std::vector<Intersection> &intersections) {
-        // doesn't matter if cylinder is closed or ray is parallel to y
-        if (!cylinder.closed or std::abs(ray.direction.y) < utils::EPSILON) {
+    // Adds intersections with the end caps of a closed cylinder or cone. A cylinder's caps always have radius 1;
+    // a cone's radius at height y is |y|, so each cap's radius comes from the height it sits at
+    template <typename S>
+    static void intersect_caps(const S &shape, const Ray &ray, std::vector<Intersection> &intersections) {
+        // nothing to do if the shape is open, or if the ray is parallel to the caps and can never cross them
+        if (!shape.closed or std::abs(ray.direction.y) < utils::EPSILON) {
             return;
         }
-        // check for an intersection with the lower end cap by intersecting the ray with the plane at y=cyl.minimum
-        float t = (cylinder.minimum - ray.origin.y) / ray.direction.y;
-        if (check_cap(ray, t)) {
-            intersections.emplace_back(cylinder, t);
+        // check for an intersection with the lower end cap by intersecting the ray with the plane at y = minimum
+        float t = (shape.minimum - ray.origin.y) / ray.direction.y;
+        if (check_cap(ray, t, std::is_same_v<S, Cylinder> ? 1.f : std::abs(shape.minimum))) {
+            intersections.emplace_back(shape, t);
         }
-        // check for an intersection with the upper end cap by intersecting the ray with the plane at y=cyl.maximum
-        t = (cylinder.maximum - ray.origin.y) / ray.direction.y;
-        if (check_cap(ray, t)) {
-            intersections.emplace_back(cylinder, t);
+        // check for an intersection with the upper end cap by intersecting the ray with the plane at y = maximum
+        t = (shape.maximum - ray.origin.y) / ray.direction.y;
+        if (check_cap(ray, t, std::is_same_v<S, Cylinder> ? 1.f : std::abs(shape.maximum))) {
+            intersections.emplace_back(shape, t);
         }
     }
 
@@ -186,11 +194,13 @@ namespace raytracer {
             const auto c = utils::square(local_ray.origin.x) + utils::square(local_ray.origin.z) - 1;
             // same as sphere
             const auto discriminant{utils::square(b) - (4 * a * c)};
-            if (discriminant < 0) {
-                return {};
+            // infinitesimally small values are OK
+            if (discriminant < -utils::EPSILON) {
+                return intersections;
             }
-            float t0{(-b - std::sqrt(discriminant)) / (2 * a)};
-            float t1{(-b + std::sqrt(discriminant)) / (2 * a)};
+            const float root{std::sqrt(std::max(discriminant, 0.f))};
+            float t0{(-b - root) / (2 * a)};
+            float t1{(-b + root) / (2 * a)};
             if (t0 > t1) {
                 std::swap(t0, t1);
             }
@@ -206,6 +216,46 @@ namespace raytracer {
         intersect_caps(cylinder, local_ray, intersections);
         return intersections;
     }
+
+    std::vector<Intersection> local_intersect(const Cone &cone, const Ray &local_ray) {
+        std::vector<Intersection> intersections;
+        const auto [dx, dy, dz] = local_ray.direction;
+        const auto origin = local_ray.origin;
+        const auto a = utils::square(dx) - utils::square(dy) + utils::square(dz);
+        const auto b = 2 * origin.x * dx - 2 * origin.y * dy + 2 * origin.z * dz;
+        const auto c = utils::square(origin.x) - utils::square(origin.y) + utils::square(origin.z);
+        if (std::abs(a) < utils::EPSILON) {
+            if (std::abs(b) < utils::EPSILON) {
+                return intersections;
+            }
+            const float t = -c/(2 * b);
+            intersections.emplace_back(cone, t);
+        }
+        else {
+            const auto discriminant{utils::square(b) - (4 * a * c)};
+            // infinitesimally small values are OK
+            if (discriminant < -utils::EPSILON) {
+                return intersections;
+            }
+            const float root{std::sqrt(std::max(discriminant, 0.f))};
+            float t0{(-b - root) / (2 * a)};
+            float t1{(-b + root) / (2 * a)};
+            if (t0 > t1) {
+                std::swap(t0, t1);
+            }
+            const float y0 = local_ray.origin.y + local_ray.direction.y * t0;
+            if (cone.minimum < y0 && y0 < cone.maximum) {
+                intersections.emplace_back(cone, t0);
+            }
+            const float y1 = local_ray.origin.y + local_ray.direction.y * t1;
+            if (cone.maximum > y1 && y1 > cone.minimum) {
+                intersections.emplace_back(cone, t1);
+            }
+        }
+        intersect_caps(cone, local_ray, intersections);
+        return intersections;
+    }
+
 
     std::optional<Intersection> hit(const std::vector<Intersection> &intersections) {
         std::optional<Intersection> result;
