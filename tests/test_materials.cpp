@@ -64,7 +64,7 @@ SCENARIO("Transparency and Refractive Index for the default material") {
 SCENARIO("Lighting with the eye between the light and the surface") {
     GIVEN("m ← material() and position ← point(0, 0, 0)") {
         constexpr Material m{};
-        const Sphere object = Sphere::make_sphere();
+        const Geom object = make_sphere();
         constexpr Point position{0, 0, 0};
         constexpr Vector eye{0, 0, -1};
         constexpr Vector normal{0, 0, -1};
@@ -83,7 +83,7 @@ SCENARIO("Lighting with the eye between the light and the surface") {
 SCENARIO("Lighting with the eye between light and surface, eye offset 45 degrees") {
     GIVEN("m ← material() and position ← point(0, 0, 0)") {
         constexpr Material m{};
-        const Sphere object = Sphere::make_sphere();
+        const Geom object = make_sphere();
         constexpr Point position{0, 0, 0};
         constexpr Vector eye{0, std::numbers::sqrt2 / 2, -std::numbers::sqrt2 / 2};
         constexpr Vector normal{0, 0, -1};
@@ -102,7 +102,7 @@ SCENARIO("Lighting with the eye between light and surface, eye offset 45 degrees
 SCENARIO("Lighting with the light behind the surface") {
     GIVEN("m ← material() and position ← point(0, 0, 0)") {
         constexpr Material m{};
-        const Sphere object = Sphere::make_sphere();
+        const Geom object = make_sphere();
         constexpr Point position{0, 0, 0};
         constexpr Vector eye{0, 0, -1};
         constexpr Vector normal{0, 0, -1};
@@ -121,7 +121,7 @@ SCENARIO("Lighting with the light behind the surface") {
 SCENARIO("Lighting with the surface in shadow") {
     GIVEN("m ← material() and position ← point(0, 0, 0)") {
         constexpr Material m{};
-        const Sphere object = Sphere::make_sphere();
+        const Geom object = make_sphere();
         constexpr Point position{0, 0, 0};
         constexpr Vector eye{0, 0, -1};
         constexpr Vector normal{0, 0, -1};
@@ -141,7 +141,7 @@ SCENARIO("Lighting with the surface in shadow") {
 SCENARIO("Lighting with a pattern applied") {
     GIVEN("m.pattern ← stripe_pattern(color(1, 1, 1), color(0, 0, 0))") {
         Material m{};
-        const Sphere object = Sphere::make_sphere();
+        const Geom object = make_sphere();
         m.pattern = StripedPattern::create(Colour{.r = 1, .g = 1, .b = 1}, Colour{.r = 0, .g = 0, .b = 0});
         m.ambient = 1;
         m.diffuse = 0;

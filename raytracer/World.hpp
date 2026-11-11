@@ -5,6 +5,7 @@
 #ifndef THE_RAYTRACER_CHALLENGE_WORLD_HPP
 #define THE_RAYTRACER_CHALLENGE_WORLD_HPP
 
+#include <memory>
 #include <optional>
 #include "Intersect.hpp"
 #include "Light.hpp"
@@ -12,8 +13,13 @@
 
 namespace raytracer {
     struct World {
-        std::vector<AnyShape> objects;
+        // Owns every Geom in the scene. unique_ptr keeps each Geom at a fixed address, because Intersections
+        // (and children's parent pointers) point at them. This makes World move-only.
+        std::vector<std::unique_ptr<Geom>> objects;
         std::optional<PointLight> light;
+
+        // Adds a new Geom holding `shape` and returns it, so the caller can set its transform and material
+        Geom &add(AnyShape shape);
 
         static World create_default_world();
 

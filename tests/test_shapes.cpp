@@ -13,7 +13,7 @@ SCENARIO("The default transformation") {
     GIVEN("Shape") {
         const auto s = make_test_shape();
         THEN("Transform is identity matrix") {
-            REQUIRE(s.m_transform == Matrix<double>::identity(4));
+            REQUIRE(s.transform() == Matrix<double>::identity(4));
         }
     }
 }
@@ -25,7 +25,7 @@ SCENARIO("Assigning a transformation") {
         WHEN("set_transform is called") {
             s.set_transform(t);
             THEN("Transform equals the translation") {
-                REQUIRE(s.m_transform == t);
+                REQUIRE(s.transform() == t);
             }
         }
     }
@@ -35,7 +35,7 @@ SCENARIO("A shape's default material") {
     GIVEN("Shape") {
         const auto s = make_test_shape();
         WHEN("Material is retrieved") {
-            const auto m = s.m_material;
+            const auto m = s.material;
             THEN("Material equals the default material") {
                 REQUIRE(m == Material{});
             }
@@ -49,9 +49,9 @@ SCENARIO("Assigning a material to a shape") {
         Material m{};
         m.ambient = 1;
         WHEN("Material is assigned to shape") {
-            s.m_material = m;
+            s.material = m;
             THEN("Shape has the assigned material") {
-                REQUIRE(s.m_material == m);
+                REQUIRE(s.material == m);
             }
         }
     }
@@ -65,8 +65,8 @@ SCENARIO("Intersecting a scaled shape with a ray") {
             s.set_transform(scale<double>(2, 2, 2));
             const auto xs = intersect(s, r);
             THEN("Saved ray is in the shape's object space") {
-                REQUIRE(s.saved_ray.origin == Point(0, 0, -2.5));
-                REQUIRE(s.saved_ray.direction == Vector(0, 0, 0.5));
+                REQUIRE(saved_ray(s).origin == Point(0, 0, -2.5));
+                REQUIRE(saved_ray(s).direction == Vector(0, 0, 0.5));
             }
         }
     }
@@ -80,8 +80,8 @@ SCENARIO("Intersecting a translated shape with a ray") {
             s.set_transform(translation<double>(5, 0, 0));
             const auto xs = intersect(s, r);
             THEN("Saved ray is in the shape's object space") {
-                REQUIRE(s.saved_ray.origin == Point(-5, 0, -5));
-                REQUIRE(s.saved_ray.direction == Vector(0, 0, 1));
+                REQUIRE(saved_ray(s).origin == Point(-5, 0, -5));
+                REQUIRE(saved_ray(s).direction == Vector(0, 0, 1));
             }
         }
     }

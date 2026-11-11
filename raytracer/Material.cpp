@@ -3,16 +3,16 @@
 //
 
 #include "Material.hpp"
-#include "Shape.hpp"
+#include "Geom.hpp"
 
 namespace raytracer {
-    Colour lighting(const Shape &shape, const Material &material, const PointLight &light, const Point &point,
+    Colour lighting(const Geom &shape, const Material &material, const PointLight &light, const Point &point,
                     const Vector &eye, const Vector &normal, const bool in_shadow)
     {
         // use the pattern's colour at this point if the material has one, otherwise its solid colour
         const Colour surface_colour{
             material.pattern.has_value()
-                ? std::visit([&](const auto &pattern) { return pattern_at_shape(pattern, shape.m_transform, point); },
+                ? std::visit([&](const auto &pattern) { return pattern_at_shape(pattern, shape, point); },
                              material.pattern.value())
                 : material.colour
         };

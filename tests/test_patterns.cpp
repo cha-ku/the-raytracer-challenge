@@ -111,12 +111,12 @@ SCENARIO("Assigning a pattern transformation") {
 
 SCENARIO("A pattern with an object transformation") {
     GIVEN("shape ← sphere(), set_transform(shape, scaling(2, 2, 2)) and pattern ← test_pattern()") {
-        Sphere shape = Sphere::make_sphere();
+        Geom shape = make_sphere();
         shape.set_transform(scale<double>(2, 2, 2));
         const auto pattern = test_pattern();
 
         WHEN("c ← pattern_at_shape(pattern, shape, point(2, 3, 4))") {
-            const auto c = pattern_at_shape(pattern, shape.m_transform, Point{.x = 2, .y = 3, .z = 4});
+            const auto c = pattern_at_shape(pattern, shape, Point{.x = 2, .y = 3, .z = 4});
 
             THEN("c = color(1, 1.5, 2)") {
                 REQUIRE(areAlmostEqual(c, Colour{.r = 1, .g = 1.5, .b = 2}));
@@ -127,12 +127,12 @@ SCENARIO("A pattern with an object transformation") {
 
 SCENARIO("A pattern with a pattern transformation") {
     GIVEN("shape ← sphere(), pattern ← test_pattern() and set_pattern_transform(pattern, scaling(2, 2, 2))") {
-        const Sphere shape = Sphere::make_sphere();
+        const Geom shape = make_sphere();
         auto pattern = test_pattern();
         pattern.m_transform = scale<double>(2, 2, 2);
 
         WHEN("c ← pattern_at_shape(pattern, shape, point(2, 3, 4))") {
-            const auto c = pattern_at_shape(pattern, shape.m_transform, Point{.x = 2, .y = 3, .z = 4});
+            const auto c = pattern_at_shape(pattern, shape, Point{.x = 2, .y = 3, .z = 4});
 
             THEN("c = color(1, 1.5, 2)") {
                 REQUIRE(areAlmostEqual(c, Colour{.r = 1, .g = 1.5, .b = 2}));
@@ -144,13 +144,13 @@ SCENARIO("A pattern with a pattern transformation") {
 SCENARIO("A pattern with both an object and a pattern transformation") {
     GIVEN("shape ← sphere(), set_transform(shape, scaling(2, 2, 2)), pattern ← test_pattern() "
           "and set_pattern_transform(pattern, translation(0.5, 1, 1.5))") {
-        Sphere shape = Sphere::make_sphere();
+        Geom shape = make_sphere();
         shape.set_transform(scale<double>(2, 2, 2));
         auto pattern = test_pattern();
         pattern.m_transform = translation<double>(0.5, 1, 1.5);
 
         WHEN("c ← pattern_at_shape(pattern, shape, point(2.5, 3, 3.5))") {
-            const auto c = pattern_at_shape(pattern, shape.m_transform, Point{.x = 2.5f, .y = 3, .z = 3.5f});
+            const auto c = pattern_at_shape(pattern, shape, Point{.x = 2.5f, .y = 3, .z = 3.5f});
 
             THEN("c = color(0.75, 0.5, 0.25)") {
                 REQUIRE(areAlmostEqual(c, Colour{.r = 0.75, .g = 0.5, .b = 0.25}));

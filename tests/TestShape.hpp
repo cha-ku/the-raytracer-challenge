@@ -1,35 +1,15 @@
 #ifndef THE_RAYTRACER_CHALLENGE_TEST_SHAPE_HPP
 #define THE_RAYTRACER_CHALLENGE_TEST_SHAPE_HPP
 
-#include "Intersect.hpp"
-#include "Shape.hpp"
+#include "Geom.hpp"
 
 namespace raytracer {
-    // A minimal concrete Shape used only to exercise Shape's own behavior
-    // (transform/material) in tests, without needing a real renderable
-    // shape like Sphere or Plane. Kept out of Shape.hpp so production code
-    // can never construct or depend on it.
-    struct TestShape : Shape, ShapeFactory<TestShape> {
-        explicit TestShape(const uint32_t id) : Shape(id) {}
+    // TestShape itself (and its local_intersect/local_normal_at) is in production code, like TestPattern, so it
+    // can be part of AnyShape. This helper keeps the book's test_shape() spelling.
+    inline Geom make_test_shape() { return Geom{TestShape{}}; }
 
-        // Records the local-space ray passed to local_intersect, so tests
-        // can verify intersect() converted the world-space ray into this
-        // shape's object space correctly. mutable because recording it is
-        // an observation, not a change to the shape's own state, and
-        // local_intersect receives the shape by const reference.
-        mutable Ray saved_ray{};
-    };
-
-    inline TestShape make_test_shape() { return TestShape::make(); }
-
-    inline std::vector<Intersection> local_intersect(const TestShape &shape, const Ray &local_ray) {
-        shape.saved_ray = local_ray;
-        return {};
-    }
-
-    inline Vector local_normal_at(const TestShape &shape, const Point &local_point) {
-        return Vector(local_point.x, local_point.y, local_point.z);
-    }
+    // The local-space ray the last intersect() call passed to this test shape
+    inline const Ray &saved_ray(const Geom &shape) { return std::get<TestShape>(shape.shape).saved_ray; }
 }
 
 #endif //THE_RAYTRACER_CHALLENGE_TEST_SHAPE_HPP

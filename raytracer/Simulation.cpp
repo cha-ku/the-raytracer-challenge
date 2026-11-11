@@ -112,7 +112,7 @@ void simulate_sphere() {
     constexpr auto half{wall_size / 2};
     Canvas canvas{canvas_pixels, canvas_pixels};
     constexpr Colour colour{.r=1.f};
-    Sphere shape = Sphere::make_sphere();
+    Geom shape = make_sphere();
     // shrink it along the y axis
     shape.set_transform(scale<double>(1, 0.5, 1));
     // shrink it along the x axis
@@ -148,8 +148,8 @@ void simulate_material_sphere() {
     constexpr auto pixel_size{wall_size/canvas_pixels};
     constexpr auto half{wall_size / 2};
     Canvas canvas{canvas_pixels, canvas_pixels};
-    Sphere sphere = Sphere::make_sphere();
-    sphere.m_material.colour = Colour{.r = 1, .g = 0.2, .b = 1};
+    Geom sphere = make_sphere();
+    sphere.material.colour = Colour{.r = 1, .g = 0.2, .b = 1};
     constexpr auto wall_z{10.0f};
 
     // camera(eye) is the origin of our rays
@@ -168,9 +168,9 @@ void simulate_material_sphere() {
             if (hit(xs).has_value()) {
                 auto [object, t] = hit(xs).value();
                 Point point = position(r, t);
-                Vector normal = std::visit([&](const auto &shape) { return normal_at(shape, point); }, object);
+                Vector normal = normal_at(*object, point);
                 Vector eye = -r.direction;
-                Colour pixel_colour = lighting(as_shape(object), material_of(object), point_light, point, eye, normal, false);
+                Colour pixel_colour = lighting(*object, object->material, point_light, point, eye, normal, false);
                 canvas.write_pixel(x, y, pixel_colour);
             }
         }
@@ -182,37 +182,37 @@ void simulate_multiple_spheres() {
     using namespace raytracer;
     using namespace std::numbers;
 
-    Plane floor{Plane::make_plane()};
-    floor.m_material.colour = Colour{.r = 0.4f, .g = 0.6f, .b = 0.8f};
-    floor.m_material.specular = 0.0f;
-    CheckersPattern floor_pattern = CheckersPattern::create(colours::periwinkle, colours::vivid_blue);
-    floor.m_material.pattern = floor_pattern;
-
-    Plane backdrop{Plane::make_plane()};
-    backdrop.set_transform(multiply(translation<double>(0, 0, 3.0), rotation_x(pi_v<double>/2)));
-    backdrop.m_material.colour = Colour{.r = 0.9f, .g = 0.85f, .b = 0.8f};
-    backdrop.m_material.specular = 0.0f;
-
-    Sphere middle{Sphere::make_sphere()};
-    middle.m_transform = translation<double>(-0.5, 1, 0.5);
-    middle.m_material.colour = Colour{.r = 0.1f, .g = 1.f, .b = 0.5f};
-    middle.m_material.diffuse = 0.7f;
-    middle.m_material.specular = 0.3f;
-
-    Sphere right_sphere{Sphere::make_sphere()};
-    right_sphere.m_transform = multiply(translation<double>(1.5, 0.5, -0.5), scale<double>(0.5, 0.5, 0.5));
-    right_sphere.m_material.colour = Colour{.r = 0.5f, .g = 1.f, .b = 0.1f};
-    right_sphere.m_material.diffuse = 0.7f;
-    right_sphere.m_material.specular = 0.3f;
-
-    Sphere left_sphere{Sphere::make_sphere()};
-    left_sphere.m_transform = multiply(translation<double>(-1.5, 0.33, -0.75), scale<double>(0.33, 0.33, 0.33));
-    left_sphere.m_material.colour = Colour{.r = 1.f, .g = 0.8f, .b = 0.1f};
-    left_sphere.m_material.diffuse = 0.7f;
-    left_sphere.m_material.specular = 0.3f;
-
+    // owns every object in the scene; each world.add() returns the new object to configure
     World world;
-    world.objects = {floor, backdrop, middle, right_sphere, left_sphere};
+    Geom &floor = world.add(Plane{});
+    floor.material.colour = Colour{.r = 0.4f, .g = 0.6f, .b = 0.8f};
+    floor.material.specular = 0.0f;
+    CheckersPattern floor_pattern = CheckersPattern::create(colours::periwinkle, colours::vivid_blue);
+    floor.material.pattern = floor_pattern;
+
+    Geom &backdrop = world.add(Plane{});
+    backdrop.set_transform(multiply(translation<double>(0, 0, 3.0), rotation_x(pi_v<double>/2)));
+    backdrop.material.colour = Colour{.r = 0.9f, .g = 0.85f, .b = 0.8f};
+    backdrop.material.specular = 0.0f;
+
+    Geom &middle = world.add(Sphere{});
+    middle.set_transform(translation<double>(-0.5, 1, 0.5));
+    middle.material.colour = Colour{.r = 0.1f, .g = 1.f, .b = 0.5f};
+    middle.material.diffuse = 0.7f;
+    middle.material.specular = 0.3f;
+
+    Geom &right_sphere = world.add(Sphere{});
+    right_sphere.set_transform(multiply(translation<double>(1.5, 0.5, -0.5), scale<double>(0.5, 0.5, 0.5)));
+    right_sphere.material.colour = Colour{.r = 0.5f, .g = 1.f, .b = 0.1f};
+    right_sphere.material.diffuse = 0.7f;
+    right_sphere.material.specular = 0.3f;
+
+    Geom &left_sphere = world.add(Sphere{});
+    left_sphere.set_transform(multiply(translation<double>(-1.5, 0.33, -0.75), scale<double>(0.33, 0.33, 0.33)));
+    left_sphere.material.colour = Colour{.r = 1.f, .g = 0.8f, .b = 0.1f};
+    left_sphere.material.diffuse = 0.7f;
+    left_sphere.material.specular = 0.3f;
+
     world.light = PointLight{.position = Point{.x = -10, .y = 10, .z = -10}, .intensity = Colour{.r = 1, .g = 1, .b = 1}};
 
     Camera camera{.hsize = 600, .vsize = 400, .field_of_view = pi_v<double>/2};
@@ -234,114 +234,112 @@ void simulate_reflections() {
     // colour_at, shade_hit and reflected_colour each decrement this, so every bounce costs 3: ~5 bounces
     constexpr uint8_t max_depth = 15;
 
+    // owns every object in the scene; each world.add() returns the new object to configure
+    World world;
+
     // Lightly reflective checkered floor, so the spheres show up in it
-    Plane floor{Plane::make_plane()};
-    floor.m_material.specular = 0.0f;
-    floor.m_material.reflective = 0.3f;
-    floor.m_material.pattern = CheckersPattern::create(colours::periwinkle, colours::vivid_blue);
+    Geom &floor = world.add(Plane{});
+    floor.material.specular = 0.0f;
+    floor.material.reflective = 0.3f;
+    floor.material.pattern = CheckersPattern::create(colours::periwinkle, colours::vivid_blue);
 
     // Non-reflective striped backdrop behind everything; stripes rotated to run vertically
-    Plane backdrop{Plane::make_plane()};
+    Geom &backdrop = world.add(Plane{});
     backdrop.set_transform(multiply(translation<double>(0, 0, 6.0), rotation_x(pi_v<double> / 2)));
-    backdrop.m_material.specular = 0.0f;
+    backdrop.material.specular = 0.0f;
     StripedPattern backdrop_pattern = StripedPattern::create(Colour{.r = 0.9f, .g = 0.85f, .b = 0.8f},
                                                              Colour{.r = 0.75f, .g = 0.7f, .b = 0.65f});
     backdrop_pattern.m_transform = scale<double>(0.5, 0.5, 0.5);
-    backdrop.m_material.pattern = backdrop_pattern;
+    backdrop.material.pattern = backdrop_pattern;
 
     // Large mirror sphere in the middle: dark base colour, almost fully reflective
-    Sphere mirror{Sphere::make_sphere()};
+    Geom &mirror = world.add(Sphere{});
     mirror.set_transform(translation<double>(0, 1, 0.5));
-    mirror.m_material.colour = Colour{.r = 0.05f, .g = 0.05f, .b = 0.05f};
-    mirror.m_material.diffuse = 0.2f;
-    mirror.m_material.specular = 1.0f;
-    mirror.m_material.shininess = 300.0f;
-    mirror.m_material.reflective = 0.9f;
+    mirror.material.colour = Colour{.r = 0.05f, .g = 0.05f, .b = 0.05f};
+    mirror.material.diffuse = 0.2f;
+    mirror.material.specular = 1.0f;
+    mirror.material.shininess = 300.0f;
+    mirror.material.reflective = 0.9f;
 
     // Gradient sphere on the left: one red → yellow fade across its width (x from -1 to 1 in object space)
-    Sphere gradient_sphere{Sphere::make_sphere()};
+    Geom &gradient_sphere = world.add(Sphere{});
     gradient_sphere.set_transform(multiply(translation<double>(-2.2, 0.7, -0.3), scale<double>(0.7, 0.7, 0.7)));
     GradientPattern gradient = GradientPattern::create(colours::red, colours::yellow);
     gradient.m_transform = multiply(translation<double>(-1, 0, 0), scale<double>(2, 1, 1));
-    gradient_sphere.m_material.pattern = gradient;
-    gradient_sphere.m_material.diffuse = 0.7f;
-    gradient_sphere.m_material.specular = 0.3f;
+    gradient_sphere.material.pattern = gradient;
+    gradient_sphere.material.diffuse = 0.7f;
+    gradient_sphere.material.specular = 0.3f;
 
     // Ring sphere on the right: tight rings tilted towards the camera, slightly reflective
-    Sphere ring_sphere{Sphere::make_sphere()};
+    Geom &ring_sphere = world.add(Sphere{});
     ring_sphere.set_transform(multiply(translation<double>(2.1, 0.6, -0.4), scale<double>(0.6, 0.6, 0.6)));
     RingPattern rings = RingPattern::create(colours::white, colours::magenta);
     rings.m_transform = multiply(rotation_x(pi_v<double> / 2), scale<double>(0.2, 0.2, 0.2));
-    ring_sphere.m_material.pattern = rings;
-    ring_sphere.m_material.reflective = 0.2f;
+    ring_sphere.material.pattern = rings;
+    ring_sphere.material.reflective = 0.2f;
 
     // Small striped sphere in front: thin diagonal stripes, slightly reflective
-    Sphere striped_sphere{Sphere::make_sphere()};
+    Geom &striped_sphere = world.add(Sphere{});
     striped_sphere.set_transform(multiply(translation<double>(-0.9, 0.35, -1.8), scale<double>(0.35, 0.35, 0.35)));
     StripedPattern stripes = StripedPattern::create(colours::green, colours::white);
     stripes.m_transform = multiply(rotation_z(pi_v<double> / 4), scale<double>(0.25, 0.25, 0.25));
-    striped_sphere.m_material.pattern = stripes;
-    striped_sphere.m_material.reflective = 0.15f;
+    striped_sphere.material.pattern = stripes;
+    striped_sphere.material.reflective = 0.15f;
 
     // Small plain glossy sphere in front on the right, non-reflective for contrast
-    Sphere plain_sphere{Sphere::make_sphere()};
+    Geom &plain_sphere = world.add(Sphere{});
     plain_sphere.set_transform(multiply(translation<double>(1.0, 0.3, -1.9), scale<double>(0.3, 0.3, 0.3)));
-    plain_sphere.m_material.colour = colours::cyan;
-    plain_sphere.m_material.diffuse = 0.7f;
-    plain_sphere.m_material.specular = 0.5f;
+    plain_sphere.material.colour = colours::cyan;
+    plain_sphere.material.diffuse = 0.7f;
+    plain_sphere.material.specular = 0.5f;
 
     // Glass sphere front and centre: almost no surface colour of its own, mostly transparent and reflective,
     // with glass's refractive index, so the scene behind it shows through bent and flipped
-    Sphere glass_sphere{Sphere::make_sphere()};
+    Geom &glass_sphere = world.add(Sphere{});
     glass_sphere.set_transform(multiply(translation<double>(0.1, 0.5, -3.0), scale<double>(0.5, 0.5, 0.5)));
-    glass_sphere.m_material.colour = colours::black;
-    glass_sphere.m_material.ambient = 0.0f;
-    glass_sphere.m_material.diffuse = 0.1f;
-    glass_sphere.m_material.specular = 1.0f;
-    glass_sphere.m_material.shininess = 300.0f;
-    glass_sphere.m_material.reflective = 0.9f;
-    glass_sphere.m_material.transparency = 0.9f;
-    glass_sphere.m_material.refractive_index = 1.5f;
+    glass_sphere.material.colour = colours::black;
+    glass_sphere.material.ambient = 0.0f;
+    glass_sphere.material.diffuse = 0.1f;
+    glass_sphere.material.specular = 1.0f;
+    glass_sphere.material.shininess = 300.0f;
+    glass_sphere.material.reflective = 0.9f;
+    glass_sphere.material.transparency = 0.9f;
+    glass_sphere.material.refractive_index = 1.5f;
 
     // Green glass cube front right, turned 45° about y so an edge faces the camera. Refracted light isn't
     // tinted by the material, so the green comes from the surface colour; it needs more diffuse than the
     // clear glass sphere to show, and correspondingly a bit less transparency
-    Cube glass_cube{Cube::make_cube()};
+    Geom &glass_cube = world.add(Cube{});
     glass_cube.set_transform(multiply(translation<double>(1.9, 0.4, -2.6),
                                       multiply(rotation_y(pi_v<double> / 4), scale<double>(0.4, 0.4, 0.4))));
-    glass_cube.m_material.colour = Colour{.r = 0.1f, .g = 0.6f, .b = 0.2f};
-    glass_cube.m_material.ambient = 0.1f;
-    glass_cube.m_material.diffuse = 0.3f;
-    glass_cube.m_material.specular = 1.0f;
-    glass_cube.m_material.shininess = 300.0f;
-    glass_cube.m_material.reflective = 0.5f;
-    glass_cube.m_material.transparency = 0.7f;
-    glass_cube.m_material.refractive_index = 1.5f;
+    glass_cube.material.colour = Colour{.r = 0.1f, .g = 0.6f, .b = 0.2f};
+    glass_cube.material.ambient = 0.1f;
+    glass_cube.material.diffuse = 0.3f;
+    glass_cube.material.specular = 1.0f;
+    glass_cube.material.shininess = 300.0f;
+    glass_cube.material.reflective = 0.5f;
+    glass_cube.material.transparency = 0.7f;
+    glass_cube.material.refractive_index = 1.5f;
 
     // Closed gold cylinder front left: a short, slightly reflective metal post standing on the floor.
     // In object space it runs from y = 0 to y = 1 with radius 1; the scale makes it 1.2 tall and 0.35 wide
-    Cylinder gold_cylinder{Cylinder::make_cylinder()};
-    gold_cylinder.minimum = 0.0f;
-    gold_cylinder.maximum = 1.0f;
-    gold_cylinder.closed = true;
+    Geom &gold_cylinder = world.add(Cylinder{.minimum = 0.0f, .maximum = 1.0f, .closed = true});
     gold_cylinder.set_transform(multiply(translation<double>(-2.0, 0.0, -2.4), scale<double>(0.35, 1.2, 0.35)));
-    gold_cylinder.m_material.colour = Colour{.r = 0.8f, .g = 0.6f, .b = 0.2f};
-    gold_cylinder.m_material.diffuse = 0.6f;
-    gold_cylinder.m_material.specular = 0.9f;
-    gold_cylinder.m_material.shininess = 200.0f;
-    gold_cylinder.m_material.reflective = 0.3f;
+    gold_cylinder.material.colour = Colour{.r = 0.8f, .g = 0.6f, .b = 0.2f};
+    gold_cylinder.material.diffuse = 0.6f;
+    gold_cylinder.material.specular = 0.9f;
+    gold_cylinder.material.shininess = 200.0f;
+    gold_cylinder.material.reflective = 0.3f;
 
     // Traffic cone front left, nearest the camera: only the lower half of the double cone (y from -1 to 0), so the
     // apex is at the top and the radius grows to 1 at the base. Scaled to 1.0 tall with a 0.4 base radius and lifted
     // by its height so the base sits on the floor. Placed left of the camera's line to the striped sphere so it
     // doesn't hide it. Left open: the base is flat on the floor and never seen, and local_normal_at for cones has
     // no cap normals
-    Cone traffic_cone{Cone::make_cone()};
-    traffic_cone.minimum = -1.0f;
-    traffic_cone.maximum = 0.0f;
+    Geom &traffic_cone = world.add(Cone{.minimum = -1.0f, .maximum = 0.0f});
     traffic_cone.set_transform(multiply(translation<double>(-1.0, 1.0, -4.2), scale<double>(0.4, 1.0, 0.4)));
-    traffic_cone.m_material.diffuse = 0.8f;
-    traffic_cone.m_material.specular = 0.3f;
+    traffic_cone.material.diffuse = 0.8f;
+    traffic_cone.material.specular = 0.3f;
     // Horizontal bands: stripes vary along pattern-space x, so rotating the pattern 90° about z makes them vary along
     // the cone's own y instead. Scaling by 0.2 gives 5 bands over the cone's height of 1 (y = -1 to 0). Patterns
     // are looked up in object space, so the cone's own scale doesn't stretch them. floor(5y) runs -5..-1 and
@@ -349,13 +347,8 @@ void simulate_reflections() {
     // orange tip
     StripedPattern cone_bands = StripedPattern::create(colours::white, Colour{.r = 1.0f, .g = 0.4f, .b = 0.1f});
     cone_bands.m_transform = multiply(rotation_z(pi_v<double> / 2), scale<double>(0.2, 0.2, 0.2));
-    traffic_cone.m_material.pattern = cone_bands;
+    traffic_cone.material.pattern = cone_bands;
 
-    World world;
-    world.objects = {
-        floor, backdrop, mirror, gradient_sphere, ring_sphere, striped_sphere, plain_sphere, glass_sphere, glass_cube,
-        gold_cylinder, traffic_cone
-    };
     world.light = PointLight{.position = Point{.x = -10, .y = 10, .z = -10}, .intensity = colours::white};
 
     Camera camera{.hsize = 600, .vsize = 400, .field_of_view = pi_v<double> / 3};

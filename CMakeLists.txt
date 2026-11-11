@@ -39,7 +39,9 @@ add_library(matrix STATIC
         raytracer/Utils.hpp
         raytracer/Intersect.hpp
         raytracer/Intersect.cpp
-        raytracer/Shape.hpp
+        raytracer/Geom.hpp
+        raytracer/Geom.cpp
+        raytracer/Ray.hpp
 )
 
 target_include_directories(matrix PUBLIC raytracer)

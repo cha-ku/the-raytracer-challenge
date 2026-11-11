@@ -18,11 +18,8 @@
 using namespace raytracer;
 
 namespace {
-    Sphere make_glass_sphere() {
-        Sphere s = Sphere::make_sphere();
-        s.m_material.transparency = 1.0f;
-        s.m_material.refractive_index = 1.5f;
-        return s;
+    Geom make_glass_sphere() {
+        return Geom{Sphere{}, Material{.transparency = 1.0f, .refractive_index = 1.5f}};
     }
 }
 
@@ -56,7 +53,7 @@ SCENARIO("Computing a point from a distance") {
 SCENARIO("A ray intersects a sphere at two points") {
     GIVEN("Ray and Sphere") {
         const Ray ray(Point(0, 0, -5), Vector(0, 0, 1));
-        const Sphere sphere = Sphere::make_sphere();
+        const Geom sphere = make_sphere();
         WHEN("") {
             const auto xs = intersect(sphere, ray);
             THEN("") {
@@ -71,7 +68,7 @@ SCENARIO("A ray intersects a sphere at two points") {
 SCENARIO("A ray intersects a sphere at a tangent") {
     GIVEN("Ray and Sphere") {
         Ray ray(Point(0, 1, -5), Vector(0, 0, 1));
-        Sphere sphere{Sphere::make_sphere()};
+        Geom sphere = make_sphere();
         WHEN("") {
             const auto xs = intersect(sphere, ray);
             THEN("") {
@@ -86,7 +83,7 @@ SCENARIO("A ray intersects a sphere at a tangent") {
 SCENARIO("A ray misses a sphere") {
     GIVEN("Ray and Sphere") {
         const Ray ray(Point(0, 2, -5), Vector(0, 0, 1));
-        const Sphere sphere{Sphere::make_sphere()};
+        const Geom sphere = make_sphere();
         WHEN("") {
             const auto xs = intersect(sphere, ray);
             THEN("") {
@@ -99,7 +96,7 @@ SCENARIO("A ray misses a sphere") {
 SCENARIO("A ray originates inside a sphere") {
     GIVEN("Ray and Sphere") {
         Ray ray(Point(0, 0, 0), Vector(0, 0, 1));
-        Sphere sphere{Sphere::make_sphere()};
+        Geom sphere = make_sphere();
         WHEN("") {
             const std::vector<Intersection> xs = intersect(sphere, ray);
             THEN("") {
@@ -114,7 +111,7 @@ SCENARIO("A ray originates inside a sphere") {
 SCENARIO("A sphere is behind a ray") {
     GIVEN("Ray and Sphere") {
         Ray ray(Point(0, 0, 5), Vector(0, 0, 1));
-        Sphere sphere{Sphere::make_sphere()};
+        Geom sphere = make_sphere();
         WHEN("") {
             const std::vector<Intersection> xs = intersect(sphere, ray);
             THEN("") {
@@ -128,12 +125,12 @@ SCENARIO("A sphere is behind a ray") {
 
 SCENARIO("An intersection encapsulates t and object") {
     GIVEN("Sphere") {
-        const Sphere s = Sphere::make_sphere();
+        const Geom s = make_sphere();
         WHEN("") {
-            const auto [sphere, intersection] = Intersection(s, 3.5);
+            const auto [sphere, intersection] = Intersection(&s, 3.5);
             THEN("") {
                 REQUIRE(intersection == 3.5);
-                REQUIRE(sphere == AnyShape{s});
+                REQUIRE(sphere == &s);
             }
         }
     }
@@ -141,12 +138,12 @@ SCENARIO("An intersection encapsulates t and object") {
 
 SCENARIO("Intersect sets the object on the intersection") {
     GIVEN("Sphere") {
-        const Sphere s = Sphere::make_sphere();
+        const Geom s = make_sphere();
         WHEN("Intersection is created") {
-            const Intersection i{s, 3.5};
+            const Intersection i{&s, 3.5};
             THEN("Intersection has correct t and object") {
                 REQUIRE(i.t == 3.5f);
-                REQUIRE(i.object == AnyShape{s});
+                REQUIRE(i.object == &s);
             }
         }
     }
@@ -154,9 +151,9 @@ SCENARIO("Intersect sets the object on the intersection") {
 
 SCENARIO("Aggregating intersections") {
     GIVEN("Sphere and intersections") {
-        const Sphere s = Sphere::make_sphere();
-        const Intersection i1{s, 1};
-        const Intersection i2{s, 2};
+        const Geom s = make_sphere();
+        const Intersection i1{&s, 1};
+        const Intersection i2{&s, 2};
         WHEN("Intersections are aggregated") {
             const auto xs = intersections(i1, i2);
             THEN("Collection contains both intersections in order") {
@@ -170,9 +167,9 @@ SCENARIO("Aggregating intersections") {
 
 SCENARIO("The hit, when all intersections have positive t") {
     GIVEN("Sphere and intersections") {
-        const Sphere s = Sphere::make_sphere();
-        const Intersection i1{s, 1};
-        const Intersection i2{s, 2};
+        const Geom s = make_sphere();
+        const Intersection i1{&s, 1};
+        const Intersection i2{&s, 2};
         const auto xs = intersections(i2, i1);
         WHEN("hit is called") {
             const auto i = hit(xs);
@@ -187,9 +184,9 @@ SCENARIO("The hit, when all intersections have positive t") {
 
 SCENARIO("The hit, when some intersections have negative t") {
     GIVEN("Sphere and intersections") {
-        const Sphere s = Sphere::make_sphere();
-        const Intersection i1{s, -1};
-        const Intersection i2{s, 1};
+        const Geom s = make_sphere();
+        const Intersection i1{&s, -1};
+        const Intersection i2{&s, 1};
         const auto xs = intersections(i2, i1);
         WHEN("hit is called") {
             const auto i = hit(xs);
@@ -204,9 +201,9 @@ SCENARIO("The hit, when some intersections have negative t") {
 
 SCENARIO("The hit, when all intersections have negative t") {
     GIVEN("Sphere and intersections") {
-        const Sphere s = Sphere::make_sphere();
-        const Intersection i1{s, -2};
-        const Intersection i2{s, -1};
+        const Geom s = make_sphere();
+        const Intersection i1{&s, -2};
+        const Intersection i2{&s, -1};
         const auto xs = intersections(i2, i1);
         WHEN("hit is called") {
             const auto i = hit(xs);
@@ -219,11 +216,11 @@ SCENARIO("The hit, when all intersections have negative t") {
 
 SCENARIO("The hit is always the lowest nonnegative intersection") {
     GIVEN("Sphere and multiple intersections") {
-        const Sphere s = Sphere::make_sphere();
-        const Intersection i1{s, 5};
-        const Intersection i2{s, 7};
-        const Intersection i3{s, -3};
-        const Intersection i4{s, 2};
+        const Geom s = make_sphere();
+        const Intersection i1{&s, 5};
+        const Intersection i2{&s, 7};
+        const Intersection i3{&s, -3};
+        const Intersection i4{&s, 2};
         const auto xs = intersections(i1, i2, i3, i4);
         WHEN("hit is called") {
             const auto i = hit(xs);
@@ -266,21 +263,21 @@ SCENARIO("Scaling a ray") {
 
 SCENARIO("A sphere's default transformation") {
     GIVEN("Sphere") {
-        const Sphere s = Sphere::make_sphere();
+        const Geom s = make_sphere();
         THEN("Transform is identity matrix") {
-            REQUIRE(s.m_transform == Matrix<double>::identity(4));
+            REQUIRE(s.transform() == Matrix<double>::identity(4));
         }
     }
 }
 
 SCENARIO("Changing a sphere's transformation") {
     GIVEN("Sphere and translation") {
-        Sphere s = Sphere::make_sphere();
+        Geom s = make_sphere();
         const auto t = translation<double>(2, 3, 4);
         WHEN("set_transform is called") {
             s.set_transform(t);
             THEN("Transform equals the translation") {
-                REQUIRE(s.m_transform == t);
+                REQUIRE(s.transform() == t);
             }
         }
     }
@@ -288,7 +285,7 @@ SCENARIO("Changing a sphere's transformation") {
 
 SCENARIO("The normal on a sphere at a point on the x axis") {
     GIVEN("Sphere") {
-        const Sphere s = Sphere::make_sphere();
+        const Geom s = make_sphere();
         WHEN("Normal is computed at point on x axis") {
             const auto n = normal_at(s, Point(1, 0, 0));
             THEN("Normal equals vector(1, 0, 0)") {
@@ -300,7 +297,7 @@ SCENARIO("The normal on a sphere at a point on the x axis") {
 
 SCENARIO("The normal on a sphere at a point on the y axis") {
     GIVEN("Sphere") {
-        const Sphere s = Sphere::make_sphere();
+        const Geom s = make_sphere();
         WHEN("Normal is computed at point on y axis") {
             const auto n = normal_at(s, Point(0, 1, 0));
             THEN("Normal equals vector(0, 1, 0)") {
@@ -312,7 +309,7 @@ SCENARIO("The normal on a sphere at a point on the y axis") {
 
 SCENARIO("The normal on a sphere at a point on the z axis") {
     GIVEN("Sphere") {
-        const Sphere s = Sphere::make_sphere();
+        const Geom s = make_sphere();
         WHEN("Normal is computed at point on z axis") {
             const auto n = normal_at(s, Point(0, 0, 1));
             THEN("Normal equals vector(0, 0, 1)") {
@@ -324,7 +321,7 @@ SCENARIO("The normal on a sphere at a point on the z axis") {
 
 SCENARIO("The normal on a sphere at a nonaxial point") {
     GIVEN("Sphere") {
-        const Sphere s = Sphere::make_sphere();
+        const Geom s = make_sphere();
         const auto sqrt3_over_3 = std::sqrt(3) / 3;
         WHEN("Normal is computed at nonaxial point") {
             const auto n = normal_at(s, Point(sqrt3_over_3, sqrt3_over_3, sqrt3_over_3));
@@ -337,7 +334,7 @@ SCENARIO("The normal on a sphere at a nonaxial point") {
 
 SCENARIO("The normal is a normalized vector") {
     GIVEN("Sphere") {
-        const Sphere s = Sphere::make_sphere();
+        const Geom s = make_sphere();
         const auto sqrt3_over_3 = std::sqrt(3) / 3;
         WHEN("Normal is computed at nonaxial point") {
             const auto n = normal_at(s, Point(sqrt3_over_3, sqrt3_over_3, sqrt3_over_3));
@@ -350,7 +347,7 @@ SCENARIO("The normal is a normalized vector") {
 
 SCENARIO("Computing the normal on a translated sphere") {
     GIVEN("Sphere with translation") {
-        Sphere s = Sphere::make_sphere();
+        Geom s = make_sphere();
         s.set_transform(translation<double>(0, 1, 0));
         WHEN("Normal is computed") {
             const auto n = normal_at(s, Point(0, 1.70711, -0.70711));
@@ -363,7 +360,7 @@ SCENARIO("Computing the normal on a translated sphere") {
 
 SCENARIO("Computing the normal on a transformed sphere") {
     GIVEN("Sphere with scaling and rotation") {
-        Sphere s = Sphere::make_sphere();
+        Geom s = make_sphere();
         const auto m = multiply(scale<double>(1, 0.5, 1), rotation_z(std::numbers::pi / 5));
         s.set_transform(m);
         WHEN("Normal is computed") {
@@ -405,9 +402,9 @@ SCENARIO("Reflecting a vector off a slanted surface") {
 
 SCENARIO("A sphere has a default material") {
     GIVEN("Sphere") {
-        const Sphere s = Sphere::make_sphere();
+        const Geom s = make_sphere();
         WHEN("Material is retrieved") {
-            const auto m = s.m_material;
+            const auto m = s.material;
             THEN("Material equals the default material") {
                 REQUIRE(m == Material{});
             }
@@ -418,8 +415,8 @@ SCENARIO("A sphere has a default material") {
 SCENARIO("Precomputing the state of an intersection") {
     GIVEN("A ray, a sphere, and an intersection") {
         const Ray r{Point(0, 0, -5), Vector(0, 0, 1)};
-        const Sphere shape = Sphere::make_sphere();
-        const Intersection i{shape, 4};
+        const Geom shape = make_sphere();
+        const Intersection i{&shape, 4};
         WHEN("comps = prepare_computations(i, r)") {
             const auto comps = prepare_computations(i, r, {i});
             THEN("comps contains precomputed state") {
@@ -436,12 +433,12 @@ SCENARIO("Precomputing the state of an intersection") {
 SCENARIO("Precomputing the reflection vector") {
     GIVEN("shape ← plane(), r ← ray(point(0, 1, -1), vector(0, -√2/2, √2/2)) and i ← intersection(√2, shape)") {
         constexpr float half_sqrt2 = std::numbers::sqrt2_v<float> / 2;
-        const Plane shape = Plane::make_plane();
+        const Geom shape = make_plane();
         const Ray r{
             .origin = Point{.x = 0, .y = 1, .z = -1},
             .direction = Vector{.x = 0, .y = -half_sqrt2, .z = half_sqrt2}
         };
-        const Intersection i{shape, std::numbers::sqrt2_v<float>};
+        const Intersection i{&shape, std::numbers::sqrt2_v<float>};
 
         WHEN("comps ← prepare_computations(i, r)") {
             const auto comps = prepare_computations(i, r, {i});
@@ -456,8 +453,8 @@ SCENARIO("Precomputing the reflection vector") {
 SCENARIO("The hit, when an intersection occurs on the outside") {
     GIVEN("A ray, a sphere, and an intersection") {
         const Ray r{Point(0, 0, -5), Vector(0, 0, 1)};
-        const Sphere shape = Sphere::make_sphere();
-        const Intersection i{shape, 4};
+        const Geom shape = make_sphere();
+        const Intersection i{&shape, 4};
         WHEN("comps = prepare_computations(i, r)") {
             const auto comps = prepare_computations(i, r, {i});
             THEN("comps.inside is false") {
@@ -470,8 +467,8 @@ SCENARIO("The hit, when an intersection occurs on the outside") {
 SCENARIO("The hit, when an intersection occurs on the inside") {
     GIVEN("A ray from origin, a sphere, and an intersection") {
         constexpr Ray r{Point(0, 0, 0), Vector(0, 0, 1)};
-        const Sphere shape = Sphere::make_sphere();
-        const Intersection i{shape, 1};
+        const Geom shape = make_sphere();
+        const Intersection i{&shape, 1};
         WHEN("comps = prepare_computations(i, r)") {
             const auto comps = prepare_computations(i, r, {i});
             THEN("comps reflects inside hit with inverted normal") {
@@ -486,29 +483,29 @@ SCENARIO("The hit, when an intersection occurs on the inside") {
 
 SCENARIO("A helper for producing a sphere with a glassy material") {
     GIVEN("s ← glass_sphere()") {
-        const Sphere s = make_glass_sphere();
+        const Geom s = make_glass_sphere();
 
         THEN("s.transform = identity_matrix") {
-            REQUIRE(s.m_transform == Matrix<double>::identity(4));
+            REQUIRE(s.transform() == Matrix<double>::identity(4));
         }
         AND_THEN("s.material.transparency = 1.0") {
-            REQUIRE(s.m_material.transparency == 1.0f);
+            REQUIRE(s.material.transparency == 1.0f);
         }
         AND_THEN("s.material.refractive_index = 1.5") {
-            REQUIRE(s.m_material.refractive_index == 1.5f);
+            REQUIRE(s.material.refractive_index == 1.5f);
         }
     }
 }
 
 SCENARIO("A sphere may be assigned a material") {
     GIVEN("Sphere and material") {
-        Sphere s = Sphere::make_sphere();
+        Geom s = make_sphere();
         Material m{};
         m.ambient = 1;
         WHEN("Material is assigned to sphere") {
-            s.m_material = m;
+            s.material = m;
             THEN("Sphere has the assigned material") {
-                REQUIRE(s.m_material == m);
+                REQUIRE(s.material == m);
             }
         }
     }
@@ -517,9 +514,9 @@ SCENARIO("A sphere may be assigned a material") {
 SCENARIO("The hit should offset the point") {
     GIVEN("r ← ray(point(0, 0, -5), vector(0, 0, 1)) and shape ← sphere with translation(0, 0, 1)") {
         constexpr Ray r{Point(0, 0, -5), Vector(0, 0, 1)};
-        Sphere shape = Sphere::make_sphere();
+        Geom shape = make_sphere();
         shape.set_transform(translation<double>(0, 0, 1));
-        const Intersection i{shape, 5};
+        const Intersection i{&shape, 5};
 
         WHEN("comps ← prepare_computations(i, r)") {
             const auto comps = prepare_computations(i, r, {i});
@@ -536,9 +533,9 @@ SCENARIO("The under point is offset below the surface") {
     GIVEN("r ← ray(point(0, 0, -5), vector(0, 0, 1)), shape ← glass_sphere() with translation(0, 0, 1), "
           "i ← intersection(5, shape) and xs ← intersections(i)") {
         constexpr Ray r{.origin = Point{.x = 0, .y = 0, .z = -5}, .direction = Vector{.x = 0, .y = 0, .z = 1}};
-        Sphere shape = make_glass_sphere();
+        Geom shape = make_glass_sphere();
         shape.set_transform(translation<double>(0, 0, 1));
-        const Intersection i{.object = shape, .t = 5};
+        const Intersection i{.object = &shape, .t = 5};
         const auto xs = intersections(i);
 
         WHEN("comps ← prepare_computations(i, r, xs)") {
@@ -560,22 +557,22 @@ SCENARIO("Finding n1 and n2 at various intersections") {
           "C ← glass_sphere() with translation(0, 0, 0.25) and refractive_index 2.5, "
           "r ← ray(point(0, 0, -4), vector(0, 0, 1)) and "
           "xs ← intersections(2:A, 2.75:B, 3.25:C, 4.75:B, 5.25:C, 6:A)") {
-        Sphere a = make_glass_sphere();
+        Geom a = make_glass_sphere();
         a.set_transform(scale<double>(2, 2, 2));
-        a.m_material.refractive_index = 1.5f;
-        Sphere b = make_glass_sphere();
+        a.material.refractive_index = 1.5f;
+        Geom b = make_glass_sphere();
         b.set_transform(translation<double>(0, 0, -0.25));
-        b.m_material.refractive_index = 2.0f;
-        Sphere c = make_glass_sphere();
+        b.material.refractive_index = 2.0f;
+        Geom c = make_glass_sphere();
         c.set_transform(translation<double>(0, 0, 0.25));
-        c.m_material.refractive_index = 2.5f;
+        c.material.refractive_index = 2.5f;
         constexpr Ray r{.origin = Point{.x = 0, .y = 0, .z = -4}, .direction = Vector{.x = 0, .y = 0, .z = 1}};
-        const auto xs = intersections(Intersection{.object = a, .t = 2},
-                                      Intersection{.object = b, .t = 2.75f},
-                                      Intersection{.object = c, .t = 3.25f},
-                                      Intersection{.object = b, .t = 4.75f},
-                                      Intersection{.object = c, .t = 5.25f},
-                                      Intersection{.object = a, .t = 6});
+        const auto xs = intersections(Intersection{.object = &a, .t = 2},
+                                      Intersection{.object = &b, .t = 2.75f},
+                                      Intersection{.object = &c, .t = 3.25f},
+                                      Intersection{.object = &b, .t = 4.75f},
+                                      Intersection{.object = &c, .t = 5.25f},
+                                      Intersection{.object = &a, .t = 6});
 
         // Scenario Outline examples: | index | n1 | n2 |
         const auto [index, n1, n2] = GENERATE(table<std::size_t, float, float>({
@@ -604,10 +601,10 @@ SCENARIO("The Schlick approximation under total internal reflection") {
     GIVEN("shape ← glass_sphere(), r ← ray(point(0, 0, √2/2), vector(0, 1, 0)) "
           "and xs ← intersections(-√2/2:shape, √2/2:shape)") {
         constexpr float half_sqrt2 = std::numbers::sqrt2_v<float> / 2;
-        const Sphere shape = make_glass_sphere();
+        const Geom shape = make_glass_sphere();
         constexpr Ray r{.origin = Point{.x = 0, .y = 0, .z = half_sqrt2}, .direction = Vector{.x = 0, .y = 1, .z = 0}};
-        const auto xs = intersections(Intersection{.object = shape, .t = -half_sqrt2},
-                                      Intersection{.object = shape, .t = half_sqrt2});
+        const auto xs = intersections(Intersection{.object = &shape, .t = -half_sqrt2},
+                                      Intersection{.object = &shape, .t = half_sqrt2});
 
         WHEN("comps ← prepare_computations(xs[1], r, xs) and reflectance ← schlick(comps)") {
             const auto comps = prepare_computations(xs[1], r, xs);
@@ -623,9 +620,9 @@ SCENARIO("The Schlick approximation under total internal reflection") {
 SCENARIO("The Schlick approximation with a perpendicular viewing angle") {
     GIVEN("shape ← glass_sphere(), r ← ray(point(0, 0, 0), vector(0, 1, 0)) "
           "and xs ← intersections(-1:shape, 1:shape)") {
-        const Sphere shape = make_glass_sphere();
+        const Geom shape = make_glass_sphere();
         constexpr Ray r{.origin = Point{.x = 0, .y = 0, .z = 0}, .direction = Vector{.x = 0, .y = 1, .z = 0}};
-        const auto xs = intersections(Intersection{.object = shape, .t = -1}, Intersection{.object = shape, .t = 1});
+        const auto xs = intersections(Intersection{.object = &shape, .t = -1}, Intersection{.object = &shape, .t = 1});
 
         WHEN("comps ← prepare_computations(xs[1], r, xs) and reflectance ← schlick(comps)") {
             const auto comps = prepare_computations(xs[1], r, xs);
@@ -641,9 +638,9 @@ SCENARIO("The Schlick approximation with a perpendicular viewing angle") {
 SCENARIO("The Schlick approximation with small angle and n2 > n1") {
     GIVEN("shape ← glass_sphere(), r ← ray(point(0, 0.99, -2), vector(0, 0, 1)) "
           "and xs ← intersections(1.8589:shape)") {
-        const Sphere shape = make_glass_sphere();
+        const Geom shape = make_glass_sphere();
         constexpr Ray r{.origin = Point{.x = 0, .y = 0.99f, .z = -2}, .direction = Vector{.x = 0, .y = 0, .z = 1}};
-        const auto xs = intersections(Intersection{.object = shape, .t = 1.8589f});
+        const auto xs = intersections(Intersection{.object = &shape, .t = 1.8589f});
 
         WHEN("comps ← prepare_computations(xs[0], r, xs) and reflectance ← schlick(comps)") {
             const auto comps = prepare_computations(xs[0], r, xs);

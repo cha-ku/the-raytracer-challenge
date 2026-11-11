@@ -8,7 +8,7 @@ using namespace raytracer;
 
 SCENARIO("The normal of a plane is constant everywhere") {
     GIVEN("Plane") {
-        const Plane p = Plane::make_plane();
+        const Plane p{};
         WHEN("Normal is computed at several points") {
             const auto n1 = local_normal_at(p, Point(0, 0, 0));
             const auto n2 = local_normal_at(p, Point(10, 0, -10));
@@ -24,7 +24,7 @@ SCENARIO("The normal of a plane is constant everywhere") {
 
 SCENARIO("Intersect with a ray parallel to the plane") {
     GIVEN("Plane and ray") {
-        const Plane p = Plane::make_plane();
+        const Plane p{};
         const Ray r{Point(0, 10, 0), Vector(0, 0, 1)};
         WHEN("Ray is intersected with the plane") {
             const auto xs = local_intersect(p, r);
@@ -37,7 +37,7 @@ SCENARIO("Intersect with a ray parallel to the plane") {
 
 SCENARIO("Intersect with a coplanar ray") {
     GIVEN("Plane and ray") {
-        const Plane p = Plane::make_plane();
+        const Plane p{};
         const Ray r{Point(0, 0, 0), Vector(0, 0, 1)};
         WHEN("Ray is intersected with the plane") {
             const auto xs = local_intersect(p, r);
@@ -50,14 +50,13 @@ SCENARIO("Intersect with a coplanar ray") {
 
 SCENARIO("A ray intersecting a plane from above") {
     GIVEN("Plane and ray") {
-        const Plane p = Plane::make_plane();
+        const Plane p{};
         const Ray r{Point(0, 1, 0), Vector(0, -1, 0)};
         WHEN("Ray is intersected with the plane") {
             const auto xs = local_intersect(p, r);
             THEN("There is one intersection at t = 1") {
                 REQUIRE(xs.size() == 1);
-                REQUIRE(xs[0].t == 1);
-                REQUIRE(xs[0].object == AnyShape{p});
+                REQUIRE(xs[0] == 1);
             }
         }
     }
@@ -65,14 +64,13 @@ SCENARIO("A ray intersecting a plane from above") {
 
 SCENARIO("A ray intersecting a plane from below") {
     GIVEN("Plane and ray") {
-        const Plane p = Plane::make_plane();
+        const Plane p{};
         const Ray r{Point(0, -1, 0), Vector(0, 1, 0)};
         WHEN("Ray is intersected with the plane") {
             const auto xs = local_intersect(p, r);
             THEN("There is one intersection at t = 1") {
                 REQUIRE(xs.size() == 1);
-                REQUIRE(xs[0].t == 1);
-                REQUIRE(xs[0].object == AnyShape{p});
+                REQUIRE(xs[0] == 1);
             }
         }
     }

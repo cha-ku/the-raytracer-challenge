@@ -16,7 +16,7 @@ SCENARIO("A ray misses a cylinder") {
         {Point(0, 0, -5), Vector(1, 1, 1)},
     }));
     GIVEN("A cylinder and a ray that passes it by") {
-        const Cylinder cyl = Cylinder::make_cylinder();
+        const Cylinder cyl{};
         const Ray r{origin, Vector::normalize(direction)};
         WHEN("The ray is intersected with the cylinder") {
             const auto xs = local_intersect(cyl, r);
@@ -34,14 +34,14 @@ SCENARIO("A ray strikes a cylinder") {
         {Point(0.5, 0, -5), Vector(0.1, 1, 1), 6.80798f, 7.08872f},
     }));
     GIVEN("A cylinder and a ray that strikes it") {
-        const Cylinder cyl = Cylinder::make_cylinder();
+        const Cylinder cyl{};
         const Ray r{origin, Vector::normalize(direction)};
         WHEN("The ray is intersected with the cylinder") {
             const auto xs = local_intersect(cyl, r);
             THEN("There are two intersections at t0 and t1") {
                 REQUIRE(xs.size() == 2);
-                REQUIRE(utils::equal(xs[0].t, t0));
-                REQUIRE(utils::equal(xs[1].t, t1));
+                REQUIRE(utils::equal(xs[0], t0));
+                REQUIRE(utils::equal(xs[1], t1));
             }
         }
     }
@@ -55,7 +55,7 @@ SCENARIO("Normal vector on a cylinder") {
         {Point(-1, 1, 0), Vector(-1, 0, 0)},
     }));
     GIVEN("A cylinder and a point on its surface") {
-        const Cylinder cyl = Cylinder::make_cylinder();
+        const Cylinder cyl{};
         WHEN("The normal is computed at the point") {
             const auto n = local_normal_at(cyl, point);
             THEN("The normal points straight out from the y axis") {
@@ -67,7 +67,7 @@ SCENARIO("Normal vector on a cylinder") {
 
 SCENARIO("The default minimum and maximum for a cylinder") {
     GIVEN("A default cylinder") {
-        const Cylinder cyl = Cylinder::make_cylinder();
+        const Cylinder cyl{};
         THEN("It is unbounded in both directions along y") {
             REQUIRE(cyl.minimum == -std::numeric_limits<float>::infinity());
             REQUIRE(cyl.maximum == std::numeric_limits<float>::infinity());
@@ -85,7 +85,7 @@ SCENARIO("Intersecting a constrained cylinder") {
         {6, Point(0, 1.5, -2), Vector(0, 0, 1), 2},
     }));
     GIVEN("A cylinder constrained to 1 < y < 2 and ray " + std::to_string(row)) {
-        Cylinder cyl = Cylinder::make_cylinder();
+        Cylinder cyl{};
         cyl.minimum = 1;
         cyl.maximum = 2;
         const Ray r{point, Vector::normalize(direction)};
@@ -100,7 +100,7 @@ SCENARIO("Intersecting a constrained cylinder") {
 
 SCENARIO("The default closed value for a cylinder") {
     GIVEN("A default cylinder") {
-        const Cylinder cyl = Cylinder::make_cylinder();
+        const Cylinder cyl{};
         THEN("It is open at both ends") {
             REQUIRE_FALSE(cyl.closed);
         }
@@ -116,7 +116,7 @@ SCENARIO("Intersecting the caps of a closed cylinder") {
         {5, Point(0, -1, -2), Vector(0, 1, 1), 2}, // corner case
     }));
     GIVEN("A closed cylinder constrained to 1 < y < 2 and ray " + std::to_string(row)) {
-        Cylinder cyl = Cylinder::make_cylinder();
+        Cylinder cyl{};
         cyl.minimum = 1;
         cyl.maximum = 2;
         cyl.closed = true;
@@ -140,7 +140,7 @@ SCENARIO("The normal vector on a cylinder's end caps") {
         {Point(0, 2, 0.5), Vector(0, 1, 0)},
     }));
     GIVEN("A closed cylinder constrained to 1 < y < 2 and a point on one of its caps") {
-        Cylinder cyl = Cylinder::make_cylinder();
+        Cylinder cyl{};
         cyl.minimum = 1;
         cyl.maximum = 2;
         cyl.closed = true;

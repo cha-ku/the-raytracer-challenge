@@ -19,14 +19,14 @@ SCENARIO("A ray intersects a cube") {
         {"inside", Point(0, 0.5, 0), Vector(0, 0, 1), -1.0f, 1.0f},
     }));
     GIVEN("A cube and a ray hitting it from " + face) {
-        const Cube c = Cube::make_cube();
+        const Cube c{};
         const Ray r{origin, direction};
         WHEN("The ray is intersected with the cube") {
             const auto xs = local_intersect(c, r);
             THEN("There are two intersections at t1 and t2") {
                 REQUIRE(xs.size() == 2);
-                REQUIRE(utils::equal(xs[0].t, t1));
-                REQUIRE(utils::equal(xs[1].t, t2));
+                REQUIRE(utils::equal(xs[0], t1));
+                REQUIRE(utils::equal(xs[1], t2));
             }
         }
     }
@@ -42,7 +42,7 @@ SCENARIO("A ray misses a cube") {
         {Point(2, 2, 0), Vector(-1, 0, 0)},
     }));
     GIVEN("A cube and a ray that passes it by") {
-        const Cube c = Cube::make_cube();
+        const Cube c{};
         const Ray r{origin, direction};
         WHEN("The ray is intersected with the cube") {
             const auto xs = local_intersect(c, r);
@@ -65,7 +65,7 @@ SCENARIO("The normal on the surface of a cube") {
         {Point(-1, -1, -1), Vector(-1, 0, 0)},
     }));
     GIVEN("A cube and a point on its surface") {
-        const Cube c = Cube::make_cube();
+        const Cube c{};
         WHEN("The normal is computed at the point") {
             const auto normal = local_normal_at(c, point);
             THEN("The normal points out of the face the point lies on") {

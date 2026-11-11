@@ -10,7 +10,8 @@
 #include "Matrix.hpp"
 #include "MatrixImpl.hpp"
 #include "Material.hpp"
-#include "Shape.hpp"
+#include "Geom.hpp"
+#include "Ray.hpp"
 
 #include <concepts>
 #include <variant>
@@ -20,104 +21,9 @@
 namespace raytracer {
     struct World;
 
-    struct Ray {
-        Point origin{};
-        Vector direction{};
-    };
-
-    Point position(const Ray &ray, float distance);
-
-    Ray transform(const Ray &ray, const Matrix<double> &matrix);
-
-    // Shared by every concrete Shape: converts a world-space point into the
-    // shape's object space, and a freshly-computed object-space normal back
-    // into world space (by the inverse transpose of the transform), so
-    // concrete shapes only need to implement their own object-space
-    // intersect/normal math. Callers pass in the shape's already-inverted
-    // transform (rather than the Shape itself) so a single inversion can be
-    // shared across both a point/ray conversion and a normal conversion.
-    Point to_object_space(const Point &point, const Matrix<double> &inverse_transform);
-
-    Vector to_world_normal(const Vector &object_normal, const Matrix<double> &inverse_transform);
-
-    struct Sphere : Shape, ShapeFactory<Sphere> {
-        explicit Sphere(const uint32_t id) : Shape(id) {
-        }
-
-        static Sphere make_sphere() { return make(); }
-    };
-
-    struct Plane : Shape, ShapeFactory<Plane> {
-        explicit Plane(const uint32_t id) : Shape(id) {
-        }
-
-        static Plane make_plane() { return make(); }
-    };
-
-    struct Cube : Shape, ShapeFactory<Cube> {
-        explicit Cube(const uint32_t id) : Shape(id) {
-        }
-
-        static Cube make_cube() { return make(); }
-    };
-
-    struct Cylinder : Shape, ShapeFactory<Cylinder> {
-        // y-axis min and max values
-        float minimum{-std::numeric_limits<float>::infinity()};
-        float maximum{std::numeric_limits<float>::infinity()};
-        bool closed{false};
-
-        explicit Cylinder(const uint32_t id) : Shape(id) {
-        }
-
-        static Cylinder make_cylinder() { return make(); }
-    };
-
-    struct Cone : Shape, ShapeFactory<Cone> {
-        // y-axis min and max values
-        float minimum{-std::numeric_limits<float>::infinity()};
-        float maximum{std::numeric_limits<float>::infinity()};
-        bool closed{false};
-
-        explicit Cone(const uint32_t id) : Shape(id) {
-        }
-
-        static Cone make_cone() { return make(); }
-    };
-
-    // The closed set of concrete, renderable shape types. This is the single
-    // source of truth for "what kinds of shapes exist" — adding a new shape
-    // means adding it here (plus its own local_intersect/local_normal_at
-    // overloads), and nowhere else needs to change.
-    using AnyShape = std::variant<Sphere, Plane, Cube, Cylinder, Cone>;
-
-    // Reaches through whichever concrete type an AnyShape currently holds to
-    // get at its common Shape subobject. This is the one place that knows
-    // how to do that; any Shape-level field or method (m_material,
-    // m_transform, m_id, set_transform, ...) is reachable through this
-    // without writing a new std::visit wrapper per field.
-    inline const Shape &as_shape(const AnyShape &shape) {
-        return std::visit([](const auto &s) -> const Shape & { return s; }, shape);
-    }
-
-    inline Shape &as_shape(AnyShape &shape) {
-        return std::visit([](auto &s) -> Shape & { return s; }, shape);
-    }
-
-    inline const Material &material_of(const AnyShape &shape) {
-        return as_shape(shape).m_material;
-    }
-
-    inline Material &material_of(AnyShape &shape) {
-        return as_shape(shape).m_material;
-    }
-
-    inline const Matrix<double> &transform_of(const AnyShape &shape) {
-        return as_shape(shape).m_transform;
-    }
-
     struct Intersection {
-        AnyShape object;
+        // Pointer to the scene object that was hit
+        const Geom *object{nullptr};
         float t{};
 
         bool operator==(const Intersection &) const = default;
@@ -128,89 +34,65 @@ namespace raytracer {
         return std::vector<Intersection>{std::forward<Args>(args)...};
     }
 
-    // Concrete, per-shape object-space normal math. Takes the point already
-    // converted into the shape's own object space (see normal_at below).
-    // Adding a new shape type means adding its own overload here.
-    Vector local_normal_at(const Sphere &sphere, const Point &local_point);
+    // Concrete, per-shape object-space normal math. Takes the point already converted into the shape's own
+    // object space (see normal_at below). Adding a new shape type means adding its own overload here.
+    Vector local_normal_at(const Sphere &, const Point &local_point);
 
-    Vector local_normal_at(const Plane &plane, const Point &local_point);
+    Vector local_normal_at(const Plane &, const Point &);
 
-    Vector local_normal_at(const Cube &cube, const Point &local_point);
+    Vector local_normal_at(const Cube &, const Point &local_point);
 
     Vector local_normal_at(const Cylinder &cylinder, const Point &local_point);
 
-    Vector local_normal_at(const Cone &cone, const Point &local_point);
+    Vector local_normal_at(const Cone &, const Point &local_point);
 
-    // A shape type S is Normalable if it has its own local_normal_at
-    // overload, found via ADL, taking S and a local-space Point and
-    // returning a Vector.
+    Vector local_normal_at(const TestShape &, const Point &local_point);
+
+    // A shape type S is Normalable if it has its own local_normal_at overload taking S and a local-space Point
+    // and returning a Vector.
     template<typename S>
     concept Normalable = requires(const S &shape, const Point &local_point)
     {
         { local_normal_at(shape, local_point) } -> std::same_as<Vector>;
     };
 
-    // Shared by every concrete Shape: converts a world-space point into the
-    // shape's object space (by the inverse of its transform), dispatches to
-    // that shape's own local_normal_at, then converts the resulting
-    // object-space normal back into world space (by the inverse transpose
-    // of the transform) and normalizes it.
-    template<Normalable S>
-    Vector normal_at(const S &shape, const Point &point) {
-        const auto shape_transform_inverse{inverse(shape.m_transform)};
-        if (!shape_transform_inverse.has_value()) {
-            return {};
-        }
-        const Point local_point{to_object_space(point, shape_transform_inverse.value())};
-        const Vector local_normal{local_normal_at(shape, local_point)};
-        return to_world_normal(local_normal, shape_transform_inverse.value());
-    }
+    // World-space normal of `geom` at a world-space point: converts the point into object space (through any
+    // parents), dispatches to the shape's own local_normal_at, then converts the normal back out to world space.
+    Vector normal_at(const Geom &geom, const Point &world_point);
 
-    // Concrete, per-shape object-space intersection math. Takes the ray
-    // already converted into the shape's own object space (see intersect
-    // below). Adding a new shape type means adding its own overload here.
-    std::vector<Intersection> local_intersect(const Sphere &sphere, const Ray &local_ray);
+    // Concrete, per-shape object-space intersection math. Takes the ray already converted into the shape's own
+    // object space (see intersect below) and returns the t values where it hits. It knows nothing about which
+    // Geom it belongs to; intersect() pairs each t with the Geom.
+    std::vector<float> local_intersect(const Sphere &, const Ray &local_ray);
 
-    std::vector<Intersection> local_intersect(const Plane &plane, const Ray &local_ray);
+    std::vector<float> local_intersect(const Plane &, const Ray &local_ray);
 
-    std::vector<Intersection> local_intersect(const Cube &cube, const Ray &local_ray);
+    std::vector<float> local_intersect(const Cube &, const Ray &local_ray);
 
-    std::vector<Intersection> local_intersect(const Cylinder &cylinder, const Ray &local_ray);
+    std::vector<float> local_intersect(const Cylinder &cylinder, const Ray &local_ray);
 
-    std::vector<Intersection> local_intersect(const Cone &cone, const Ray &local_ray);
+    std::vector<float> local_intersect(const Cone &cone, const Ray &local_ray);
 
-    // A shape type S is Intersectable if it has its own local_intersect
-    // overload, found via ADL, taking S and a local-space Ray and returning
-    // std::vector<Intersection>. This turns a missing/mismatched
-    // local_intersect overload into a clear "constraints not satisfied"
-    // error at the intersect() call site, instead of a confusing failure
-    // deep inside intersect()'s template body.
+    std::vector<float> local_intersect(const TestShape &shape, const Ray &local_ray);
+
+    // A shape type S is Intersectable if it has its own local_intersect overload taking S and a local-space Ray
+    // and returning its t values.
     template<typename S>
     concept Intersectable = requires(const S &shape, const Ray &local_ray)
     {
-        { local_intersect(shape, local_ray) } -> std::same_as<std::vector<Intersection> >;
+        { local_intersect(shape, local_ray) } -> std::same_as<std::vector<float> >;
     };
 
-    // Shared by every concrete Shape: converts a world-space ray into the
-    // shape's object space (by the inverse of its transform), then
-    // dispatches to that shape's own local_intersect (resolved by overload
-    // resolution on the concrete shape type S).
-    template<Intersectable S>
-    std::vector<Intersection> intersect(const S &shape, const Ray &ray) {
-        const auto shape_transform_inverse{inverse(shape.m_transform)};
-        if (!shape_transform_inverse.has_value()) {
-            return {};
-        }
-        const Ray local_ray{transform(ray, shape_transform_inverse.value())};
-        return local_intersect(shape, local_ray);
-    }
+    // Converts a world-space ray into `geom`'s object space (by its cached inverse transform), dispatches to the
+    // shape's own local_intersect, and pairs every t value with `geom`.
+    std::vector<Intersection> intersect(const Geom &geom, const Ray &ray);
 
     std::optional<Intersection> hit(const std::vector<Intersection> &intersections);
 
 
     struct Computations {
         float t{};
-        AnyShape object;
+        const Geom *object{nullptr};
         Point point{};
         Vector eye_vector{};
         Vector normal_vector{};

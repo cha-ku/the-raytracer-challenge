@@ -11,19 +11,25 @@
 namespace raytracer {
     World World::create_default_world() {
         World world;
-        Sphere s1 = Sphere::make_sphere();
-        s1.m_material = {.colour = Colour{.r = 0.8, .g = 1.0, .b = 0.6}, .diffuse = 0.7, .specular = 0.2};
-        Sphere s2 = Sphere::make_sphere();
+        Geom &s1 = world.add(Sphere{});
+        s1.material = {.colour = Colour{.r = 0.8, .g = 1.0, .b = 0.6}, .diffuse = 0.7, .specular = 0.2};
+        Geom &s2 = world.add(Sphere{});
         s2.set_transform(scale<double>(0.5, 0.5, 0.5));
-        world.objects = {s1, s2};
         world.light = {.position = Point{.x = -10, .y = 10, .z = -10}, .intensity = Colour{.r = 1, .g = 1, .b = 1}};
         return world;
+    }
+
+    Geom &World::add(AnyShape shape) {
+        return *objects.emplace_back(std::make_unique<Geom>(std::move(shape)));
     }
 
     std::vector<Intersection> World::intersect_world(const World &world, const Ray &ray) {
         std::vector<Intersection> intersections;
         for (const auto &obj: world.objects) {
-            std::visit([&](const auto &shape) { intersections.append_range(intersect(shape, ray)); }, obj);
+            // only root objects: a child is intersected through its parent group, never on its own
+            if (obj->parent == nullptr) {
+                intersections.append_range(intersect(*obj, ray));
+            }
         }
         std::ranges::sort(intersections, [](const Intersection &a, const Intersection &b) {
             return (a.t < b.t);
@@ -81,7 +87,7 @@ namespace raytracer {
         if (remaining == 0) {
             return colours::black;
         }
-        const auto &mat = as_shape(comps.object).m_material;
+        const auto &mat = comps.object->material;
         if (mat.transparency == 0.0f) return colours::black;
         // Snell's law calculations
         // sin θᵢ / sin θₜ = n2 / n1
@@ -106,7 +112,7 @@ namespace raytracer {
         if (remaining == 0) {
             return colours::black;
         }
-        const auto &mat = as_shape(comps.object).m_material;
+        const auto &mat = comps.object->material;
         if (mat.reflective == 0.0f) return colours::black;
         const Ray &reflect_ray{.origin = comps.over_point, .direction = comps.reflect_vector};
         const auto &colour = colour_at(world, reflect_ray, --remaining);

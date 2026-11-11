@@ -12,7 +12,7 @@
 #include <optional>
 
 namespace raytracer {
-    struct Shape;
+    struct Geom;
 
     struct Material {
         Colour colour{.r = 1, .g = 1, .b = 1};
@@ -28,7 +28,7 @@ namespace raytracer {
         bool operator==(const Material &) const = default;
     };
 
-    Colour lighting(const Shape &shape, const Material &material, const PointLight &light, const Point &point,
+    Colour lighting(const Geom &shape, const Material &material, const PointLight &light, const Point &point,
                     const Vector &eye, const Vector &normal, bool in_shadow);
 }
 
