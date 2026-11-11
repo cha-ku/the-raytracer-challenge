@@ -12,6 +12,7 @@ add_executable(tests
         test_cubes.cpp
         test_cylinders.cpp
         test_cones.cpp
+        test_groups.cpp
 )
 
 target_include_directories(tests PUBLIC ${CMAKE_SOURCE_DIR}/raytracer)

@@ -6,6 +6,7 @@
 #include "Ray.hpp"
 
 #include <limits>
+#include <memory>
 #include <utility>
 #include <variant>
 
@@ -32,6 +33,12 @@ namespace raytracer {
         bool closed{false};
     };
 
+    struct Group {
+        std::vector<Geom*> children;
+    };
+
+    void add_child(Geom &group, Geom &child);
+
     // A minimal shape used only to exercise Geom's own behaviour (transform/material) in tests. Like TestPattern
     // it lives in production code so it can be part of AnyShape; the name signals it is for tests only.
     struct TestShape {
@@ -43,7 +50,7 @@ namespace raytracer {
 
     // The closed set of concrete shape types. Adding a new shape means adding it here, plus its own
     // local_intersect/local_normal_at overloads in Intersect.hpp.
-    using AnyShape = std::variant<Sphere, Plane, Cube, Cylinder, Cone, TestShape>;
+    using AnyShape = std::variant<Sphere, Plane, Cube, Cylinder, Cone, Group, TestShape>;
 
     // A node in the scene: a shape plus where it is (transform, parent) and how it looks (material).
     //
@@ -51,17 +58,18 @@ namespace raytracer {
     // Geom, so its address must never change; deleting copy and move turns any accidental relocation into a
     // compile error. The World owns its Geoms through std::unique_ptr; tests can keep them as locals. Factory
     // functions like make_sphere() still work because returning a prvalue is guaranteed copy elision.
+    // struct Group;
     struct Geom {
         AnyShape shape;
         Material material{};
         Geom *parent{nullptr};
 
-        explicit Geom(const AnyShape &s) : shape{s} {
+        explicit Geom(AnyShape s) : shape{std::move(s)} {
         }
 
         // For factories that need to return a Geom with a material already set: a named local Geom can't be
         // returned (that would need a move), but a prvalue built from this can
-        Geom(const AnyShape &s, Material m) : shape{s}, material{std::move(m)} {
+        Geom(AnyShape s, Material m) : shape{std::move(s)}, material{std::move(m)} {
         }
 
         Geom(const Geom &) = delete;
@@ -90,6 +98,8 @@ namespace raytracer {
     inline Geom make_cylinder() { return Geom{Cylinder{}}; }
 
     inline Geom make_cone() { return Geom{Cone{}}; }
+
+    inline Geom make_group() { return Geom{Group{}};}
 
     // Converts a world-space point into the geom's object space, going through every parent's transform first
     Point world_to_object(const Geom &geom, const Point &world_point);

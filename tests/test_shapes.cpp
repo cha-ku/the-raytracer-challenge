@@ -114,3 +114,72 @@ SCENARIO("Computing the normal on a transformed shape") {
         }
     }
 }
+
+SCENARIO("A shape has a parent attribute") {
+    GIVEN("A test shape") {
+        const auto s = make_test_shape();
+        THEN("It has no parent") {
+            REQUIRE(s.parent == nullptr);
+        }
+    }
+}
+
+SCENARIO("Converting a point from world to object space") {
+    GIVEN("A sphere inside a scaled group inside a rotated group") {
+        Geom g1 = make_group();
+        g1.set_transform(rotation_y(std::numbers::pi / 2));
+        Geom g2 = make_group();
+        g2.set_transform(scale<double>(2, 2, 2));
+        add_child(g1, g2);
+        Geom s = make_sphere();
+        s.set_transform(translation<double>(5, 0, 0));
+        add_child(g2, s);
+        WHEN("A world-space point is converted into the sphere's object space") {
+            const auto p = world_to_object(s, Point(-2, 0, -10));
+            THEN("Every parent's transform has been applied") {
+                REQUIRE(utils::equal(p.x, 0.0f));
+                REQUIRE(utils::equal(p.y, 0.0f));
+                REQUIRE(utils::equal(p.z, -1.0f));
+            }
+        }
+    }
+}
+
+SCENARIO("Converting a normal from object to world space") {
+    GIVEN("A sphere inside a scaled group inside a rotated group") {
+        Geom g1 = make_group();
+        g1.set_transform(rotation_y(std::numbers::pi / 2));
+        Geom g2 = make_group();
+        g2.set_transform(scale<double>(1, 2, 3));
+        add_child(g1, g2);
+        Geom s = make_sphere();
+        s.set_transform(translation<double>(5, 0, 0));
+        add_child(g2, s);
+        WHEN("An object-space normal is converted into world space") {
+            const auto sqrt3_over_3 = static_cast<float>(std::numbers::sqrt3 / 3);
+            const auto n = normal_to_world(s, Vector(sqrt3_over_3, sqrt3_over_3, sqrt3_over_3));
+            THEN("Every parent's transform has been applied") {
+                REQUIRE(Vector::areAlmostEqual(n, Vector(0.2857, 0.4286, -0.8571)));
+            }
+        }
+    }
+}
+
+SCENARIO("Finding the normal on a child object") {
+    GIVEN("A sphere inside a scaled group inside a rotated group") {
+        Geom g1 = make_group();
+        g1.set_transform(rotation_y(std::numbers::pi / 2));
+        Geom g2 = make_group();
+        g2.set_transform(scale<double>(1, 2, 3));
+        add_child(g1, g2);
+        Geom s = make_sphere();
+        s.set_transform(translation<double>(5, 0, 0));
+        add_child(g2, s);
+        WHEN("The normal is computed at a world-space point on the sphere") {
+            const auto n = normal_at(s, Point(1.7321, 1.1547, -5.5774));
+            THEN("The normal accounts for every parent's transform") {
+                REQUIRE(Vector::areAlmostEqual(n, Vector(0.2857, 0.4286, -0.8571)));
+            }
+        }
+    }
+}

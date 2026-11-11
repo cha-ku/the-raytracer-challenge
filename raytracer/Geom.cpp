@@ -3,6 +3,11 @@
 #include <stdexcept>
 
 namespace raytracer {
+    void add_child(Geom &group, Geom &child) {
+        child.parent = &group;
+        std::get<Group>(group.shape).children.push_back(&child);
+    }
+
     void Geom::set_transform(const Matrix<double> &t) {
         const auto t_inverse{inverse(t)};
         if (!t_inverse.has_value()) {

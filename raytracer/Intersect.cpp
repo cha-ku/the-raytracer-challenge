@@ -81,6 +81,9 @@ namespace raytracer {
         return {.x = local_point.x, .y = local_point.y > 0.f ? -y : y, .z = local_point.z};
     }
 
+    Vector local_normal_at(const Group &, const Point &) {
+        throw std::logic_error("local_normal_at called on a Group: a group has no surface, ask its children");
+    }
 
     std::vector<float> local_intersect(const Sphere &, const Ray &local_ray) {
         const auto &[origin, direction] = local_ray;
@@ -239,6 +242,17 @@ namespace raytracer {
         return intersections;
     }
 
+    std::vector<float> local_intersect(const Group &group, const Ray &local_ray) {
+        std::vector<float> intersections;
+        std::ranges::for_each(group.children, [&local_ray, &intersections](const auto &child) {
+            std::visit([&local_ray, &intersections](const auto &shape) {
+                const auto tmp = local_intersect(shape, local_ray);
+                intersections.insert(intersections.end(), tmp.begin(), tmp.end());
+            }, child->shape);
+        });
+        return intersections;
+    }
+
 
     std::vector<float> local_intersect(const TestShape &shape, const Ray &local_ray) {
         shape.saved_ray = local_ray;
@@ -251,7 +265,16 @@ namespace raytracer {
 
     std::vector<Intersection> intersect(const Geom &geom, const Ray &ray) {
         const Ray local_ray{transform(ray, geom.inverse_transform())};
-        const std::vector<float> ts{
+        // get_if takes pointer to variant - weird
+        if (const auto group = std::get_if<Group>(&geom.shape)) {
+            std::vector<Intersection> intersections;
+            for (const Geom* child : group->children) {
+                intersections.append_range(intersect(*child, local_ray));
+            }
+            std::ranges::sort(intersections, {}, &Intersection::t);
+            return intersections;
+        }
+        const std::vector ts{
             std::visit([&local_ray]<Intersectable S>(const S &shape) { return local_intersect(shape, local_ray); },
                        geom.shape)
         };

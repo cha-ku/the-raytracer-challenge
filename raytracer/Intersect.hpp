@@ -46,6 +46,8 @@ namespace raytracer {
 
     Vector local_normal_at(const Cone &, const Point &local_point);
 
+    [[noreturn]] Vector local_normal_at(const Group&, const Point&);
+
     Vector local_normal_at(const TestShape &, const Point &local_point);
 
     // A shape type S is Normalable if it has its own local_normal_at overload taking S and a local-space Point
@@ -72,6 +74,8 @@ namespace raytracer {
     std::vector<float> local_intersect(const Cylinder &cylinder, const Ray &local_ray);
 
     std::vector<float> local_intersect(const Cone &cone, const Ray &local_ray);
+
+    std::vector<float> local_intersect(const Group &group, const Ray &local_ray);
 
     std::vector<float> local_intersect(const TestShape &shape, const Ray &local_ray);
 
