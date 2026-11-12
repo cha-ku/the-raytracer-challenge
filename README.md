@@ -2,8 +2,7 @@
 
 A C++23 ray tracer built by working through Jamis Buck's book
 [*The Ray Tracer Challenge*](https://pragprog.com/titles/jbtracer/the-ray-tracer-challenge/)
-(published by The Pragmatic Programmers). Each chapter's Gherkin scenarios live under
-`tests/features/*.feature` and are implemented as Catch2 test cases.
+(published by The Pragmatic Programmers). Each chapter's Gherkin scenarios are implemented as Catch2 test cases.
 
 **This is an ongoing project** — chapters are being worked through and
 implemented incrementally, so features, architecture, and this README are
@@ -90,7 +89,4 @@ All types live in the `raytracer` namespace.
 
 ## License
 
-This project's own code is licensed under
-[CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/). The Gherkin
-scenarios under `tests/features/*.feature` are adapted from the book itself
-and carry a separate attribution notice — see [LICENSE](LICENSE) for both.
+This work is licensed under <a href="https://creativecommons.org/licenses/by-sa/4.0/">Creative Commons Attribution-ShareAlike 4.0 International</a><img src="https://mirrors.creativecommons.org/presskit/icons/cc.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;"><img src="https://mirrors.creativecommons.org/presskit/icons/by.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;"><img src="https://mirrors.creativecommons.org/presskit/icons/sa.svg" alt="" style="max-width: 1em;max-height:1em;margin-left: .2em;">
