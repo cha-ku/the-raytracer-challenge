@@ -25,6 +25,7 @@ int main() {
     // simulate_sphere();
     // simulate_material_sphere();
     // simulate_multiple_spheres();
-    simulate_reflections();
+    // simulate_reflections();
+    simulate_hexagon();
     return 0;
 }

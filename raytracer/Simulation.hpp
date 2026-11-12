@@ -17,4 +17,6 @@ void simulate_multiple_spheres();
 
 void simulate_reflections();
 
+void simulate_hexagon();
+
 #endif //THE_RAYTRACER_CHALLENGE_SIMULATION_HPP

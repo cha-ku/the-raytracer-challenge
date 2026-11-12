@@ -33,8 +33,8 @@ namespace {
         return {.position = new_position, .velocity = new_velocity};
     }
 
-    void save_canvas(const raytracer::Canvas& canvas, const std::string& filename) {
-        const auto& retval = raytracer::canvas_to_ppm(canvas, filename);
+    void save_canvas(const raytracer::Canvas &canvas, const std::string &filename) {
+        const auto &retval = raytracer::canvas_to_ppm(canvas, filename);
         if (retval.has_value()) {
             std::cout << "Data written to " << filename << "\n";
         } else if (retval.error() == raytracer::CanvasError::invalid_path) {
@@ -50,7 +50,9 @@ void simulate_projectile() {
     constexpr Point start{.x = 0, .y = 1, .z = 0};
     const Vector velocity{Vector::normalize({.x = 1, .y = 1.8, .z = 0}) * 11.25};
     Projectile projectile{.position = start, .velocity = velocity};
-    constexpr Environment environment{.gravity = Vector{.x = 0, .y = -0.1, .z = 0}, .wind = Vector{.x = -0.01, .y = 0, .z = 0}};
+    constexpr Environment environment{
+        .gravity = Vector{.x = 0, .y = -0.1, .z = 0}, .wind = Vector{.x = -0.01, .y = 0, .z = 0}
+    };
     Canvas canvas{900, 900};
 
     int ticks = 0;
@@ -75,14 +77,15 @@ void simulate_projectile() {
 void simulate_clock() {
     using namespace raytracer;
     Canvas canvas{256, 256};
-    const Point centre{.x = static_cast<float>(canvas.width)/2.f, .y = 0, .z = static_cast<float>(canvas.height)/2};
-    canvas.write_pixel(static_cast<uint32_t>(centre.x), static_cast<uint32_t>(centre.z),  Colour{.r = 1, .g = 0, .b = 0});
-    const float radius{3/8.f * static_cast<float>(canvas.width)};
+    const Point centre{.x = static_cast<float>(canvas.width) / 2.f, .y = 0, .z = static_cast<float>(canvas.height) / 2};
+    canvas.write_pixel(static_cast<uint32_t>(centre.x), static_cast<uint32_t>(centre.z),
+                       Colour{.r = 1, .g = 0, .b = 0});
+    const float radius{3 / 8.f * static_cast<float>(canvas.width)};
     // 12 o'clock position relative to origin
     const auto twelve_oclock = make_matrix({.x = 0, .y = 0, .z = -radius});
 
     for (int i = 0; i < 12; ++i) {
-        const auto rad = static_cast<float>(i) * std::numbers::pi_v<float>/6.f;
+        const auto rad = static_cast<float>(i) * std::numbers::pi_v<float> / 6.f;
         const auto hour{rotation_y(rad)};
         try {
             // Rotate the point around origin
@@ -94,10 +97,9 @@ void simulate_clock() {
             if (x >= 0.f && x < static_cast<float>(canvas.width) &&
                 z >= 0.f && z < static_cast<float>(canvas.height)) {
                 canvas.write_pixel(static_cast<uint32_t>(x), static_cast<uint32_t>(z),
-                    Colour{.r = 1, .g = 1, .b = 1});
+                                   Colour{.r = 1, .g = 1, .b = 1});
             }
-        }
-        catch (const std::invalid_argument& e) {
+        } catch (const std::invalid_argument &e) {
             std::cerr << "Error at hour " << i << ": " << e.what() << "\n";
         }
     }
@@ -108,17 +110,17 @@ void simulate_sphere() {
     using namespace raytracer;
     constexpr auto canvas_pixels{256u};
     constexpr auto wall_size{7.f};
-    constexpr auto pixel_size{wall_size/canvas_pixels};
+    constexpr auto pixel_size{wall_size / canvas_pixels};
     constexpr auto half{wall_size / 2};
     Canvas canvas{canvas_pixels, canvas_pixels};
-    constexpr Colour colour{.r=1.f};
+    constexpr Colour colour{.r = 1.f};
     Geom shape = make_sphere();
     // shrink it along the y axis
     shape.set_transform(scale<double>(1, 0.5, 1));
     // shrink it along the x axis
     shape.set_transform(scale<double>(0.5, 1, 1));
     // shrink it, and rotate it
-    shape.set_transform(multiply(rotation_z(std::numbers::pi/4),  scale<double>(0.5, 1, 1)));
+    shape.set_transform(multiply(rotation_z(std::numbers::pi / 4), scale<double>(0.5, 1, 1)));
     // shrink it, and skew it
     shape.set_transform(multiply(shearing(1, 0, 0, 0, 0, 0), scale<double>(0.5, 1, 1)));
     constexpr auto wall_z{10.0f};
@@ -145,7 +147,7 @@ void simulate_material_sphere() {
     using namespace raytracer;
     constexpr auto canvas_pixels{256u};
     constexpr auto wall_size{7.f};
-    constexpr auto pixel_size{wall_size/canvas_pixels};
+    constexpr auto pixel_size{wall_size / canvas_pixels};
     constexpr auto half{wall_size / 2};
     Canvas canvas{canvas_pixels, canvas_pixels};
     Geom sphere = make_sphere();
@@ -191,7 +193,7 @@ void simulate_multiple_spheres() {
     floor.material.pattern = floor_pattern;
 
     Geom &backdrop = world.add(Plane{});
-    backdrop.set_transform(multiply(translation<double>(0, 0, 3.0), rotation_x(pi_v<double>/2)));
+    backdrop.set_transform(multiply(translation<double>(0, 0, 3.0), rotation_x(pi_v<double> / 2)));
     backdrop.material.colour = Colour{.r = 0.9f, .g = 0.85f, .b = 0.8f};
     backdrop.material.specular = 0.0f;
 
@@ -213,10 +215,13 @@ void simulate_multiple_spheres() {
     left_sphere.material.diffuse = 0.7f;
     left_sphere.material.specular = 0.3f;
 
-    world.light = PointLight{.position = Point{.x = -10, .y = 10, .z = -10}, .intensity = Colour{.r = 1, .g = 1, .b = 1}};
+    world.light = PointLight{
+        .position = Point{.x = -10, .y = 10, .z = -10}, .intensity = Colour{.r = 1, .g = 1, .b = 1}
+    };
 
-    Camera camera{.hsize = 600, .vsize = 400, .field_of_view = pi_v<double>/2};
-    camera.transform = view_transform(Point{.x = 0, .y = 1.5f, .z = -5}, Point{.x = 0, .y = 1, .z = 0}, Vector{.x = 0, .y = 1, .z = 0});
+    Camera camera{.hsize = 600, .vsize = 400, .field_of_view = pi_v<double> / 2};
+    camera.transform = view_transform(Point{.x = 0, .y = 1.5f, .z = -5}, Point{.x = 0, .y = 1, .z = 0},
+                                      Vector{.x = 0, .y = 1, .z = 0});
 
     Canvas canvas{camera.hsize, camera.vsize};
     for (uint32_t y = 0; y < camera.vsize; ++y) {
@@ -227,6 +232,7 @@ void simulate_multiple_spheres() {
     }
     save_canvas(canvas, "multiple_spheres.ppm");
 }
+
 void simulate_reflections() {
     using namespace raytracer;
     using namespace std::numbers;
@@ -354,7 +360,7 @@ void simulate_reflections() {
     Camera camera{.hsize = 600, .vsize = 400, .field_of_view = pi_v<double> / 3};
     // pull back camera
     constexpr Point to{.x = 0, .y = 0.8f, .z = 0};
-    constexpr Point from{to + Vector{.x = 0, .y = 1, .z = -6} * 1.4f};   // = (0, 2.2, -8.4)
+    constexpr Point from{to + Vector{.x = 0, .y = 1, .z = -6} * 1.4f}; // = (0, 2.2, -8.4)
     camera.transform = view_transform(from, to, Vector{.x = 0, .y = 1, .z = 0});
 
     Canvas canvas{camera.hsize, camera.vsize};
@@ -365,4 +371,49 @@ void simulate_reflections() {
         }
     }
     save_canvas(canvas, "reflections.ppm");
+}
+
+void simulate_hexagon() {
+    using namespace raytracer;
+    World world;
+    Geom &hex = world.add(Group{});
+    for (int i = 0; i < 6; ++i) {
+        Geom &corner = world.add(Sphere{});
+        /*
+        set_transform(corner, translation(0, 0, -1) * scaling(0.25, 0.25, 0.25))
+        */
+        corner.set_transform(multiply(translation(0.0, 0.0, -1.0), scale(0.25, 0.25, 0.25)));
+
+        Geom &edge = world.add(Cylinder{.minimum = 0, .maximum = 1.0f, .closed = true});
+        /*
+        set_transform(edge, translation(0, 0, -1) * rotation_y(-π/6) * rotation_z(-π/2) * scaling(0.25, 1, 0.25))
+        */
+        edge.set_transform(multiply(translation(0.0, 0.0, -1.0),
+                             multiply(rotation_y(-std::numbers::pi_v<double> / 6),
+                             multiply(rotation_z(-std::numbers::pi_v<double> / 2),
+                             scale<double>(0.25, 1, 0.25)))));
+
+        Geom &side = world.add(Group{});
+        add_child(side, corner);
+        add_child(side, edge);
+        side.set_transform(rotation_y(i * std::numbers::pi_v<double> / 3));
+        add_child(hex, side);
+    }
+    world.light = PointLight{.position = Point{.x = -10, .y = 10, .z = -10}, .intensity = colours::white};
+
+    Camera camera{.hsize = 600, .vsize = 400, .field_of_view = std::numbers::pi_v<double> / 3};
+    // pull back camera
+    constexpr Point to{.x = 0, .y = 0.8f, .z = 0};
+    constexpr Point from{to + Vector{.x = 0, .y = 1, .z = -6} * 1.4f}; // = (0, 2.2, -8.4)
+    camera.transform = view_transform(from, to, Vector{.x = 0, .y = 1, .z = 0});
+
+    constexpr uint8_t max_depth = 15;
+    Canvas canvas{camera.hsize, camera.vsize};
+    for (uint32_t y = 0; y < camera.vsize; ++y) {
+        for (uint32_t x = 0; x < camera.hsize; ++x) {
+            const auto ray = World::ray_for_pixel(camera, x, y);
+            canvas.write_pixel(x, y, World::colour_at(world, ray, max_depth));
+        }
+    }
+    save_canvas(canvas, "hexagon.ppm");
 }
