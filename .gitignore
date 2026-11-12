@@ -7,3 +7,6 @@ build
 # Build artefacts
 *.ppm
 .clangd
+
+# feature files
+tests/features
