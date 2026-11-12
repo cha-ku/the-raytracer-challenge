@@ -233,7 +233,7 @@ void simulate_multiple_spheres() {
     save_canvas(canvas, "multiple_spheres.ppm");
 }
 
-void simulate_reflections() {
+void simulate_group_reflections() {
     using namespace raytracer;
     using namespace std::numbers;
 
@@ -355,27 +355,6 @@ void simulate_reflections() {
     cone_bands.m_transform = multiply(rotation_z(pi_v<double> / 2), scale<double>(0.2, 0.2, 0.2));
     traffic_cone.material.pattern = cone_bands;
 
-    world.light = PointLight{.position = Point{.x = -10, .y = 10, .z = -10}, .intensity = colours::white};
-
-    Camera camera{.hsize = 600, .vsize = 400, .field_of_view = pi_v<double> / 3};
-    // pull back camera
-    constexpr Point to{.x = 0, .y = 0.8f, .z = 0};
-    constexpr Point from{to + Vector{.x = 0, .y = 1, .z = -6} * 1.4f}; // = (0, 2.2, -8.4)
-    camera.transform = view_transform(from, to, Vector{.x = 0, .y = 1, .z = 0});
-
-    Canvas canvas{camera.hsize, camera.vsize};
-    for (uint32_t y = 0; y < camera.vsize; ++y) {
-        for (uint32_t x = 0; x < camera.hsize; ++x) {
-            const auto ray = World::ray_for_pixel(camera, x, y);
-            canvas.write_pixel(x, y, World::colour_at(world, ray, max_depth));
-        }
-    }
-    save_canvas(canvas, "reflections.ppm");
-}
-
-void simulate_hexagon() {
-    using namespace raytracer;
-    World world;
     Geom &hex = world.add(Group{});
     for (int i = 0; i < 6; ++i) {
         Geom &corner = world.add(Sphere{});
@@ -399,15 +378,18 @@ void simulate_hexagon() {
         side.set_transform(rotation_y(i * std::numbers::pi_v<double> / 3));
         add_child(hex, side);
     }
+    hex.set_transform(multiply(translation(3.0, 2.0, 0.0),
+                 multiply(rotation_z(std::numbers::pi_v<double> / 6),
+                          rotation_x(-std::numbers::pi_v<double> / 2))));
+
     world.light = PointLight{.position = Point{.x = -10, .y = 10, .z = -10}, .intensity = colours::white};
 
-    Camera camera{.hsize = 600, .vsize = 400, .field_of_view = std::numbers::pi_v<double> / 3};
+    Camera camera{.hsize = 600, .vsize = 400, .field_of_view = pi_v<double> / 3};
     // pull back camera
     constexpr Point to{.x = 0, .y = 0.8f, .z = 0};
     constexpr Point from{to + Vector{.x = 0, .y = 1, .z = -6} * 1.4f}; // = (0, 2.2, -8.4)
     camera.transform = view_transform(from, to, Vector{.x = 0, .y = 1, .z = 0});
 
-    constexpr uint8_t max_depth = 15;
     Canvas canvas{camera.hsize, camera.vsize};
     for (uint32_t y = 0; y < camera.vsize; ++y) {
         for (uint32_t x = 0; x < camera.hsize; ++x) {
@@ -415,5 +397,5 @@ void simulate_hexagon() {
             canvas.write_pixel(x, y, World::colour_at(world, ray, max_depth));
         }
     }
-    save_canvas(canvas, "hexagon.ppm");
+    save_canvas(canvas, "reflections_hex_group.ppm");
 }
