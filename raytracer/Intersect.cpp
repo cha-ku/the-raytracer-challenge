@@ -85,6 +85,10 @@ namespace raytracer {
         throw std::logic_error("local_normal_at called on a Group: a group has no surface, ask its children");
     }
 
+    Vector local_normal_at(const Triangle & triangle, const Point &) {
+        return triangle.normal;
+    }
+
     std::vector<float> local_intersect(const Sphere &, const Ray &local_ray) {
         const auto &[origin, direction] = local_ray;
 
@@ -250,6 +254,27 @@ namespace raytracer {
                 intersections.insert(intersections.end(), tmp.begin(), tmp.end());
             }, child->shape);
         });
+        return intersections;
+    }
+
+    std::vector<float> local_intersect(const Triangle &triangle, const Ray &local_ray) {
+        // Möller-Trumbore algorithm
+        std::vector<float> intersections;
+        // ray parallel to the triangle
+        const auto dir_cross_e2 = Vector::cross(local_ray.direction, triangle.e2);
+        const auto det = Vector::dot(triangle.e1, dir_cross_e2);
+        if (std::fabs(det) < utils::EPSILON) return intersections;
+        // ray misses v1-v3 edge
+        const auto f{1.0/det};
+        const Vector v1_to_origin{local_ray.origin - triangle.v1};
+        const auto u{f * Vector::dot(v1_to_origin, dir_cross_e2)};
+        if (u < 0 || u > 1) return intersections;
+        // ray misses v1-v2, v2-v3 edges
+        const auto origin_cross_e1 = Vector::cross(v1_to_origin, triangle.e1);
+        const auto v{f * Vector::dot(local_ray.direction, origin_cross_e1)};
+        if (v < 0 || (u + v) > 1) return intersections;
+        // ray intersects the triangle
+        intersections.emplace_back(f * Vector::dot(triangle.e2, origin_cross_e1));
         return intersections;
     }
 

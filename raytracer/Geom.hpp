@@ -4,6 +4,7 @@
 #include "Material.hpp"
 #include "MatrixImpl.hpp"
 #include "Ray.hpp"
+#include "Vector.hpp"
 
 #include <limits>
 #include <memory>
@@ -39,6 +40,19 @@ namespace raytracer {
 
     void add_child(Geom &group, Geom &child);
 
+    struct Triangle {
+        Point v1;
+        Point v2;
+        Point v3;
+        Vector e1;
+        Vector e2;
+        Vector normal;
+
+        explicit Triangle(const Point &v1, const Point &v2, const Point &v3) :
+        v1{v1}, v2{v2}, v3{v3}, e1{v2 - v1}, e2{v3 - v1}, normal{Vector::normalize(Vector::cross(e2, e1))} {}
+
+    };
+
     // A minimal shape used only to exercise Geom's own behaviour (transform/material) in tests. Like TestPattern
     // it lives in production code so it can be part of AnyShape; the name signals it is for tests only.
     struct TestShape {
@@ -50,7 +64,7 @@ namespace raytracer {
 
     // The closed set of concrete shape types. Adding a new shape means adding it here, plus its own
     // local_intersect/local_normal_at overloads in Intersect.hpp.
-    using AnyShape = std::variant<Sphere, Plane, Cube, Cylinder, Cone, Group, TestShape>;
+    using AnyShape = std::variant<Sphere, Plane, Cube, Cylinder, Cone, Group, Triangle, TestShape>;
 
     // A node in the scene: a shape plus where it is (transform, parent) and how it looks (material).
     //
@@ -100,6 +114,8 @@ namespace raytracer {
     inline Geom make_cone() { return Geom{Cone{}}; }
 
     inline Geom make_group() { return Geom{Group{}};}
+
+    inline Geom make_triangle(const Point &p1, const Point &p2, const Point &p3) { return Geom{Triangle{p1, p2, p3}}; }
 
     // Converts a world-space point into the geom's object space, going through every parent's transform first
     Point world_to_object(const Geom &geom, const Point &world_point);
