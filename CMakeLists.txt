@@ -30,6 +30,9 @@ add_library(simulation STATIC raytracer/Simulation.cpp
         raytracer/Simulation.hpp
         raytracer/Canvas.cpp)
 target_include_directories(simulation PUBLIC raytracer)
+target_link_libraries(simulation PUBLIC objreader)
+# Where simulate_teapot finds its model
+target_compile_definitions(simulation PRIVATE TEAPOT_OBJ="${CMAKE_SOURCE_DIR}/tests/features/teapot.obj")
 
 add_library(matrix STATIC
         raytracer/Matrix.cpp
@@ -43,6 +46,12 @@ add_library(matrix STATIC
         raytracer/Geom.cpp
         raytracer/Ray.hpp
 )
+
+add_library(objreader STATIC
+        raytracer/ObjFile.hpp
+        raytracer/ObjFile.cpp)
+target_include_directories(objreader PUBLIC raytracer)
+target_link_libraries(objreader PUBLIC matrix)
 
 target_include_directories(matrix PUBLIC raytracer)
 

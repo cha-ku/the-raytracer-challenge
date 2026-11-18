@@ -17,4 +17,6 @@ void simulate_multiple_spheres();
 
 void simulate_group_reflections();
 
+void simulate_teapot();
+
 #endif //THE_RAYTRACER_CHALLENGE_SIMULATION_HPP

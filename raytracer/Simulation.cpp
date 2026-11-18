@@ -12,6 +12,12 @@
 #include "Intersect.hpp"
 #include "World.hpp"
 #include "MatrixImpl.hpp"
+#include "ObjFile.hpp"
+
+#include <algorithm>
+#include <chrono>
+#include <iterator>
+#include <print>
 
 namespace {
     // Projectile structure
@@ -398,4 +404,59 @@ void simulate_group_reflections() {
         }
     }
     save_canvas(canvas, "reflections_hex_group.ppm");
+}
+
+void simulate_teapot() {
+    using namespace raytracer;
+    using namespace std::numbers;
+
+    World world;
+
+    // Matte checkered floor for the teapot to sit on
+    Geom &floor = world.add(Plane{});
+    floor.material.specular = 0.0f;
+    floor.material.pattern = CheckersPattern::create(colours::periwinkle, colours::white);
+
+    // teapot.obj is y-up, about 6.4 wide (x: -3 to 3.4), 3.15 tall (y: 0 to 3.15) and 4 deep (z: -2 to 2),
+    // already sitting on y = 0
+    ObjParser parser{parse_obj_file(read_file(TEAPOT_OBJ))};
+    std::println("teapot: {} vertices, {} geoms, {} lines ignored", parser.vertices.size() - 1,
+                 parser.geoms.size(), parser.ignored);
+
+    // Materials live on each Geom, not on the group, so colour every triangle
+    for (const auto &geom: parser.geoms) {
+        geom->material.colour = Colour{.r = 0.8f, .g = 0.25f, .b = 0.2f};
+        geom->material.specular = 0.6f;
+        geom->material.shininess = 150.0f;
+    }
+
+    Geom &teapot = obj_to_group(parser);
+    // Turn the spout towards the camera's left and shrink it to about 3 wide
+    teapot.set_transform(multiply(rotation_y(-pi / 6), scale<double>(0.5, 0.5, 0.5)));
+
+    // Hand the parser's Geoms (triangles, groups and the teapot group itself) to the World, which renders only
+    // root objects: the teapot group is the only parser Geom without a parent
+    std::ranges::move(parser.geoms, std::back_inserter(world.objects));
+
+    world.light = PointLight{.position = Point{.x = -10, .y = 10, .z = -10}, .intensity = colours::white};
+
+    Camera camera{.hsize = 300, .vsize = 200, .field_of_view = pi / 3};
+    constexpr Point to{.x = 0, .y = 0.7f, .z = 0};
+    constexpr Point from{.x = 0, .y = 2.2f, .z = -3.8f};
+    camera.transform = view_transform(from, to, Vector{.x = 0, .y = 1, .z = 0});
+
+    // No reflective or transparent materials, so one bounce is plenty
+    constexpr uint8_t max_depth = 5;
+    Canvas canvas{camera.hsize, camera.vsize};
+    const auto start = std::chrono::steady_clock::now();
+
+    for (uint32_t y = 0; y < camera.vsize; ++y) {
+        for (uint32_t x = 0; x < camera.hsize; ++x) {
+            const auto ray = World::ray_for_pixel(camera, x, y);
+            canvas.write_pixel(x, y, World::colour_at(world, ray, max_depth));
+        }
+    }
+    save_canvas(canvas, "teapot.ppm");
+    const std::chrono::duration<double> duration{std::chrono::steady_clock::now() - start};
+    std::println("Render took {:.2}s", duration.count());
 }
