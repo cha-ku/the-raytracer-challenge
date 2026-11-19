@@ -10,6 +10,8 @@
 #include "World.hpp"
 #include "Utils.hpp"
 
+#include <cmath>
+
 namespace raytracer {
     Point position(const Ray &ray, const float distance) {
         return ray.origin + ray.direction * distance;
@@ -113,11 +115,11 @@ namespace raytracer {
         return {t};
     }
 
-    // helper for local_intersect - Cube
-    static std::pair<float, float> check_axis(const float& direction_component, const float& origin_component) {
-        // generalized formula for ray-plane intersection, the plane
-        const auto tmin_numerator = -1.f - origin_component;
-        const auto tmax_numerator = 1.f - origin_component;
+    // ray-plane intersection
+    static std::pair<float, float> check_axis(const float direction_component, const float origin_component,
+                                              const float min = -1.f, const float max = 1.f) {
+        const auto tmin_numerator = min - origin_component;
+        const auto tmax_numerator = max - origin_component;
         float tmin, tmax;
         if (std::abs(direction_component) < utils::EPSILON) {
             tmin = tmin_numerator * std::numeric_limits<float>::infinity();
@@ -173,6 +175,19 @@ namespace raytracer {
         if (check_cap(ray, t, std::is_same_v<S, Cylinder> ? 1.f : std::abs(shape.maximum))) {
             intersections.push_back(t);
         }
+    }
+
+    Vector local_normal_at(const TestShape &, const Point &local_point) {
+        return Vector{.x = local_point.x, .y = local_point.y, .z = local_point.z};
+    }
+
+    Vector normal_at(const Geom &geom, const Point &world_point) {
+        const Point local_point{world_to_object(geom, world_point)};
+        const Vector local_normal{
+            std::visit([&local_point]<Normalable S>(const S &shape) { return local_normal_at(shape, local_point); },
+                       geom.shape)
+        };
+        return normal_to_world(geom, local_normal);
     }
 
     std::vector<float> local_intersect(const Cylinder &cylinder, const Ray &local_ray) {
@@ -246,6 +261,7 @@ namespace raytracer {
         return intersections;
     }
 
+
     std::vector<float> local_intersect(const Group &group, const Ray &local_ray) {
         std::vector<float> intersections;
         std::ranges::for_each(group.children, [&local_ray, &intersections](const auto &child) {
@@ -278,20 +294,19 @@ namespace raytracer {
         return intersections;
     }
 
-
     std::vector<float> local_intersect(const TestShape &shape, const Ray &local_ray) {
         shape.saved_ray = local_ray;
         return {};
-    }
-
-    Vector local_normal_at(const TestShape &, const Point &local_point) {
-        return Vector{.x = local_point.x, .y = local_point.y, .z = local_point.z};
     }
 
     std::vector<Intersection> intersect(const Geom &geom, const Ray &ray) {
         const Ray local_ray{transform(ray, geom.inverse_transform())};
         // get_if takes pointer to variant - weird
         if (const auto group = std::get_if<Group>(&geom.shape)) {
+            // A ray that misses the group's box can't hit any child
+            if (group->bounds && !intersects(*group->bounds, local_ray)) {
+                return {};
+            }
             std::vector<Intersection> intersections;
             for (const Geom* child : group->children) {
                 intersections.append_range(intersect(*child, local_ray));
@@ -311,15 +326,6 @@ namespace raytracer {
         return result;
     }
 
-    Vector normal_at(const Geom &geom, const Point &world_point) {
-        const Point local_point{world_to_object(geom, world_point)};
-        const Vector local_normal{
-            std::visit([&local_point]<Normalable S>(const S &shape) { return local_normal_at(shape, local_point); },
-                       geom.shape)
-        };
-        return normal_to_world(geom, local_normal);
-    }
-
     std::optional<Intersection> hit(const std::vector<Intersection> &intersections) {
         std::optional<Intersection> result;
         for (const auto &intersection: intersections) {
@@ -330,6 +336,106 @@ namespace raytracer {
             }
         }
         return result;
+    }
+
+    BoundingBox transform(const BoundingBox &box, const Matrix<double> &m) {
+        // An empty box's +inf/-inf corners would turn into NaN; transforming nothing gives nothing
+        if (box.empty()) {
+            return box;
+        }
+        BoundingBox result;
+        // transform 8 vertices of the bounding box
+        for (const float x : {box.min.x, box.max.x})
+            for (const float y : {box.min.y, box.max.y})
+                for (const float z : {box.min.z, box.max.z})
+                    result.add(transform(Point{.x = x, .y = y, .z = z}, m));
+        return result;
+    }
+
+    std::optional<BoundingBox> parent_space_bounds(const Geom &geom) {
+        const std::optional local{
+            std::visit([]<Boundable S>(const S &shape) { return local_bounds(shape); }, geom.shape)
+        };
+        if (!local) {
+            return std::nullopt;
+        }
+        return transform(*local, geom.transform());
+    }
+
+    bool intersects(const BoundingBox &box, const Ray &ray) {
+        if (box.empty()) {
+            return false;
+        }
+        const auto [xtmin, xtmax] = check_axis(ray.direction.x, ray.origin.x, box.min.x, box.max.x);
+        const auto [ytmin, ytmax] = check_axis(ray.direction.y, ray.origin.y, box.min.y, box.max.y);
+        const auto [ztmin, ztmax] = check_axis(ray.direction.z, ray.origin.z, box.min.z, box.max.z);
+        return std::max({xtmin, ytmin, ztmin}) <= std::min({xtmax, ytmax, ztmax});
+    }
+
+    void refresh_bounds(Geom &geom) {
+        auto *group = std::get_if<Group>(&geom.shape);
+        if (group == nullptr) {
+            return;
+        }
+        // Nested groups first, so each keeps its own cache for its own culling
+        for (Geom *child: group->children) {
+            refresh_bounds(*child);
+        }
+        group->bounds = local_bounds(*group);
+    }
+
+    std::optional<BoundingBox> local_bounds(const Group &group) {
+        BoundingBox result;
+        for (const Geom *child: group.children) {
+            const std::optional child_box{parent_space_bounds(*child)};
+            // One unbounded child makes the whole group unbounded
+            if (!child_box) {
+                return std::nullopt;
+            }
+            result.add(*child_box);
+        }
+        return result;
+    }
+
+    std::optional<BoundingBox> local_bounds(const Triangle &triangle) {
+        BoundingBox result;
+        result.add(triangle.v1);
+        result.add(triangle.v2);
+        result.add(triangle.v3);
+        return result;
+    }
+
+    std::optional<BoundingBox> local_bounds(const Sphere &) {
+        return BoundingBox{.min = Point(-1, -1, -1), .max = Point(1, 1, 1)};
+    }
+
+    std::optional<BoundingBox> local_bounds(const Plane &) {
+        // Infinite in x and z
+        return std::nullopt;
+    }
+
+    std::optional<BoundingBox> local_bounds(const Cube &) {
+        return BoundingBox{.min = Point(-1, -1, -1), .max = Point(1, 1, 1)};
+    }
+
+    std::optional<BoundingBox> local_bounds(const Cylinder &cylinder) {
+        if (std::isinf(cylinder.minimum) || std::isinf(cylinder.maximum)) {
+            return std::nullopt;
+        }
+        return BoundingBox{.min = Point(-1, cylinder.minimum, -1), .max = Point(1, cylinder.maximum, 1)};
+    }
+
+    std::optional<BoundingBox> local_bounds(const Cone &cone) {
+        if (std::isinf(cone.minimum) || std::isinf(cone.maximum)) {
+            return std::nullopt;
+        }
+        // The radius at height y is |y|, so whichever end is wider sets the x/z extent
+        const auto r{std::max(std::abs(cone.maximum), std::abs(cone.minimum))};
+        return BoundingBox{.min = Point(-r, cone.minimum, -r), .max = Point(r, cone.maximum, r)};
+    }
+
+    std::optional<BoundingBox> local_bounds(const TestShape &) {
+        return BoundingBox{.min = Point(-1, -1, -1), .max = Point(1, 1, 1)};
     }
 
     Computations::Computations(const Intersection &intersection, const Ray &ray) : t{intersection.t},

@@ -14,9 +14,9 @@
 #include "Ray.hpp"
 
 #include <concepts>
-#include <variant>
 #include <vector>
 #include <optional>
+#include <limits>
 
 namespace raytracer {
     struct World;
@@ -46,9 +46,9 @@ namespace raytracer {
 
     Vector local_normal_at(const Cone &, const Point &local_point);
 
-    [[noreturn]] Vector local_normal_at(const Group&, const Point&);
+    [[noreturn]] Vector local_normal_at(const Group &, const Point &);
 
-    Vector local_normal_at(const Triangle& triangle, const Point&);
+    Vector local_normal_at(const Triangle &triangle, const Point &);
 
     Vector local_normal_at(const TestShape &, const Point &local_point);
 
@@ -97,6 +97,46 @@ namespace raytracer {
 
     std::optional<Intersection> hit(const std::vector<Intersection> &intersections);
 
+    // Bounding boxes (BoundingBox itself is in Geom.hpp, because Group caches one). Every local_bounds returns the
+    // shape's box in its own object space, or std::nullopt if the shape is unbounded (planes, and cylinders or
+    // cones without both a minimum and a maximum).
+    template<typename S>
+    concept Boundable = requires(const S &shape)
+    {
+        { local_bounds(shape) } -> std::same_as<std::optional<BoundingBox> >;
+    };
+
+    std::optional<BoundingBox> local_bounds(const Sphere &);
+
+    std::optional<BoundingBox> local_bounds(const Plane &);
+
+    std::optional<BoundingBox> local_bounds(const Cube &);
+
+    std::optional<BoundingBox> local_bounds(const Cylinder &cylinder);
+
+    std::optional<BoundingBox> local_bounds(const Cone &cone);
+
+    // The union of the children's boxes in the group's space; nullopt if any child is unbounded. Computed from the
+    // children every time (it doesn't read the cache); refresh_bounds() stores it.
+    std::optional<BoundingBox> local_bounds(const Group &group);
+
+    std::optional<BoundingBox> local_bounds(const Triangle &triangle);
+
+    std::optional<BoundingBox> local_bounds(const TestShape &);
+
+    // The box around all 8 transformed corners. An empty box stays empty.
+    BoundingBox transform(const BoundingBox &box, const Matrix<double> &m);
+
+    // A geom's bounds in its parent's space: its local bounds through its own transform. nullopt if unbounded.
+    std::optional<BoundingBox> parent_space_bounds(const Geom &geom);
+
+    // Whether the ray passes through the box (slab method). Never true for an empty box.
+    bool intersects(const BoundingBox &box, const Ray &ray);
+
+    // Recomputes and caches the bounds of `geom` and every group below it. Call once the scene is built, and again
+    // after changing any child's transform or adding children.
+    void refresh_bounds(Geom &geom);
+
 
     struct Computations {
         float t{};
@@ -115,7 +155,7 @@ namespace raytracer {
     };
 
     Computations prepare_computations(const Intersection &intersection, const Ray &ray,
-                                      const std::vector<Intersection>& intersections);
+                                      const std::vector<Intersection> &intersections);
 
     Colour shade_hit(const World &world, const Computations &computations, uint8_t remaining);
 

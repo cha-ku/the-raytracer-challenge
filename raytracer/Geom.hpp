@@ -6,8 +6,10 @@
 #include "Ray.hpp"
 #include "Vector.hpp"
 
+#include <algorithm>
 #include <limits>
 #include <memory>
+#include <optional>
 #include <utility>
 #include <variant>
 
@@ -34,8 +36,38 @@ namespace raytracer {
         bool closed{false};
     };
 
+    // An axis-aligned box. Default-constructed it is empty (min = +inf, max = -inf), so the first add() replaces
+    // both corners. It only ever holds finite or empty boxes: shapes that extend to infinity have no box at all
+    // (local_bounds returns std::nullopt), so infinities never reach the arithmetic in transform().
+    struct BoundingBox {
+        Point min{
+            .x = std::numeric_limits<float>::infinity(), .y = std::numeric_limits<float>::infinity(),
+            .z = std::numeric_limits<float>::infinity()
+        };
+        Point max{
+            .x = -std::numeric_limits<float>::infinity(), .y = -std::numeric_limits<float>::infinity(),
+            .z = -std::numeric_limits<float>::infinity()
+        };
+
+        [[nodiscard]] bool empty() const { return min.x > max.x; }
+
+        void add(const Point &p) {
+            min = {.x = std::min(min.x, p.x), .y = std::min(min.y, p.y), .z = std::min(min.z, p.z)};
+            max = {.x = std::max(max.x, p.x), .y = std::max(max.y, p.y), .z = std::max(max.z, p.z)};
+        }
+
+        void add(const BoundingBox &box) {
+            if (!box.empty()) {
+                add(box.min);
+                add(box.max);
+            }
+        }
+    };
+
     struct Group {
         std::vector<Geom*> children;
+        // cached bounds box
+        std::optional<BoundingBox> bounds;
     };
 
     void add_child(Geom &group, Geom &child);

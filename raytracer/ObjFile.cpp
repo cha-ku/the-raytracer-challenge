@@ -3,6 +3,7 @@
 //
 
 #include "ObjFile.hpp"
+#include "Intersect.hpp"
 
 #include <charconv>
 #include <fstream>
@@ -148,6 +149,8 @@ namespace raytracer {
         for (Geom *named: parser.groups | std::views::values) {
             add_child(result, *named);
         }
+        // The triangles never move after parsing, so their boxes can be cached now
+        refresh_bounds(result);
         return result;
     }
 }
