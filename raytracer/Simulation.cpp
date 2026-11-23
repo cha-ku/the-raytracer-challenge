@@ -453,9 +453,27 @@ void simulate_model(const std::string &obj_path) {
     world.light = PointLight{.position = Point{.x = -10, .y = 10, .z = -10}, .intensity = colours::white};
 
     Camera camera{.hsize = 300, .vsize = 200, .field_of_view = pi / 3};
-    constexpr Point to{.x = 0, .y = 0.7f, .z = 0};
-    constexpr Point from{.x = 0, .y = 2.2f, .z = -3.8f};
-    camera.transform = view_transform(from, to, Vector{.x = 0, .y = 1, .z = 0});
+    constexpr Vector up{.x = 0, .y = 1, .z = 0};
+    camera.transform = view_transform(Point{.x = 0, .y = 2.2f, .z = -3.8f}, Point{.x = 0, .y = 0.7f, .z = 0}, up);
+
+    // Frame the model from its world-space box: look at its centre from above-front, far enough back that its
+    // bounding sphere fits the narrower field of view (the camera's shorter side), with a margin. The light keeps
+    // the same direction, at a distance that scales with the model.
+    if (const auto world_bounds{parent_space_bounds(model)}; world_bounds && !world_bounds->empty()) {
+        const auto &[min, max]{*world_bounds};
+        const Point centre{.x = (min.x + max.x) / 2, .y = (min.y + max.y) / 2, .z = (min.z + max.z) / 2};
+        const float radius{Vector::magnitude(max - min) / 2};
+
+        const double half_short{std::min(camera.half_width, camera.half_height)};
+        constexpr float margin{1.15f};
+        const float distance{margin * radius / static_cast<float>(std::sin(std::atan(half_short)))};
+
+        const Vector view_direction{Vector::normalize(Vector{.x = 0, .y = 0.4f, .z = -1})};
+        camera.transform = view_transform(centre + view_direction * distance, centre, up);
+
+        const Vector light_direction{Vector::normalize(Vector{.x = -1, .y = 1, .z = -1})};
+        world.light->position = centre + light_direction * (2 * distance);
+    }
 
     // No reflective or transparent materials, so one bounce is plenty
     constexpr uint8_t max_depth = 5;
