@@ -18,14 +18,24 @@ void test() {
     [[maybe_unused]] auto ret = raytracer::canvas_to_ppm(c, "testfile.ppm");
 }
 
-int main() {
+// raytracer [model.obj]: renders the OBJ model if one is given, the group reflections scene otherwise
+int main(const int argc, char *argv[]) {
     // simulate_projectile();
     // simulate_clock();
     // test();
     // simulate_sphere();
     // simulate_material_sphere();
     // simulate_multiple_spheres();
-    // simulate_group_reflections();
-    simulate_teapot();
+    if (argc < 2) {
+        simulate_group_reflections();
+        return 0;
+    }
+    try {
+        simulate_model(argv[1]);
+    } catch (const std::exception &e) {
+        // e.g. the file can't be opened
+        std::println(stderr, "{}", e.what());
+        return 1;
+    }
     return 0;
 }

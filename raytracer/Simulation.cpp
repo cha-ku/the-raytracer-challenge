@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <chrono>
+#include <filesystem>
 #include <iterator>
 #include <print>
 
@@ -407,22 +408,20 @@ void simulate_group_reflections() {
     save_canvas(canvas, "reflections_hex_group.ppm");
 }
 
-void simulate_teapot() {
+void simulate_model(const std::string &obj_path) {
     using namespace raytracer;
     using namespace std::numbers;
 
     World world;
 
-    // Matte checkered floor for the teapot to sit on
+    // Matte checkered floor for the model to sit on
     Geom &floor = world.add(Plane{});
     floor.material.specular = 0.0f;
     floor.material.pattern = CheckersPattern::create(colours::periwinkle, colours::white);
 
-    // teapot.obj is y-up, about 6.4 wide (x: -3 to 3.4), 3.15 tall (y: 0 to 3.15) and 4 deep (z: -2 to 2),
-    // already sitting on y = 0
-    ObjParser parser{parse_obj_file(read_file(TEAPOT_OBJ))};
-    std::println("teapot: {} vertices, {} geoms, {} lines ignored", parser.vertices.size() - 1,
-                 parser.geoms.size(), parser.ignored);
+    ObjParser parser{parse_obj_file(read_file(obj_path))};
+    std::println("{}: {} vertices, {} normals, {} geoms, {} lines ignored", obj_path, parser.vertices.size() - 1,
+                 parser.normals.size() - 1, parser.geoms.size(), parser.ignored);
 
     // Materials live on each Geom, not on the group, so colour every triangle
     for (const auto &geom: parser.geoms) {
@@ -431,12 +430,24 @@ void simulate_teapot() {
         geom->material.shininess = 150.0f;
     }
 
-    Geom &teapot = obj_to_group(parser);
-    // Turn the spout towards the camera's left and shrink it to about 3 wide
-    teapot.set_transform(multiply(rotation_y(-pi / 6), scale<double>(0.5, 0.5, 0.5)));
+    Geom &model = obj_to_group(parser);
+    // Models come in any size and position, so fit each one from its bounds (cached by obj_to_group): centred on
+    // x/z, resting on the floor and scaled so its largest side is 3 units, then turned a little towards the left.
+    // Assumes a y-up model, like the teapot.
+    if (const auto &bounds{std::get<Group>(model.shape).bounds}; bounds && !bounds->empty()) {
+        const float largest_side{
+            std::max({bounds->max.x - bounds->min.x, bounds->max.y - bounds->min.y, bounds->max.z - bounds->min.z})
+        };
+        const double fit{largest_side > 0 ? 3.0 / largest_side : 1.0};
+        const double centre_x{(bounds->min.x + bounds->max.x) / 2.0};
+        const double centre_z{(bounds->min.z + bounds->max.z) / 2.0};
+        model.set_transform(multiply(rotation_y(-pi / 6),
+                                     multiply(scale<double>(fit, fit, fit),
+                                              translation<double>(-centre_x, -bounds->min.y, -centre_z))));
+    }
 
-    // Hand the parser's Geoms (triangles, groups and the teapot group itself) to the World, which renders only
-    // root objects: the teapot group is the only parser Geom without a parent
+    // Hand the parser's Geoms (triangles, groups and the model group itself) to the World, which renders only
+    // root objects: the model group is the only parser Geom without a parent
     std::ranges::move(parser.geoms, std::back_inserter(world.objects));
 
     world.light = PointLight{.position = Point{.x = -10, .y = 10, .z = -10}, .intensity = colours::white};
@@ -457,7 +468,7 @@ void simulate_teapot() {
             canvas.write_pixel(x, y, World::colour_at(world, ray, max_depth));
         }
     }
-    save_canvas(canvas, "teapot.ppm");
+    save_canvas(canvas, std::filesystem::path{obj_path}.stem().string() + ".ppm");
     const std::chrono::duration<double> duration{std::chrono::steady_clock::now() - start};
     std::println("Render took {:.2}s", duration.count());
 }

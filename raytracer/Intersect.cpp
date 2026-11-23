@@ -11,7 +11,6 @@
 #include "Utils.hpp"
 
 #include <cmath>
-#include <utility>
 
 namespace raytracer {
     Point position(const Ray &ray, const float distance) {
@@ -289,8 +288,13 @@ namespace raytracer {
                                                    const Ray &local_ray) {
             const Vector dir_cross_e2{Vector::cross(local_ray.direction, e2)};
             const float det{Vector::dot(e1, dir_cross_e2)};
-            // ray parallel to the triangle
-            if (std::fabs(det) < utils::EPSILON) return std::nullopt;
+            // ray parallel to the triangle. det grows with the triangle's size and the ray direction's length, so
+            // compare it against those lengths: an absolute EPSILON rejected most of a fine mesh like the bunny
+            const float scale{
+                std::sqrt(Vector::dot(e1, e1) * Vector::dot(e2, e2) *
+                          Vector::dot(local_ray.direction, local_ray.direction))
+            };
+            if (std::fabs(det) < utils::EPSILON * scale) return std::nullopt;
             const float f{1.0f / det};
             const Vector p1_to_origin{local_ray.origin - p1};
             const float u{f * Vector::dot(p1_to_origin, dir_cross_e2)};
