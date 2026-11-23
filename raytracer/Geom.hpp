@@ -85,6 +85,18 @@ namespace raytracer {
 
     };
 
+    struct SmoothTriangle {
+        Point p1{};
+        Point p2{};
+        Point p3{};
+        Vector n1{};
+        Vector n2{};
+        Vector n3{};
+
+        // explicit SmoothTriangle(const Point &p1, const Point &p2, const Point &p3, const Vector &n1, const Vector &n2,
+        //                         const Vector &n3) : p1{p1}, p2{p2}, p3{p3}, n1{n1}, n2{n2}, n3{n3} {}
+    };
+
     // A minimal shape used only to exercise Geom's own behaviour (transform/material) in tests. Like TestPattern
     // it lives in production code so it can be part of AnyShape; the name signals it is for tests only.
     struct TestShape {
@@ -96,7 +108,7 @@ namespace raytracer {
 
     // The closed set of concrete shape types. Adding a new shape means adding it here, plus its own
     // local_intersect/local_normal_at overloads in Intersect.hpp.
-    using AnyShape = std::variant<Sphere, Plane, Cube, Cylinder, Cone, Group, Triangle, TestShape>;
+    using AnyShape = std::variant<Sphere, Plane, Cube, Cylinder, Cone, Group, Triangle, SmoothTriangle, TestShape>;
 
     // A node in the scene: a shape plus where it is (transform, parent) and how it looks (material).
     //

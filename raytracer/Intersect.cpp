@@ -11,6 +11,7 @@
 #include "Utils.hpp"
 
 #include <cmath>
+#include <utility>
 
 namespace raytracer {
     Point position(const Ray &ray, const float distance) {
@@ -91,6 +92,12 @@ namespace raytracer {
         return triangle.normal;
     }
 
+    Vector local_normal_at(const SmoothTriangle &smooth_triangle, const Point &, const Intersection &hit) {
+        const float u{*hit.u};
+        const float v{*hit.v};
+        return smooth_triangle.n2 * u + smooth_triangle.n3 * v + smooth_triangle.n1 * (1 - u - v);
+    }
+
     std::vector<float> local_intersect(const Sphere &, const Ray &local_ray) {
         const auto &[origin, direction] = local_ray;
 
@@ -159,7 +166,7 @@ namespace raytracer {
 
     // Adds intersections with the end caps of a closed cylinder or cone. A cylinder's caps always have radius 1;
     // a cone's radius at height y is |y|, so each cap's radius comes from the height it sits at
-    template <typename S>
+    template<typename S>
     static void intersect_caps(const S &shape, const Ray &ray, std::vector<float> &intersections) {
         // nothing to do if the shape is open, or if the ray is parallel to the caps and can never cross them
         if (!shape.closed or std::abs(ray.direction.y) < utils::EPSILON) {
@@ -181,10 +188,12 @@ namespace raytracer {
         return Vector{.x = local_point.x, .y = local_point.y, .z = local_point.z};
     }
 
-    Vector normal_at(const Geom &geom, const Point &world_point) {
+    Vector normal_at(const Geom &geom, const Point &world_point, const Intersection &hit) {
         const Point local_point{world_to_object(geom, world_point)};
         const Vector local_normal{
-            std::visit([&local_point]<Normalable S>(const S &shape) { return local_normal_at(shape, local_point); },
+            std::visit([&local_point, &hit]<Normalable S>(const S &shape) {
+                           return local_normal_at(shape, local_point, hit);
+                       },
                        geom.shape)
         };
         return normal_to_world(geom, local_normal);
@@ -233,10 +242,9 @@ namespace raytracer {
             if (std::abs(b) < utils::EPSILON) {
                 return intersections;
             }
-            const float t = -c/(2 * b);
+            const float t = -c / (2 * b);
             intersections.push_back(t);
-        }
-        else {
+        } else {
             const auto discriminant{utils::square(b) - (4 * a * c)};
             // infinitesimally small values are OK
             if (discriminant < -utils::EPSILON) {
@@ -262,36 +270,51 @@ namespace raytracer {
     }
 
 
-    std::vector<float> local_intersect(const Group &group, const Ray &local_ray) {
-        std::vector<float> intersections;
-        std::ranges::for_each(group.children, [&local_ray, &intersections](const auto &child) {
-            std::visit([&local_ray, &intersections](const auto &shape) {
-                const auto tmp = local_intersect(shape, local_ray);
-                intersections.insert(intersections.end(), tmp.begin(), tmp.end());
-            }, child->shape);
-        });
+    std::vector<Intersection> local_intersect(const Group &group, const Ray &local_ray) {
+        // ray does not intersect group bounds
+        if (group.bounds && !intersects(*group.bounds, local_ray)) {
+            return {};
+        }
+        std::vector<Intersection> intersections;
+        for (const Geom *child: group.children) {
+            intersections.append_range(intersect(*child, local_ray));
+        }
+        std::ranges::sort(intersections, {}, &Intersection::t);
         return intersections;
     }
 
-    std::vector<float> local_intersect(const Triangle &triangle, const Ray &local_ray) {
+    namespace {
         // Möller-Trumbore algorithm
-        std::vector<float> intersections;
-        // ray parallel to the triangle
-        const auto dir_cross_e2 = Vector::cross(local_ray.direction, triangle.e2);
-        const auto det = Vector::dot(triangle.e1, dir_cross_e2);
-        if (std::fabs(det) < utils::EPSILON) return intersections;
-        // ray misses v1-v3 edge
-        const auto f{1.0/det};
-        const Vector v1_to_origin{local_ray.origin - triangle.v1};
-        const auto u{f * Vector::dot(v1_to_origin, dir_cross_e2)};
-        if (u < 0 || u > 1) return intersections;
-        // ray misses v1-v2, v2-v3 edges
-        const auto origin_cross_e1 = Vector::cross(v1_to_origin, triangle.e1);
-        const auto v{f * Vector::dot(local_ray.direction, origin_cross_e1)};
-        if (v < 0 || (u + v) > 1) return intersections;
-        // ray intersects the triangle
-        intersections.emplace_back(f * Vector::dot(triangle.e2, origin_cross_e1));
-        return intersections;
+        std::optional<TriangleHit> moller_trumbore(const Point &p1, const Vector &e1, const Vector &e2,
+                                                   const Ray &local_ray) {
+            const Vector dir_cross_e2{Vector::cross(local_ray.direction, e2)};
+            const float det{Vector::dot(e1, dir_cross_e2)};
+            // ray parallel to the triangle
+            if (std::fabs(det) < utils::EPSILON) return std::nullopt;
+            const float f{1.0f / det};
+            const Vector p1_to_origin{local_ray.origin - p1};
+            const float u{f * Vector::dot(p1_to_origin, dir_cross_e2)};
+            // ray misses the p1-p3 edge
+            if (u < 0 || u > 1) return std::nullopt;
+            const Vector origin_cross_e1{Vector::cross(p1_to_origin, e1)};
+            const float v{f * Vector::dot(local_ray.direction, origin_cross_e1)};
+            // ray misses the p1-p2 or p2-p3 edge
+            if (v < 0 || u + v > 1) return std::nullopt;
+            return TriangleHit{.t = f * Vector::dot(e2, origin_cross_e1), .u = u, .v = v};
+        }
+    }
+
+    std::vector<float> local_intersect(const Triangle &triangle, const Ray &local_ray) {
+        if (const auto hit{moller_trumbore(triangle.v1, triangle.e1, triangle.e2, local_ray)}) {
+            return {hit->t};
+        }
+        return {};
+    }
+
+    std::optional<TriangleHit> local_intersect(const SmoothTriangle &smooth_triangle, const Ray &local_ray) {
+        const Vector e1{smooth_triangle.p2 - smooth_triangle.p1};
+        const Vector e2{smooth_triangle.p3 - smooth_triangle.p1};
+        return moller_trumbore(smooth_triangle.p1, e1, e2, local_ray);
     }
 
     std::vector<float> local_intersect(const TestShape &shape, const Ray &local_ray) {
@@ -301,29 +324,9 @@ namespace raytracer {
 
     std::vector<Intersection> intersect(const Geom &geom, const Ray &ray) {
         const Ray local_ray{transform(ray, geom.inverse_transform())};
-        // get_if takes pointer to variant - weird
-        if (const auto group = std::get_if<Group>(&geom.shape)) {
-            // A ray that misses the group's box can't hit any child
-            if (group->bounds && !intersects(*group->bounds, local_ray)) {
-                return {};
-            }
-            std::vector<Intersection> intersections;
-            for (const Geom* child : group->children) {
-                intersections.append_range(intersect(*child, local_ray));
-            }
-            std::ranges::sort(intersections, {}, &Intersection::t);
-            return intersections;
-        }
-        const std::vector ts{
-            std::visit([&local_ray]<Intersectable S>(const S &shape) { return local_intersect(shape, local_ray); },
-                       geom.shape)
-        };
-        std::vector<Intersection> result;
-        result.reserve(ts.size());
-        for (const float t: ts) {
-            result.push_back({.object = &geom, .t = t});
-        }
-        return result;
+        return std::visit([&local_ray, &geom]<Intersectable S>(const S &shape) {
+            return to_intersections(geom, local_intersect(shape, local_ray));
+        }, geom.shape);
     }
 
     std::optional<Intersection> hit(const std::vector<Intersection> &intersections) {
@@ -345,9 +348,9 @@ namespace raytracer {
         }
         BoundingBox result;
         // transform 8 vertices of the bounding box
-        for (const float x : {box.min.x, box.max.x})
-            for (const float y : {box.min.y, box.max.y})
-                for (const float z : {box.min.z, box.max.z})
+        for (const float x: {box.min.x, box.max.x})
+            for (const float y: {box.min.y, box.max.y})
+                for (const float z: {box.min.z, box.max.z})
                     result.add(transform(Point{.x = x, .y = y, .z = z}, m));
         return result;
     }
@@ -405,6 +408,14 @@ namespace raytracer {
         return result;
     }
 
+    std::optional<BoundingBox> local_bounds(const SmoothTriangle &smooth_triangle) {
+        BoundingBox result;
+        result.add(smooth_triangle.p1);
+        result.add(smooth_triangle.p2);
+        result.add(smooth_triangle.p3);
+        return result;
+    }
+
     std::optional<BoundingBox> local_bounds(const Sphere &) {
         return BoundingBox{.min = Point(-1, -1, -1), .max = Point(1, 1, 1)};
     }
@@ -440,7 +451,7 @@ namespace raytracer {
 
     Computations::Computations(const Intersection &intersection, const Ray &ray) : t{intersection.t},
         object{intersection.object}, point{position(ray, intersection.t)}, eye_vector{-ray.direction},
-        normal_vector{normal_at(*object, point)},
+        normal_vector{normal_at(*object, point, intersection)},
         reflect_vector{Vector::reflect(ray.direction, normal_vector)} {
         if (Vector::dot(normal_vector, eye_vector) < 0) {
             inside = true;
@@ -453,7 +464,7 @@ namespace raytracer {
     }
 
     Computations prepare_computations(const Intersection &intersection, const Ray &ray,
-                                      const std::vector<Intersection>& intersections) {
+                                      const std::vector<Intersection> &intersections) {
         Computations comp{intersection, ray};
         // Objects the ray is currently inside, innermost last
         std::vector<const Geom *> shape_container;
@@ -491,7 +502,7 @@ namespace raytracer {
         const Colour reflected{World::reflected_colour(world, computations, remaining)};
         const Colour refracted{World::refracted_colour(world, computations, remaining)};
 
-        const auto& mat{computations.object->material};
+        const auto &mat{computations.object->material};
         if (mat.reflective > 0.f && mat.transparency > 0.f) {
             const auto reflectance = World::schlick(computations);
             return surface + reflected * reflectance + refracted * (1.0f - reflectance);

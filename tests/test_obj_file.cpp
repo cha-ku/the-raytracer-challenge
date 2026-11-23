@@ -20,6 +20,17 @@ namespace {
         return std::get<Triangle>(std::get<Group>(group.shape).children.at(index)->shape);
     }
 
+    // The smooth triangle held by the index-th child of a group (faces with vertex normals become these)
+    const SmoothTriangle &child_smooth_triangle(const Geom &group, const std::size_t index) {
+        return std::get<SmoothTriangle>(std::get<Group>(group.shape).children.at(index)->shape);
+    }
+
+    bool smooth_triangles_equal(const SmoothTriangle &a, const SmoothTriangle &b) {
+        return points_equal(a.p1, b.p1) && points_equal(a.p2, b.p2) && points_equal(a.p3, b.p3) &&
+               Vector::areAlmostEqual(a.n1, b.n1) && Vector::areAlmostEqual(a.n2, b.n2) &&
+               Vector::areAlmostEqual(a.n3, b.n3);
+    }
+
     bool group_includes(const Geom &group, const Geom *child) {
         const auto &children = std::get<Group>(group.shape).children;
         return std::ranges::find(children, child) != children.end();
@@ -156,6 +167,60 @@ SCENARIO("Converting an OBJ file to a group") {
             THEN("The group includes both named groups") {
                 REQUIRE(group_includes(g, parser.group("FirstGroup")));
                 REQUIRE(group_includes(g, parser.group("SecondGroup")));
+            }
+        }
+    }
+}
+
+SCENARIO("Vertex normal records") {
+    GIVEN("A file containing vertex normal records") {
+        constexpr std::string_view file{
+            "vn 0 0 1\n"
+            "vn 0.707 0 -0.707\n"
+            "vn 1 2 3\n"
+        };
+        WHEN("The file is parsed") {
+            const auto parser = parse_obj_file(file);
+            THEN("The normals are recorded as given, numbered from 1") {
+                // The placeholder at index 0, plus one per record
+                REQUIRE(parser.normals.size() == 4);
+                REQUIRE(Vector::areAlmostEqual(parser.normals[1], Vector(0, 0, 1)));
+                REQUIRE(Vector::areAlmostEqual(parser.normals[2], Vector(0.707, 0, -0.707)));
+                REQUIRE(Vector::areAlmostEqual(parser.normals[3], Vector(1, 2, 3)));
+            }
+        }
+    }
+}
+
+SCENARIO("Faces with normals") {
+    GIVEN("A file containing vertices, vertex normals and faces that reference both") {
+        constexpr std::string_view file{
+            "v 0 1 0\n"
+            "v -1 0 0\n"
+            "v 1 0 0\n"
+            "\n"
+            "vn -1 0 0\n"
+            "vn 1 0 0\n"
+            "vn 0 1 0\n"
+            "\n"
+            "f 1//3 2//1 3//2\n"
+            "f 1/0/3 2/102/1 3/14/2\n"
+        };
+        WHEN("The file is parsed") {
+            const auto parser = parse_obj_file(file);
+            const Geom &g = *parser.default_group;
+            THEN("Each face becomes a smooth triangle with the referenced vertices and normals") {
+                REQUIRE(std::get<Group>(g.shape).children.size() == 2);
+                const SmoothTriangle &t1 = child_smooth_triangle(g, 0);
+                const SmoothTriangle &t2 = child_smooth_triangle(g, 1);
+                REQUIRE(points_equal(t1.p1, parser.vertices[1]));
+                REQUIRE(points_equal(t1.p2, parser.vertices[2]));
+                REQUIRE(points_equal(t1.p3, parser.vertices[3]));
+                REQUIRE(Vector::areAlmostEqual(t1.n1, parser.normals[3]));
+                REQUIRE(Vector::areAlmostEqual(t1.n2, parser.normals[1]));
+                REQUIRE(Vector::areAlmostEqual(t1.n3, parser.normals[2]));
+                // The texture index (0, 102, 14 in the second face) is ignored
+                REQUIRE(smooth_triangles_equal(t2, t1));
             }
         }
     }

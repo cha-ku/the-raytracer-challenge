@@ -48,43 +48,82 @@ namespace raytracer {
             return *parser.geoms.emplace_back(std::make_unique<Geom>(std::move(shape)));
         }
 
-        // `v x y z`: false if the record is malformed
-        bool parse_vertex(ObjParser &parser, const std::vector<std::string_view> &words) {
+        template<typename T>
+        bool parse_xyz(std::vector<T>& out, const std::vector<std::string_view> &words) {
             if (words.size() < 4) {
                 return false;
             }
-            const auto x{parse_number<float>(words[1])};
-            const auto y{parse_number<float>(words[2])};
-            const auto z{parse_number<float>(words[3])};
+            using ElementType = decltype(T::x);
+            const auto x{parse_number<ElementType>(words[1])};
+            const auto y{parse_number<ElementType>(words[2])};
+            const auto z{parse_number<ElementType>(words[3])};
             if (!x || !y || !z) {
                 return false;
             }
-            parser.vertices.push_back(Point{.x = *x, .y = *y, .z = *z});
+            out.push_back(T{.x = *x, .y = *y, .z = *z});
             return true;
         }
 
-        // `f i j k ...`: fan-triangulates the polygon into `group`. false if the record is malformed.
+        // One corner of a face: its vertex index and, if the face gives one, its vertex normal index
+        struct FaceVertex {
+            std::size_t vertex;
+            std::optional<std::size_t> normal;
+        };
+
+        // A face word: "v", "v/vt", "v//vn" or "v/vt/vn". The texture index is ignored, so it isn't validated.
+        // nullopt if the vertex or normal index is malformed or doesn't refer to an earlier record.
+        std::optional<FaceVertex> parse_face_vertex(const ObjParser &parser, const std::string_view word) {
+            const std::size_t first_slash{word.find('/')};
+            const auto vertex{parse_number<std::size_t>(word.substr(0, first_slash))};
+            if (!vertex || *vertex == 0 || *vertex >= parser.vertices.size()) {
+                return std::nullopt;
+            }
+            // "v" or "v/vt": no normal
+            const std::size_t second_slash{
+                first_slash == std::string_view::npos ? first_slash : word.find('/', first_slash + 1)
+            };
+            if (second_slash == std::string_view::npos) {
+                return FaceVertex{.vertex = *vertex, .normal = std::nullopt};
+            }
+            const auto normal{parse_number<std::size_t>(word.substr(second_slash + 1))};
+            if (!normal || *normal == 0 || *normal >= parser.normals.size()) {
+                return std::nullopt;
+            }
+            return FaceVertex{.vertex = *vertex, .normal = *normal};
+        }
+
+        // `f i j k ...`: fan-triangulates the polygon into `group`. Smooth triangles if every corner has a normal,
+        // flat ones otherwise. false if the record is malformed.
         bool parse_face(ObjParser &parser, Geom &group, const std::vector<std::string_view> &words) {
             if (words.size() < 4) {
                 return false;
             }
-            std::vector<std::size_t> indices;
-            indices.reserve(words.size() - 1);
+            std::vector<FaceVertex> corners;
+            corners.reserve(words.size() - 1);
+            bool smooth{true};
             for (const std::string_view word: words | std::views::drop(1)) {
-                // "v", "v/vt", "v//vn" or "v/vt/vn": the vertex index comes first
-                const auto index{parse_number<std::size_t>(word.substr(0, word.find('/')))};
-                if (!index || *index == 0 || *index >= parser.vertices.size()) {
+                const auto corner{parse_face_vertex(parser, word)};
+                if (!corner) {
                     return false;
                 }
-                indices.push_back(*index);
+                smooth = smooth && corner->normal.has_value();
+                corners.push_back(*corner);
             }
-            // Every triangle shares the first vertex: (1, 2, 3), (1, 3, 4), (1, 4, 5), ...
-            for (std::size_t i{1}; i + 1 < indices.size(); ++i) {
+            // Every triangle shares the first corner: (1, 2, 3), (1, 3, 4), (1, 4, 5), ...
+            const FaceVertex &first{corners[0]};
+            for (std::size_t i{1}; i + 1 < corners.size(); ++i) {
+                const FaceVertex &second{corners[i]};
+                const FaceVertex &third{corners[i + 1]};
+                const Point &p1{parser.vertices[first.vertex]};
+                const Point &p2{parser.vertices[second.vertex]};
+                const Point &p3{parser.vertices[third.vertex]};
                 Geom &triangle{
-                    new_geom(parser, Triangle{
-                                 parser.vertices[indices[0]], parser.vertices[indices[i]],
-                                 parser.vertices[indices[i + 1]]
-                             })
+                    smooth
+                        ? new_geom(parser, SmoothTriangle{
+                                       p1, p2, p3, parser.normals[*first.normal], parser.normals[*second.normal],
+                                       parser.normals[*third.normal]
+                                   })
+                        : new_geom(parser, Triangle{p1, p2, p3})
                 };
                 add_child(group, triangle);
             }
@@ -116,8 +155,11 @@ namespace raytracer {
 
             bool recognised{false};
             if (words[0] == "v") {
-                recognised = parse_vertex(parser, words);
-            } else if (words[0] == "f") {
+                recognised = parse_xyz(parser.vertices, words);
+            } else if (words[0] == "vn") {
+                recognised = parse_xyz(parser.normals, words);
+            }
+            else if (words[0] == "f") {
                 recognised = parse_face(parser, *current_group, words);
             } else if (words[0] == "g" && words.size() >= 2) {
                 const auto [it, inserted]{parser.groups.try_emplace(std::string{words[1]}, nullptr)};

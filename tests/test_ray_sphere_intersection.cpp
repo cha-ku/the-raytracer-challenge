@@ -127,7 +127,7 @@ SCENARIO("An intersection encapsulates t and object") {
     GIVEN("Sphere") {
         const Geom s = make_sphere();
         WHEN("") {
-            const auto [sphere, intersection] = Intersection(&s, 3.5);
+            const auto [sphere, intersection, u, v] = Intersection(&s, 3.5);
             THEN("") {
                 REQUIRE(intersection == 3.5);
                 REQUIRE(sphere == &s);
@@ -648,6 +648,20 @@ SCENARIO("The Schlick approximation with small angle and n2 > n1") {
 
             THEN("reflectance = 0.48873") {
                 REQUIRE(utils::equal(reflectance, 0.48873f));
+            }
+        }
+    }
+}
+
+SCENARIO("An intersection can encapsulate `u` and `v`") {
+    GIVEN("A triangle") {
+        const Geom s = make_triangle(Point(0, 1, 0), Point(-1, 0, 0), Point(1, 0, 0));
+        WHEN("An intersection is created with u and v") {
+            // The book's intersection_with_uv(3.5, s, 0.2, 0.4)
+            const Intersection i{.object = &s, .t = 3.5f, .u = 0.2f, .v = 0.4f};
+            THEN("It stores u and v") {
+                REQUIRE(utils::equal(*i.u, 0.2f));
+                REQUIRE(utils::equal(*i.v, 0.4f));
             }
         }
     }

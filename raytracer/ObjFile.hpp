@@ -29,6 +29,8 @@ namespace raytracer {
         // OBJ indices are 1-based, so vertices[0] is an unused placeholder and vertices[1] is the first vertex
         std::vector<Point> vertices{Point{}};
 
+        std::vector<Vector> normals{Vector{}};
+
         // Owns every triangle and group created while parsing
         std::vector<std::unique_ptr<Geom>> geoms;
 

@@ -174,9 +174,10 @@ void simulate_material_sphere() {
             Ray r{.origin = camera, .direction = Vector::normalize(Vector(p - camera))};
             auto xs{intersect(sphere, r)};
             if (hit(xs).has_value()) {
-                auto [object, t] = hit(xs).value();
-                Point point = position(r, t);
-                Vector normal = normal_at(*object, point);
+                const Intersection intersection = hit(xs).value();
+                const Geom *object = intersection.object;
+                Point point = position(r, intersection.t);
+                Vector normal = normal_at(*object, point, intersection);
                 Vector eye = -r.direction;
                 Colour pixel_colour = lighting(*object, object->material, point_light, point, eye, normal, false);
                 canvas.write_pixel(x, y, pixel_colour);
