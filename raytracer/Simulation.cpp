@@ -450,11 +450,13 @@ void simulate_model(const std::string &obj_path) {
     // root objects: the model group is the only parser Geom without a parent
     std::ranges::move(parser.geoms, std::back_inserter(world.objects));
 
-    world.light = PointLight{.position = Point{.x = -10, .y = 10, .z = -10}, .intensity = colours::white};
-
     Camera camera{.hsize = 300, .vsize = 200, .field_of_view = pi / 3};
-    constexpr Vector up{.x = 0, .y = 1, .z = 0};
-    camera.transform = view_transform(Point{.x = 0, .y = 2.2f, .z = -3.8f}, Point{.x = 0, .y = 0.7f, .z = 0}, up);
+
+    // Where the camera and light go for a model without bounds; replaced below by a framing of the model. They are
+    // used once, after the branch, so the camera and the light are each set in one place.
+    Point from{.x = 0, .y = 2.2f, .z = -3.8f};
+    Point to{.x = 0, .y = 0.7f, .z = 0};
+    Point light_position{.x = -10, .y = 10, .z = -10};
 
     // Frame the model from its world-space box: look at its centre from above-front, far enough back that its
     // bounding sphere fits the narrower field of view (the camera's shorter side), with a margin. The light keeps
@@ -469,11 +471,15 @@ void simulate_model(const std::string &obj_path) {
         const float distance{margin * radius / static_cast<float>(std::sin(std::atan(half_short)))};
 
         const Vector view_direction{Vector::normalize(Vector{.x = 0, .y = 0.4f, .z = -1})};
-        camera.transform = view_transform(centre + view_direction * distance, centre, up);
+        from = centre + view_direction * distance;
+        to = centre;
 
         const Vector light_direction{Vector::normalize(Vector{.x = -1, .y = 1, .z = -1})};
-        world.light->position = centre + light_direction * (2 * distance);
+        light_position = centre + light_direction * (2 * distance);
     }
+
+    camera.transform = view_transform(from, to, Vector{.x = 0, .y = 1, .z = 0});
+    world.light = PointLight{.position = light_position, .intensity = colours::white};
 
     // No reflective or transparent materials, so one bounce is plenty
     constexpr uint8_t max_depth = 5;
