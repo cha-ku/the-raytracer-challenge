@@ -13,7 +13,10 @@
 
 using namespace raytracer;
 
-SCENARIO("Constructing a camera") {
+SCENARIO (
+"Constructing a camera"
+)
+ {
     GIVEN("hsize ← 160, vsize ← 120, field_of_view ← π/2") {
         constexpr uint32_t hsize{160};
         constexpr uint32_t vsize{120};
@@ -32,7 +35,10 @@ SCENARIO("Constructing a camera") {
     }
 }
 
-SCENARIO("The pixel size for a horizontal canvas") {
+SCENARIO (
+"The pixel size for a horizontal canvas"
+)
+ {
     GIVEN("c ← camera(200, 125, π/2)") {
         const Camera c{200, 125, std::numbers::pi / 2};
 
@@ -42,7 +48,10 @@ SCENARIO("The pixel size for a horizontal canvas") {
     }
 }
 
-SCENARIO("The pixel size for a vertical canvas") {
+SCENARIO (
+"The pixel size for a vertical canvas"
+)
+ {
     GIVEN("c ← camera(125, 200, π/2)") {
         const Camera c{125, 200, std::numbers::pi / 2};
 
@@ -52,7 +61,10 @@ SCENARIO("The pixel size for a vertical canvas") {
     }
 }
 
-SCENARIO("Constructing a ray through the center of the canvas") {
+SCENARIO (
+"Constructing a ray through the center of the canvas"
+)
+ {
     GIVEN("c ← camera(201, 101, π/2)") {
         const Camera c{201, 101, std::numbers::pi / 2};
 
@@ -67,7 +79,10 @@ SCENARIO("Constructing a ray through the center of the canvas") {
     }
 }
 
-SCENARIO("Constructing a ray through a corner of the canvas") {
+SCENARIO (
+"Constructing a ray through a corner of the canvas"
+)
+ {
     GIVEN("c ← camera(201, 101, π/2)") {
         const Camera c{201, 101, std::numbers::pi / 2};
 
@@ -82,7 +97,10 @@ SCENARIO("Constructing a ray through a corner of the canvas") {
     }
 }
 
-SCENARIO("Constructing a ray when the camera is transformed") {
+SCENARIO (
+"Constructing a ray when the camera is transformed"
+)
+ {
     GIVEN("c ← camera(201, 101, π/2)") {
         Camera c{201, 101, std::numbers::pi / 2};
 

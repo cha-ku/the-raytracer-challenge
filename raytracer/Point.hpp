@@ -14,22 +14,22 @@ namespace raytracer {
         float z{0};
         float w{1};
 
-        constexpr auto operator<=>(const Point& p) const = default;
+        constexpr auto operator<=>(const Point &p) const = default;
 
-        constexpr Vector operator-(const Point& p) const {
+        constexpr Vector operator-(const Point &p) const {
             return {.x = x - p.x, .y = y - p.y, .z = z - p.z};
         }
 
-        constexpr Point operator-(const Vector& v) const {
+        constexpr Point operator-(const Vector &v) const {
             return {.x = x - v.x, .y = y - v.y, .z = z - v.z};
         }
     };
 
-    constexpr Point operator+(const Point& p, const Point& q) {
+    constexpr Point operator+(const Point &p, const Point &q) {
         return {.x = p.x + q.x, .y = p.y + q.y, .z = p.z + q.z};
     }
 
-    constexpr Point operator+(const Point& p, const Vector& v) {
+    constexpr Point operator+(const Point &p, const Vector &v) {
         return {.x = p.x + v.x, .y = p.y + v.y, .z = p.z + v.z};
     }
 }

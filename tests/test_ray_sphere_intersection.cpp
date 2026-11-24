@@ -531,7 +531,7 @@ SCENARIO("The hit should offset the point") {
 
 SCENARIO("The under point is offset below the surface") {
     GIVEN("r ← ray(point(0, 0, -5), vector(0, 0, 1)), shape ← glass_sphere() with translation(0, 0, 1), "
-          "i ← intersection(5, shape) and xs ← intersections(i)") {
+        "i ← intersection(5, shape) and xs ← intersections(i)") {
         constexpr Ray r{.origin = Point{.x = 0, .y = 0, .z = -5}, .direction = Vector{.x = 0, .y = 0, .z = 1}};
         Geom shape = make_glass_sphere();
         shape.set_transform(translation<double>(0, 0, 1));
@@ -553,10 +553,10 @@ SCENARIO("The under point is offset below the surface") {
 
 SCENARIO("Finding n1 and n2 at various intersections") {
     GIVEN("A ← glass_sphere() with scaling(2, 2, 2) and refractive_index 1.5, "
-          "B ← glass_sphere() with translation(0, 0, -0.25) and refractive_index 2.0, "
-          "C ← glass_sphere() with translation(0, 0, 0.25) and refractive_index 2.5, "
-          "r ← ray(point(0, 0, -4), vector(0, 0, 1)) and "
-          "xs ← intersections(2:A, 2.75:B, 3.25:C, 4.75:B, 5.25:C, 6:A)") {
+        "B ← glass_sphere() with translation(0, 0, -0.25) and refractive_index 2.0, "
+        "C ← glass_sphere() with translation(0, 0, 0.25) and refractive_index 2.5, "
+        "r ← ray(point(0, 0, -4), vector(0, 0, 1)) and "
+        "xs ← intersections(2:A, 2.75:B, 3.25:C, 4.75:B, 5.25:C, 6:A)") {
         Geom a = make_glass_sphere();
         a.set_transform(scale<double>(2, 2, 2));
         a.material.refractive_index = 1.5f;
@@ -576,13 +576,13 @@ SCENARIO("Finding n1 and n2 at various intersections") {
 
         // Scenario Outline examples: | index | n1 | n2 |
         const auto [index, n1, n2] = GENERATE(table<std::size_t, float, float>({
-            {0, 1.0f, 1.5f},
-            {1, 1.5f, 2.0f},
-            {2, 2.0f, 2.5f},
-            {3, 2.5f, 2.5f},
-            {4, 2.5f, 1.5f},
-            {5, 1.5f, 1.0f},
-        }));
+                                                  {0, 1.0f, 1.5f},
+                                                  {1, 1.5f, 2.0f},
+                                                  {2, 2.0f, 2.5f},
+                                                  {3, 2.5f, 2.5f},
+                                                  {4, 2.5f, 1.5f},
+                                                  {5, 1.5f, 1.0f},
+                                                  }));
 
         WHEN("comps ← prepare_computations(xs[" + std::to_string(index) + "], r, xs)") {
             const auto comps = prepare_computations(xs[index], r, xs);
@@ -599,7 +599,7 @@ SCENARIO("Finding n1 and n2 at various intersections") {
 
 SCENARIO("The Schlick approximation under total internal reflection") {
     GIVEN("shape ← glass_sphere(), r ← ray(point(0, 0, √2/2), vector(0, 1, 0)) "
-          "and xs ← intersections(-√2/2:shape, √2/2:shape)") {
+        "and xs ← intersections(-√2/2:shape, √2/2:shape)") {
         constexpr float half_sqrt2 = std::numbers::sqrt2_v<float> / 2;
         const Geom shape = make_glass_sphere();
         constexpr Ray r{.origin = Point{.x = 0, .y = 0, .z = half_sqrt2}, .direction = Vector{.x = 0, .y = 1, .z = 0}};
@@ -619,7 +619,7 @@ SCENARIO("The Schlick approximation under total internal reflection") {
 
 SCENARIO("The Schlick approximation with a perpendicular viewing angle") {
     GIVEN("shape ← glass_sphere(), r ← ray(point(0, 0, 0), vector(0, 1, 0)) "
-          "and xs ← intersections(-1:shape, 1:shape)") {
+        "and xs ← intersections(-1:shape, 1:shape)") {
         const Geom shape = make_glass_sphere();
         constexpr Ray r{.origin = Point{.x = 0, .y = 0, .z = 0}, .direction = Vector{.x = 0, .y = 1, .z = 0}};
         const auto xs = intersections(Intersection{.object = &shape, .t = -1}, Intersection{.object = &shape, .t = 1});
@@ -637,7 +637,7 @@ SCENARIO("The Schlick approximation with a perpendicular viewing angle") {
 
 SCENARIO("The Schlick approximation with small angle and n2 > n1") {
     GIVEN("shape ← glass_sphere(), r ← ray(point(0, 0.99, -2), vector(0, 0, 1)) "
-          "and xs ← intersections(1.8589:shape)") {
+        "and xs ← intersections(1.8589:shape)") {
         const Geom shape = make_glass_sphere();
         constexpr Ray r{.origin = Point{.x = 0, .y = 0.99f, .z = -2}, .direction = Vector{.x = 0, .y = 0, .z = 1}};
         const auto xs = intersections(Intersection{.object = &shape, .t = 1.8589f});

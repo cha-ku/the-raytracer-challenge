@@ -10,10 +10,10 @@ using namespace raytracer;
 
 SCENARIO("Intersecting a cone with a ray") {
     const auto [origin, direction, t0, t1] = GENERATE(table<Point, Vector, float, float>({
-        {Point(0, 0, -5), Vector(0, 0, 1), 5.0f, 5.0f},
-        {Point(0, 0, -5), Vector(1, 1, 1), 8.66025f, 8.66025f},
-        {Point(1, 1, -5), Vector(-0.5, -1, 1), 4.55006f, 49.44994f},
-    }));
+                                                          {Point(0, 0, -5), Vector(0, 0, 1), 5.0f, 5.0f},
+                                                          {Point(0, 0, -5), Vector(1, 1, 1), 8.66025f, 8.66025f},
+                                                          {Point(1, 1, -5), Vector(-0.5, -1, 1), 4.55006f, 49.44994f},
+                                                          }));
     GIVEN("A cone and a ray that strikes it") {
         const Cone shape{};
         const Ray r{origin, Vector::normalize(direction)};
@@ -44,10 +44,10 @@ SCENARIO("Intersecting a cone with a ray parallel to one of its halves") {
 
 SCENARIO("Intersecting a cone's end caps") {
     const auto [origin, direction, count] = GENERATE(table<Point, Vector, std::size_t>({
-        {Point(0, 0, -5), Vector(0, 1, 0), 0},
-        {Point(0, 0, -0.25), Vector(0, 1, 1), 2},
-        {Point(0, 0, -0.25), Vector(0, 1, 0), 4},
-    }));
+                                                         {Point(0, 0, -5), Vector(0, 1, 0), 0},
+                                                         {Point(0, 0, -0.25), Vector(0, 1, 1), 2},
+                                                         {Point(0, 0, -0.25), Vector(0, 1, 0), 4},
+                                                         }));
     GIVEN("A closed cone constrained to -0.5 < y < 0.5 and a ray") {
         Cone shape{};
         shape.minimum = -0.5;
@@ -66,10 +66,10 @@ SCENARIO("Intersecting a cone's end caps") {
 SCENARIO("Computing the normal vector on a cone") {
     using std::numbers::sqrt2_v;
     const auto [point, expected_normal] = GENERATE(table<Point, Vector>({
-        {Point(0, 0, 0), Vector(0, 0, 0)},
-        {Point(1, 1, 1), Vector(1, -sqrt2_v<float>, 1)},
-        {Point(-1, -1, 0), Vector(-1, 1, 0)},
-    }));
+                                                       {Point(0, 0, 0), Vector(0, 0, 0)},
+                                                       {Point(1, 1, 1), Vector(1, -sqrt2_v<float>, 1)},
+                                                       {Point(-1, -1, 0), Vector(-1, 1, 0)},
+                                                       }));
     GIVEN("A cone") {
         const Cone shape{};
         WHEN("The normal is computed at the point") {

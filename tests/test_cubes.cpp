@@ -8,7 +8,10 @@
 
 using namespace raytracer;
 
-SCENARIO("A ray intersects a cube") {
+SCENARIO (
+"A ray intersects a cube"
+)
+ {
     const auto [face, origin, direction, t1, t2] = GENERATE(table<std::string, Point, Vector, float, float>({
         {"+x", Point(5, 0.5, 0), Vector(-1, 0, 0), 4.0f, 6.0f},
         {"-x", Point(-5, 0.5, 0), Vector(1, 0, 0), 4.0f, 6.0f},
@@ -32,7 +35,10 @@ SCENARIO("A ray intersects a cube") {
     }
 }
 
-SCENARIO("A ray misses a cube") {
+SCENARIO (
+"A ray misses a cube"
+)
+ {
     const auto [origin, direction] = GENERATE(table<Point, Vector>({
         {Point(-2, 0, 0), Vector(0.2673, 0.5345, 0.8018)},
         {Point(0, -2, 0), Vector(0.8018, 0.2673, 0.5345)},
@@ -53,7 +59,10 @@ SCENARIO("A ray misses a cube") {
     }
 }
 
-SCENARIO("The normal on the surface of a cube") {
+SCENARIO (
+"The normal on the surface of a cube"
+)
+ {
     const auto [point, expected_normal] = GENERATE(table<Point, Vector>({
         {Point(1, 0.5, -0.8), Vector(1, 0, 0)},
         {Point(-1, -0.2, 0.9), Vector(-1, 0, 0)},

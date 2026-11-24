@@ -34,7 +34,7 @@ namespace raytracer {
     }
 
     template<typename T>
-    constexpr Matrix<T> transpose(const Matrix<T>& matrix) {
+    constexpr Matrix<T> transpose(const Matrix<T> &matrix) {
         Matrix<T> result(matrix.cols(), matrix.rows());
         for (size_t row = 0; row < matrix.rows(); ++row) {
             for (size_t col = 0; col < matrix.cols(); ++col) {
@@ -116,7 +116,7 @@ namespace raytracer {
         return result;
     }
 
-    template <typename T>
+    template<typename T>
     constexpr Matrix<T> translation(T x, T y, T z) {
         Matrix<T> result(Matrix<T>::identity(4));
         result[0, 3] = x;
@@ -125,7 +125,7 @@ namespace raytracer {
         return result;
     }
 
-    template <typename T>
+    template<typename T>
     constexpr Matrix<T> scale(T x, T y, T z) {
         Matrix<T> result(Matrix<T>::identity(4));
         result[0, 0] = x;
@@ -170,7 +170,8 @@ namespace raytracer {
         };
     }
 
-    constexpr Matrix<double> shearing(const double xy, const double xz, const double yx, const double yz, const double zx, const double zy) {
+    constexpr Matrix<double> shearing(const double xy, const double xz, const double yx, const double yz,
+                                      const double zx, const double zy) {
         Matrix result(Matrix<double>::identity(4));
         result[0, 1] = xy;
         result[0, 2] = xz;

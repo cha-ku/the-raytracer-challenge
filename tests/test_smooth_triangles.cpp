@@ -19,7 +19,10 @@ namespace {
     }
 }
 
-SCENARIO("Constructing a smooth triangle") {
+SCENARIO (
+"Constructing a smooth triangle"
+)
+ {
     // Background shared by the smooth-triangle scenarios
     GIVEN("Three corner points and a normal at each corner") {
         const Point p1{0, 1, 0};
@@ -42,7 +45,10 @@ SCENARIO("Constructing a smooth triangle") {
     }
 }
 
-SCENARIO("An intersection with a smooth triangle stores u/v") {
+SCENARIO (
+"An intersection with a smooth triangle stores u/v"
+)
+ {
     GIVEN("A smooth triangle and a ray aimed inside it") {
         const SmoothTriangle tri{background_triangle()};
         const Ray r{Point(-0.2, 0.3, -2), Vector(0, 0, 1)};
@@ -68,7 +74,10 @@ SCENARIO("An intersection with a smooth triangle stores u/v") {
     }
 }
 
-SCENARIO("A smooth triangle uses u/v to interpolate the normal") {
+SCENARIO (
+"A smooth triangle uses u/v to interpolate the normal"
+)
+ {
     GIVEN("A smooth triangle") {
         const Geom tri{background_triangle()};
         WHEN("An intersection with u = 0.45, v = 0.25 is used to find the normal") {
@@ -82,7 +91,10 @@ SCENARIO("A smooth triangle uses u/v to interpolate the normal") {
     }
 }
 
-SCENARIO("Preparing the normal on a smooth triangle") {
+SCENARIO (
+"Preparing the normal on a smooth triangle"
+)
+ {
     GIVEN("A smooth triangle") {
         const Geom tri{background_triangle()};
         WHEN("The computations are prepared for a hit with u = 0.45, v = 0.25") {

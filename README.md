@@ -71,8 +71,8 @@ All types live in the `raytracer` namespace.
   `operator[](row, col)`. Supports `multiply`, `transpose`, `inverse`,
   `translation`, `scale`, `rotation_*`, `shearing`.
 - **`Shape`** (`Shape.hpp`) — common base (transform, material, id) shared
-  by every concrete shape via a CRTP `ShapeFactory` mixin. Concrete shapes
-  (`Sphere`, `Plane`, in `Intersect.hpp`) each implement their own
+  by every concrete shape via a CRTP `ShapeFactory` mixin. Concrete shapes (`Sphere`, `Plane`, in `Intersect.hpp`) each
+  implement their own
   `local_intersect`/`local_normal_at` in their own object space; the shared
   `intersect`/`normal_at` templates handle converting to and from object
   space. `AnyShape` (`std::variant<Sphere, Plane>`) is the single place a

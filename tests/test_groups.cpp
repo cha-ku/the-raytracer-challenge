@@ -8,7 +8,10 @@
 
 using namespace raytracer;
 
-SCENARIO("Adding a child to a group") {
+SCENARIO (
+"Adding a child to a group"
+)
+ {
     GIVEN("A group and a test shape") {
         Geom g = make_group();
         Geom s = make_test_shape();
@@ -24,7 +27,10 @@ SCENARIO("Adding a child to a group") {
     }
 }
 
-SCENARIO("Intersecting a ray with an empty group") {
+SCENARIO (
+"Intersecting a ray with an empty group"
+)
+ {
     GIVEN("An empty group and a ray") {
         const Geom g = make_group();
         const Ray r{Point(0, 0, 0), Vector(0, 0, 1)};
@@ -38,7 +44,10 @@ SCENARIO("Intersecting a ray with an empty group") {
     }
 }
 
-SCENARIO("Intersecting a ray with a nonempty group") {
+SCENARIO (
+"Intersecting a ray with a nonempty group"
+)
+ {
     GIVEN("A group with three spheres") {
         Geom g = make_group();
         Geom s1 = make_sphere();
@@ -64,7 +73,10 @@ SCENARIO("Intersecting a ray with a nonempty group") {
     }
 }
 
-SCENARIO("Intersecting a transformed group") {
+SCENARIO (
+"Intersecting a transformed group"
+)
+ {
     GIVEN("A scaled group with a translated sphere") {
         Geom g = make_group();
         g.set_transform(scale<double>(2, 2, 2));

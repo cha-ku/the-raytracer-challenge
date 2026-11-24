@@ -56,14 +56,14 @@ namespace raytracer {
     Vector local_normal_at(const Cube &, const Point &local_point) {
         // The face is always the one matching the component whose absolute value is a 1!
         // could also use utils::equal to see which component is closest to 1.f, but wanna avoid floating point comparisons
-        const auto& maxc = std::max({std::abs(local_point.x), std::abs(local_point.y), std::abs(local_point.z)});
+        const auto &maxc = std::max({std::abs(local_point.x), std::abs(local_point.y), std::abs(local_point.z)});
         if (maxc == std::abs(local_point.x)) {
-            return {.x=local_point.x, .y=0, .z=0};
+            return {.x = local_point.x, .y = 0, .z = 0};
         }
         if (maxc == std::abs(local_point.y)) {
-            return {.x = 0, .y=local_point.y, .z=0};
+            return {.x = 0, .y = local_point.y, .z = 0};
         }
-        return {.x = 0, .y=0, .z=local_point.z};
+        return {.x = 0, .y = 0, .z = local_point.z};
     }
 
     Vector local_normal_at(const Cylinder &cylinder, const Point &local_point) {
@@ -87,7 +87,7 @@ namespace raytracer {
         throw std::logic_error("local_normal_at called on a Group: a group has no surface, ask its children");
     }
 
-    Vector local_normal_at(const Triangle & triangle, const Point &) {
+    Vector local_normal_at(const Triangle &triangle, const Point &) {
         return triangle.normal;
     }
 
@@ -130,10 +130,9 @@ namespace raytracer {
         if (std::abs(direction_component) < utils::EPSILON) {
             tmin = tmin_numerator * std::numeric_limits<float>::infinity();
             tmax = tmax_numerator * std::numeric_limits<float>::infinity();
-        }
-        else {
-            tmin = tmin_numerator/direction_component;
-            tmax = tmax_numerator/direction_component;
+        } else {
+            tmin = tmin_numerator / direction_component;
+            tmax = tmax_numerator / direction_component;
         }
         return tmin > tmax ? std::make_pair(tmax, tmin) : std::make_pair(tmin, tmax);
     }
@@ -143,13 +142,13 @@ namespace raytracer {
         // xy planes at z = 1 and z = -1
         // xz planes at y = 1 and y = -1
         // yz planes at x = 1 and x = -1
-        const auto& [xtmin, xtmax] = check_axis(local_ray.direction.x, local_ray.origin.x);
-        const auto& [ytmin, ytmax] = check_axis(local_ray.direction.y, local_ray.origin.y);
+        const auto &[xtmin, xtmax] = check_axis(local_ray.direction.x, local_ray.origin.x);
+        const auto &[ytmin, ytmax] = check_axis(local_ray.direction.y, local_ray.origin.y);
         auto tmin = std::max(xtmin, ytmin);
         auto tmax = std::min(xtmax, ytmax);
         // check if ray passes outside the xy boundaries, if it does, then return empty because no z value can fix it
         if (tmin > tmax) return {};
-        const auto& [ztmin, ztmax] = check_axis(local_ray.direction.z, local_ray.origin.z);
+        const auto &[ztmin, ztmax] = check_axis(local_ray.direction.z, local_ray.origin.z);
         tmin = std::max({tmin, ztmin});
         tmax = std::min({tmax, ztmax});
         if (tmin > tmax) return {};
@@ -203,7 +202,8 @@ namespace raytracer {
         std::vector<float> intersections;
         // ray is parallel to y axis, only check caps
         if (a > utils::EPSILON) {
-            const auto b = 2 * local_ray.origin.x * local_ray.direction.x + 2 * local_ray.origin.z * local_ray.direction.z;
+            const auto b = 2 * local_ray.origin.x * local_ray.direction.x + 2 * local_ray.origin.z * local_ray.direction
+                           .z;
             const auto c = utils::square(local_ray.origin.x) + utils::square(local_ray.origin.z) - 1;
             // same as sphere
             const auto discriminant{utils::square(b) - (4 * a * c)};

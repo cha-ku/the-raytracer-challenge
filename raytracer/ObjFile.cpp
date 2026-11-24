@@ -49,7 +49,7 @@ namespace raytracer {
         }
 
         template<typename T>
-        bool parse_xyz(std::vector<T>& out, const std::vector<std::string_view> &words) {
+        bool parse_xyz(std::vector<T> &out, const std::vector<std::string_view> &words) {
             if (words.size() < 4) {
                 return false;
             }
@@ -158,8 +158,7 @@ namespace raytracer {
                 recognised = parse_xyz(parser.vertices, words);
             } else if (words[0] == "vn") {
                 recognised = parse_xyz(parser.normals, words);
-            }
-            else if (words[0] == "f") {
+            } else if (words[0] == "f") {
                 recognised = parse_face(parser, *current_group, words);
             } else if (words[0] == "g" && words.size() >= 2) {
                 const auto [it, inserted]{parser.groups.try_emplace(std::string{words[1]}, nullptr)};

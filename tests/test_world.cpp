@@ -15,7 +15,10 @@
 
 using namespace raytracer;
 
-SCENARIO("Creating a world") {
+SCENARIO (
+"Creating a world"
+)
+ {
     GIVEN("w ← world()") {
         const auto w = World();
 
@@ -29,7 +32,10 @@ SCENARIO("Creating a world") {
     }
 }
 
-SCENARIO("The default world") {
+SCENARIO (
+"The default world"
+)
+ {
     GIVEN("The default world is created") {
         constexpr PointLight light{Point{-10, 10, -10}, Colour{1, 1, 1}};
 
@@ -69,7 +75,10 @@ SCENARIO("The default world") {
     }
 }
 
-SCENARIO("Intersect a world with a ray") {
+SCENARIO (
+"Intersect a world with a ray"
+)
+ {
     GIVEN("w ← default_world() and r ← ray(point(0, 0, -5), vector(0, 0, 1))") {
         const auto w = World::create_default_world();
         constexpr Ray r{Point{0, 0, -5}, Vector{0, 0, 1}};
@@ -88,7 +97,10 @@ SCENARIO("Intersect a world with a ray") {
     }
 }
 
-SCENARIO("Shading an intersection") {
+SCENARIO (
+"Shading an intersection"
+)
+ {
     GIVEN("w ← default_world(), a ray, the first shape, and an intersection") {
         auto w = World::create_default_world();
         constexpr Ray r{Point{0, 0, -5}, Vector{0, 0, 1}};
@@ -106,7 +118,10 @@ SCENARIO("Shading an intersection") {
     }
 }
 
-SCENARIO("Shading an intersection from the inside") {
+SCENARIO (
+"Shading an intersection from the inside"
+)
+ {
     GIVEN("w ← default_world() with inner light, a ray, the second shape, and an intersection") {
         auto w = World::create_default_world();
         w.light = PointLight{Point{0, 0.25f, 0}, Colour{1, 1, 1}};
@@ -125,7 +140,10 @@ SCENARIO("Shading an intersection from the inside") {
     }
 }
 
-SCENARIO("The color when a ray misses") {
+SCENARIO (
+"The color when a ray misses"
+)
+ {
     GIVEN("w ← default_world() and r ← ray(point(0, 0, -5), vector(0, 1, 0))") {
         const auto w = World::create_default_world();
         constexpr Ray r{Point{0, 0, -5}, Vector{0, 1, 0}};
@@ -140,7 +158,10 @@ SCENARIO("The color when a ray misses") {
     }
 }
 
-SCENARIO("The color when a ray hits") {
+SCENARIO (
+"The color when a ray hits"
+)
+ {
     GIVEN("w ← default_world() and r ← ray(point(0, 0, -5), vector(0, 0, 1))") {
         const auto w = World::create_default_world();
         constexpr Ray r{Point{0, 0, -5}, Vector{0, 0, 1}};
@@ -155,7 +176,10 @@ SCENARIO("The color when a ray hits") {
     }
 }
 
-SCENARIO("There is no shadow when nothing is collinear with point and light") {
+SCENARIO (
+"There is no shadow when nothing is collinear with point and light"
+)
+ {
     GIVEN("w ← default_world() and p ← point(0, 10, 0)") {
         const auto w = World::create_default_world();
         constexpr Point p{0, 10, 0};
@@ -166,7 +190,10 @@ SCENARIO("There is no shadow when nothing is collinear with point and light") {
     }
 }
 
-SCENARIO("The shadow when an object is between the point and the light") {
+SCENARIO (
+"The shadow when an object is between the point and the light"
+)
+ {
     GIVEN("w ← default_world() and p ← point(10, -10, 10)") {
         const auto w = World::create_default_world();
         constexpr Point p{10, -10, 10};
@@ -177,7 +204,10 @@ SCENARIO("The shadow when an object is between the point and the light") {
     }
 }
 
-SCENARIO("There is no shadow when an object is behind the light") {
+SCENARIO (
+"There is no shadow when an object is behind the light"
+)
+ {
     GIVEN("w ← default_world() and p ← point(-20, 20, -20)") {
         const auto w = World::create_default_world();
         constexpr Point p{-20, 20, -20};
@@ -188,7 +218,10 @@ SCENARIO("There is no shadow when an object is behind the light") {
     }
 }
 
-SCENARIO("There is no shadow when an object is behind the point") {
+SCENARIO (
+"There is no shadow when an object is behind the point"
+)
+ {
     GIVEN("w ← default_world() and p ← point(-2, 2, -2)") {
         const auto w = World::create_default_world();
         constexpr Point p{-2, 2, -2};
@@ -199,7 +232,10 @@ SCENARIO("There is no shadow when an object is behind the point") {
     }
 }
 
-SCENARIO("shade_hit() is given an intersection in shadow") {
+SCENARIO (
+"shade_hit() is given an intersection in shadow"
+)
+ {
     GIVEN("w ← world() with a light and two spheres, s2 translated to z=10") {
         World w;
         w.light = PointLight{Point{0, 0, -10}, Colour{1, 1, 1}};
@@ -220,7 +256,10 @@ SCENARIO("shade_hit() is given an intersection in shadow") {
     }
 }
 
-SCENARIO("The color with an intersection behind the ray") {
+SCENARIO (
+"The color with an intersection behind the ray"
+)
+ {
     GIVEN("w ← default_world(), outer and inner spheres with ambient=1, r behind outer") {
         auto w = World::create_default_world();
         w.objects[0]->material.ambient = 1.0f;
@@ -238,7 +277,10 @@ SCENARIO("The color with an intersection behind the ray") {
     }
 }
 
-SCENARIO("The reflected color for a nonreflective material") {
+SCENARIO (
+"The reflected color for a nonreflective material"
+)
+ {
     GIVEN("w ← default_world(), r ← ray(point(0, 0, 0), vector(0, 0, 1)), shape ← the second object in w, "
           "shape.material.ambient ← 1 and i ← intersection(1, shape)") {
         auto w = World::create_default_world();
@@ -258,7 +300,10 @@ SCENARIO("The reflected color for a nonreflective material") {
     }
 }
 
-SCENARIO("The reflected color for a reflective material") {
+SCENARIO (
+"The reflected color for a reflective material"
+)
+ {
     GIVEN("w ← default_world(), shape ← plane() with material.reflective 0.5 and transform translation(0, -1, 0), "
           "shape is added to w, r ← ray(point(0, 0, -3), vector(0, -√2/2, √2/2)) and i ← intersection(√2, shape)") {
         constexpr float half_sqrt2 = std::numbers::sqrt2_v<float> / 2;
@@ -283,7 +328,10 @@ SCENARIO("The reflected color for a reflective material") {
     }
 }
 
-SCENARIO("shade_hit() with a reflective material") {
+SCENARIO (
+"shade_hit() with a reflective material"
+)
+ {
     GIVEN("w ← default_world(), shape ← plane() with material.reflective 0.5 and transform translation(0, -1, 0), "
           "shape is added to w, r ← ray(point(0, 0, -3), vector(0, -√2/2, √2/2)) and i ← intersection(√2, shape)") {
         constexpr float half_sqrt2 = std::numbers::sqrt2_v<float> / 2;
@@ -308,7 +356,10 @@ SCENARIO("shade_hit() with a reflective material") {
     }
 }
 
-SCENARIO("color_at() with mutually reflective surfaces") {
+SCENARIO (
+"color_at() with mutually reflective surfaces"
+)
+ {
     GIVEN("w ← world() with w.light ← point_light(point(0, 0, 0), color(1, 1, 1)), "
           "lower ← plane() with material.reflective 1 and transform translation(0, -1, 0), "
           "upper ← plane() with material.reflective 1 and transform translation(0, 1, 0), "
@@ -331,7 +382,10 @@ SCENARIO("color_at() with mutually reflective surfaces") {
     }
 }
 
-SCENARIO("The refracted color with an opaque surface") {
+SCENARIO (
+"The refracted color with an opaque surface"
+)
+ {
     GIVEN("w ← default_world(), shape ← the first object in w, r ← ray(point(0, 0, -5), vector(0, 0, 1)) "
           "and xs ← intersections(4:shape, 6:shape)") {
         const auto w = World::create_default_world();
@@ -350,7 +404,10 @@ SCENARIO("The refracted color with an opaque surface") {
     }
 }
 
-SCENARIO("The refracted color at the maximum recursive depth") {
+SCENARIO (
+"The refracted color at the maximum recursive depth"
+)
+ {
     GIVEN("w ← default_world(), shape ← the first object in w with transparency 1.0 and refractive_index 1.5, "
           "r ← ray(point(0, 0, -5), vector(0, 0, 1)) and xs ← intersections(4:shape, 6:shape)") {
         auto w = World::create_default_world();
@@ -371,7 +428,10 @@ SCENARIO("The refracted color at the maximum recursive depth") {
     }
 }
 
-SCENARIO("The refracted color under total internal reflection") {
+SCENARIO (
+"The refracted color under total internal reflection"
+)
+ {
     GIVEN("w ← default_world(), shape ← the first object in w with transparency 1.0 and refractive_index 1.5, "
           "r ← ray(point(0, 0, √2/2), vector(0, 1, 0)) and xs ← intersections(-√2/2:shape, √2/2:shape)") {
         constexpr float half_sqrt2 = std::numbers::sqrt2_v<float> / 2;
@@ -395,7 +455,10 @@ SCENARIO("The refracted color under total internal reflection") {
     }
 }
 
-SCENARIO("The refracted color with a refracted ray") {
+SCENARIO (
+"The refracted color with a refracted ray"
+)
+ {
     GIVEN("w ← default_world(), A ← the first object in w with ambient 1.0 and pattern test_pattern(), "
           "B ← the second object in w with transparency 1.0 and refractive_index 1.5, "
           "r ← ray(point(0, 0, 0.1), vector(0, 1, 0)) and "
@@ -424,7 +487,10 @@ SCENARIO("The refracted color with a refracted ray") {
     }
 }
 
-SCENARIO("shade_hit() with a transparent material") {
+SCENARIO (
+"shade_hit() with a transparent material"
+)
+ {
     GIVEN("w ← default_world(), floor ← plane() with translation(0, -1, 0), transparency 0.5 and refractive_index 1.5, "
           "ball ← sphere() with color (1, 0, 0), ambient 0.5 and translation(0, -3.5, -0.5), both added to w, "
           "r ← ray(point(0, 0, -3), vector(0, -√2/2, √2/2)) and xs ← intersections(√2:floor)") {
@@ -455,7 +521,10 @@ SCENARIO("shade_hit() with a transparent material") {
     }
 }
 
-SCENARIO("shade_hit() with a reflective, transparent material") {
+SCENARIO (
+"shade_hit() with a reflective, transparent material"
+)
+ {
     GIVEN("w ← default_world(), r ← ray(point(0, 0, -3), vector(0, -√2/2, √2/2)), "
           "floor ← plane() with translation(0, -1, 0), reflective 0.5, transparency 0.5 and refractive_index 1.5, "
           "ball ← sphere() with color (1, 0, 0), ambient 0.5 and translation(0, -3.5, -0.5), both added to w, "

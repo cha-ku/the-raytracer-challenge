@@ -10,7 +10,10 @@
 
 using namespace raytracer;
 
-SCENARIO("A point light has a position and intensity") {
+SCENARIO (
+"A point light has a position and intensity"
+)
+ {
     GIVEN("An intensity and a position") {
         constexpr Colour intensity{1, 1, 1};
         constexpr Point position{0, 0, 0};

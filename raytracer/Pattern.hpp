@@ -14,7 +14,8 @@
 
 namespace raytracer {
     template<typename P>
-    concept Patternable = requires(const P &pattern, const Point &pattern_point) {
+    concept Patternable = requires(const P &pattern, const Point &pattern_point)
+    {
         { pattern_at(pattern, pattern_point) } -> std::same_as<Colour>;
     };
 
@@ -31,6 +32,7 @@ namespace raytracer {
         Colour m_colour_b{};
 
         static StripedPattern create(Colour a, Colour b);
+
         static Colour stripe_at(const StripedPattern &pattern, const Point &point);
 
         bool operator==(const StripedPattern &) const = default;
@@ -45,22 +47,24 @@ namespace raytracer {
         Colour m_colour_b{};
 
         static GradientPattern create(Colour a, Colour b);
+
         bool operator==(const GradientPattern &) const = default;
     };
 
     // GradientPattern pattern_at
-    Colour pattern_at(const GradientPattern& pattern, const Point &pattern_point);
+    Colour pattern_at(const GradientPattern &pattern, const Point &pattern_point);
 
     struct RingPattern : Pattern {
         Colour m_colour_a{};
         Colour m_colour_b{};
 
         static RingPattern create(Colour a, Colour b);
+
         bool operator==(const RingPattern &) const = default;
     };
 
     // RingPattern pattern_at
-    Colour pattern_at(const RingPattern& pattern, const Point &pattern_point);
+    Colour pattern_at(const RingPattern &pattern, const Point &pattern_point);
 
     // CheckersPattern
     struct CheckersPattern : Pattern {
@@ -68,11 +72,12 @@ namespace raytracer {
         Colour m_colour_b{};
 
         static CheckersPattern create(Colour a, Colour b);
+
         bool operator==(const CheckersPattern &) const = default;
     };
 
     // CheckersPattern pattern_at
-    Colour pattern_at(const CheckersPattern& pattern, const Point &pattern_point);
+    Colour pattern_at(const CheckersPattern &pattern, const Point &pattern_point);
 
     // TestPattern: colours each point by its pattern-space coordinates (r = x, g = y, b = z), so you can see
     // exactly which point pattern_at received. Used by the tests (via test_pattern()), and handy for

@@ -16,11 +16,14 @@
 namespace raytracer {
     // Pure geometry: each shape type only describes its own object-space surface. Where it sits in the scene
     // (transform, parent) and how it looks (material) belong to the Geom that holds it.
-    struct Sphere {};
+    struct Sphere {
+    };
 
-    struct Plane {};
+    struct Plane {
+    };
 
-    struct Cube {};
+    struct Cube {
+    };
 
     struct Cylinder {
         // y-axis min and max values
@@ -65,7 +68,7 @@ namespace raytracer {
     };
 
     struct Group {
-        std::vector<Geom*> children;
+        std::vector<Geom *> children;
         // cached bounds box
         std::optional<BoundingBox> bounds;
     };
@@ -80,9 +83,13 @@ namespace raytracer {
         Vector e2;
         Vector normal;
 
-        explicit Triangle(const Point &v1, const Point &v2, const Point &v3) :
-        v1{v1}, v2{v2}, v3{v3}, e1{v2 - v1}, e2{v3 - v1}, normal{Vector::normalize(Vector::cross(e2, e1))} {}
-
+        explicit Triangle(const Point &v1, const Point &v2, const Point &v3) : v1{v1}, v2{v2}, v3{v3}, e1{v2 - v1},
+                                                                               e2{v3 - v1},
+                                                                               normal{
+                                                                                   Vector::normalize(
+                                                                                       Vector::cross(e2, e1))
+                                                                               } {
+        }
     };
 
     struct SmoothTriangle {
@@ -157,7 +164,7 @@ namespace raytracer {
 
     inline Geom make_cone() { return Geom{Cone{}}; }
 
-    inline Geom make_group() { return Geom{Group{}};}
+    inline Geom make_group() { return Geom{Group{}}; }
 
     inline Geom make_triangle(const Point &p1, const Point &p2, const Point &p3) { return Geom{Triangle{p1, p2, p3}}; }
 

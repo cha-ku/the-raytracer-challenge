@@ -42,19 +42,32 @@ This is a raytracer implementation in C++23, following "The Ray Tracer Challenge
 
 ### Core Types (all in `raytracer` namespace)
 
-- **Point/Vector** (`raytracer/Point.hpp`, `raytracer/Vector.hpp`): 3D geometric primitives with w=1 for points, w=0 implicit for vectors. Support standard operations (add, subtract, dot, cross, normalize).
+- **Point/Vector** (`raytracer/Point.hpp`, `raytracer/Vector.hpp`): 3D geometric primitives with w=1 for points, w=0
+  implicit for vectors. Support standard operations (add, subtract, dot, cross, normalize).
 
-- **Matrix** (`raytracer/Matrix.hpp`, `raytracer/MatrixImpl.hpp`): `Matrix<T>` owns its data directly (a private `std::vector<T>`, no separate `Container` class) and exposes it via a custom multidimensional `operator[](row, col)`. Supports multiply, transpose, determinant, inverse, and transformations (translation, scale, rotation_x/y/z, shearing).
+- **Matrix** (`raytracer/Matrix.hpp`, `raytracer/MatrixImpl.hpp`): `Matrix<T>` owns its data directly (a private
+  `std::vector<T>`, no separate `Container` class) and exposes it via a custom multidimensional `operator[](row, col)`.
+  Supports multiply, transpose, determinant, inverse, and transformations (translation, scale, rotation_x/y/z,
+  shearing).
 
 - **Ray** (`raytracer/Ray.hpp`): origin + direction; `position(ray, t)` and `transform(ray, matrix)`.
 
-- **Shapes and Geom** (`raytracer/Geom.hpp`): shape types (`Sphere`, `Plane`, `Cube`, `Cylinder`, `Cone`, and the test-only `TestShape`) are plain geometry structs in `AnyShape = std::variant<...>`. A `Geom` is a scene node: an `AnyShape` plus its `Material`, its transform (with the inverse cached by `set_transform`) and a `Geom* parent`. Geom is neither copyable nor movable, so pointers to it stay valid; create one with `make_sphere()` etc. or `World::add(shape)`. `world_to_object`/`normal_to_world` follow the parent chain.
+- **Shapes and Geom** (`raytracer/Geom.hpp`): shape types (`Sphere`, `Plane`, `Cube`, `Cylinder`, `Cone`, and the
+  test-only `TestShape`) are plain geometry structs in `AnyShape = std::variant<...>`. A `Geom` is a scene node: an
+  `AnyShape` plus its `Material`, its transform (with the inverse cached by `set_transform`) and a `Geom* parent`. Geom
+  is neither copyable nor movable, so pointers to it stay valid; create one with `make_sphere()` etc. or
+  `World::add(shape)`. `world_to_object`/`normal_to_world` follow the parent chain.
 
-- **Intersections** (`raytracer/Intersect.hpp`): each shape's `local_intersect(shape, local_ray)` returns only `t` values and `local_normal_at(shape, local_point)` the object-space normal. `intersect(geom, ray)` and `normal_at(geom, point)` handle the transforms. `Intersection`/`Computations` refer to the hit object by `const Geom*` (identity is the address). `hit()` finds the visible intersection.
+- **Intersections** (`raytracer/Intersect.hpp`): each shape's `local_intersect(shape, local_ray)` returns only `t`
+  values and `local_normal_at(shape, local_point)` the object-space normal. `intersect(geom, ray)` and
+  `normal_at(geom, point)` handle the transforms. `Intersection`/`Computations` refer to the hit object by `const Geom*`
+  (identity is the address). `hit()` finds the visible intersection.
 
-- **World** (`raytracer/World.hpp`): owns every Geom via `std::vector<std::unique_ptr<Geom>>` (move-only); `intersect_world` visits only root objects (no parent).
+- **World** (`raytracer/World.hpp`): owns every Geom via `std::vector<std::unique_ptr<Geom>>` (move-only);
+  `intersect_world` visits only root objects (no parent).
 
-- **Colour/Canvas** (`raytracer/Colour.hpp`, `raytracer/Canvas.hpp`): RGB colors with Hadamard product; Canvas outputs to PPM format.
+- **Colour/Canvas** (`raytracer/Colour.hpp`, `raytracer/Canvas.hpp`): RGB colors with Hadamard product; Canvas outputs
+  to PPM format.
 
 ### Key Patterns
 
@@ -64,8 +77,11 @@ This is a raytracer implementation in C++23, following "The Ray Tracer Challenge
 
 ## Feature Files
 
-Test specifications from "The Ray Tracer Challenge" book are in `tests/features/*.feature` (Gherkin format). When implementing new functionality, create Catch2 tests based on the scenarios in these files. Each `Scenario` becomes a `TEST_CASE` or `SECTION`, and `Given/When/Then` steps map to setup, action, and `REQUIRE` assertions.
+Test specifications from "The Ray Tracer Challenge" book are in `tests/features/*.feature` (Gherkin format). When
+implementing new functionality, create Catch2 tests based on the scenarios in these files. Each `Scenario` becomes a
+`TEST_CASE` or `SECTION`, and `Given/When/Then` steps map to setup, action, and `REQUIRE` assertions.
 
 ## Workflow Rules
 
-- When asked to add or implement tests, only add the test code. Do not implement the underlying functions or production code.
+- When asked to add or implement tests, only add the test code. Do not implement the underlying functions or production
+  code.

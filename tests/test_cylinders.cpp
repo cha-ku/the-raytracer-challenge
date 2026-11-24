@@ -9,7 +9,10 @@
 
 using namespace raytracer;
 
-SCENARIO("A ray misses a cylinder") {
+SCENARIO (
+"A ray misses a cylinder"
+)
+ {
     const auto [origin, direction] = GENERATE(table<Point, Vector>({
         {Point(1, 0, 0), Vector(0, 1, 0)},
         {Point(0, 0, 0), Vector(0, 1, 0)},
@@ -27,7 +30,10 @@ SCENARIO("A ray misses a cylinder") {
     }
 }
 
-SCENARIO("A ray strikes a cylinder") {
+SCENARIO (
+"A ray strikes a cylinder"
+)
+ {
     const auto [origin, direction, t0, t1] = GENERATE(table<Point, Vector, float, float>({
         {Point(1, 0, -5), Vector(0, 0, 1), 5.0f, 5.0f},
         {Point(0, 0, -5), Vector(0, 0, 1), 4.0f, 6.0f},
@@ -47,7 +53,10 @@ SCENARIO("A ray strikes a cylinder") {
     }
 }
 
-SCENARIO("Normal vector on a cylinder") {
+SCENARIO (
+"Normal vector on a cylinder"
+)
+ {
     const auto [point, expected_normal] = GENERATE(table<Point, Vector>({
         {Point(1, 0, 0), Vector(1, 0, 0)},
         {Point(0, 5, -1), Vector(0, 0, -1)},
@@ -65,7 +74,10 @@ SCENARIO("Normal vector on a cylinder") {
     }
 }
 
-SCENARIO("The default minimum and maximum for a cylinder") {
+SCENARIO (
+"The default minimum and maximum for a cylinder"
+)
+ {
     GIVEN("A default cylinder") {
         const Cylinder cyl{};
         THEN("It is unbounded in both directions along y") {
@@ -75,7 +87,10 @@ SCENARIO("The default minimum and maximum for a cylinder") {
     }
 }
 
-SCENARIO("Intersecting a constrained cylinder") {
+SCENARIO (
+"Intersecting a constrained cylinder"
+)
+ {
     const auto [row, point, direction, count] = GENERATE(table<int, Point, Vector, std::size_t>({
         {1, Point(0, 1.5, 0), Vector(0.1, 1, 0), 0},
         {2, Point(0, 3, -5), Vector(0, 0, 1), 0},
@@ -98,7 +113,10 @@ SCENARIO("Intersecting a constrained cylinder") {
     }
 }
 
-SCENARIO("The default closed value for a cylinder") {
+SCENARIO (
+"The default closed value for a cylinder"
+)
+ {
     GIVEN("A default cylinder") {
         const Cylinder cyl{};
         THEN("It is open at both ends") {
@@ -107,7 +125,10 @@ SCENARIO("The default closed value for a cylinder") {
     }
 }
 
-SCENARIO("Intersecting the caps of a closed cylinder") {
+SCENARIO (
+"Intersecting the caps of a closed cylinder"
+)
+ {
     const auto [row, point, direction, count] = GENERATE(table<int, Point, Vector, std::size_t>({
         {1, Point(0, 3, 0), Vector(0, -1, 0), 2},
         {2, Point(0, 3, -2), Vector(0, -1, 2), 2},
@@ -130,7 +151,10 @@ SCENARIO("Intersecting the caps of a closed cylinder") {
     }
 }
 
-SCENARIO("The normal vector on a cylinder's end caps") {
+SCENARIO (
+"The normal vector on a cylinder's end caps"
+)
+ {
     const auto [point, expected_normal] = GENERATE(table<Point, Vector>({
         {Point(0, 1, 0), Vector(0, -1, 0)},
         {Point(0.5, 1, 0), Vector(0, -1, 0)},

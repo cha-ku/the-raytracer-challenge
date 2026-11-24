@@ -32,13 +32,13 @@ namespace raytracer {
         std::vector<Vector> normals{Vector{}};
 
         // Owns every triangle and group created while parsing
-        std::vector<std::unique_ptr<Geom>> geoms;
+        std::vector<std::unique_ptr<Geom> > geoms;
 
         // Faces before any `g` line go here
         Geom *default_group{nullptr};
 
         // Named groups from `g <name>` lines. std::less<> allows lookup by string_view without a temporary string.
-        std::map<std::string, Geom *, std::less<>> groups;
+        std::map<std::string, Geom *, std::less<> > groups;
 
         // The named group, or nullptr if the file has no group with that name
         [[nodiscard]] Geom *group(std::string_view name) const;

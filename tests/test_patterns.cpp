@@ -13,7 +13,10 @@ using namespace raytracer;
 constexpr Colour black{.r = 0, .g = 0, .b = 0};
 constexpr Colour white{.r = 1, .g = 1, .b = 1};
 
-SCENARIO("Creating a stripe pattern") {
+SCENARIO (
+"Creating a stripe pattern"
+)
+ {
     GIVEN("pattern ← stripe_pattern(white, black)") {
         const auto pattern = StripedPattern::create(white, black);
 
@@ -26,7 +29,10 @@ SCENARIO("Creating a stripe pattern") {
     }
 }
 
-SCENARIO("A stripe pattern is constant in y") {
+SCENARIO (
+"A stripe pattern is constant in y"
+)
+ {
     GIVEN("pattern ← stripe_pattern(white, black)") {
         const auto pattern = StripedPattern::create(white, black);
 
@@ -42,7 +48,10 @@ SCENARIO("A stripe pattern is constant in y") {
     }
 }
 
-SCENARIO("A stripe pattern is constant in z") {
+SCENARIO (
+"A stripe pattern is constant in z"
+)
+ {
     GIVEN("pattern ← stripe_pattern(white, black)") {
         const auto pattern = StripedPattern::create(white, black);
 
@@ -58,7 +67,10 @@ SCENARIO("A stripe pattern is constant in z") {
     }
 }
 
-SCENARIO("A stripe pattern alternates in x") {
+SCENARIO (
+"A stripe pattern alternates in x"
+)
+ {
     GIVEN("pattern ← stripe_pattern(white, black)") {
         const auto pattern = StripedPattern::create(white, black);
 
@@ -83,7 +95,10 @@ SCENARIO("A stripe pattern alternates in x") {
     }
 }
 
-SCENARIO("The default pattern transformation") {
+SCENARIO (
+"The default pattern transformation"
+)
+ {
     GIVEN("pattern ← test_pattern()") {
         const auto pattern = test_pattern();
 
@@ -95,7 +110,10 @@ SCENARIO("The default pattern transformation") {
 
 // "Assigning a transformation" in patterns.feature; renamed because Catch2 test names must be unique and
 // test_shapes.cpp already has a scenario with that name
-SCENARIO("Assigning a pattern transformation") {
+SCENARIO (
+"Assigning a pattern transformation"
+)
+ {
     GIVEN("pattern ← test_pattern()") {
         auto pattern = test_pattern();
 
@@ -109,7 +127,10 @@ SCENARIO("Assigning a pattern transformation") {
     }
 }
 
-SCENARIO("A pattern with an object transformation") {
+SCENARIO (
+"A pattern with an object transformation"
+)
+ {
     GIVEN("shape ← sphere(), set_transform(shape, scaling(2, 2, 2)) and pattern ← test_pattern()") {
         Geom shape = make_sphere();
         shape.set_transform(scale<double>(2, 2, 2));
@@ -125,7 +146,10 @@ SCENARIO("A pattern with an object transformation") {
     }
 }
 
-SCENARIO("A pattern with a pattern transformation") {
+SCENARIO (
+"A pattern with a pattern transformation"
+)
+ {
     GIVEN("shape ← sphere(), pattern ← test_pattern() and set_pattern_transform(pattern, scaling(2, 2, 2))") {
         const Geom shape = make_sphere();
         auto pattern = test_pattern();
@@ -141,7 +165,10 @@ SCENARIO("A pattern with a pattern transformation") {
     }
 }
 
-SCENARIO("A pattern with both an object and a pattern transformation") {
+SCENARIO (
+"A pattern with both an object and a pattern transformation"
+)
+ {
     GIVEN("shape ← sphere(), set_transform(shape, scaling(2, 2, 2)), pattern ← test_pattern() "
           "and set_pattern_transform(pattern, translation(0.5, 1, 1.5))") {
         Geom shape = make_sphere();
@@ -159,7 +186,10 @@ SCENARIO("A pattern with both an object and a pattern transformation") {
     }
 }
 
-SCENARIO("A gradient linearly interpolates between colors") {
+SCENARIO (
+"A gradient linearly interpolates between colors"
+)
+ {
     GIVEN("pattern ← gradient_pattern(white, black)") {
         const auto pattern = GradientPattern::create(white, black);
 
@@ -181,7 +211,10 @@ SCENARIO("A gradient linearly interpolates between colors") {
     }
 }
 
-SCENARIO("A ring should extend in both x and z") {
+SCENARIO (
+"A ring should extend in both x and z"
+)
+ {
     GIVEN("pattern ← ring_pattern(white, black)") {
         const auto pattern = RingPattern::create(white, black);
 
@@ -201,7 +234,10 @@ SCENARIO("A ring should extend in both x and z") {
     }
 }
 
-SCENARIO("Checkers should repeat in x") {
+SCENARIO (
+"Checkers should repeat in x"
+)
+ {
     GIVEN("pattern ← checkers_pattern(white, black)") {
         const auto pattern = CheckersPattern::create(white, black);
 
@@ -217,7 +253,10 @@ SCENARIO("Checkers should repeat in x") {
     }
 }
 
-SCENARIO("Checkers should repeat in y") {
+SCENARIO (
+"Checkers should repeat in y"
+)
+ {
     GIVEN("pattern ← checkers_pattern(white, black)") {
         const auto pattern = CheckersPattern::create(white, black);
 
@@ -233,7 +272,10 @@ SCENARIO("Checkers should repeat in y") {
     }
 }
 
-SCENARIO("Checkers should repeat in z") {
+SCENARIO (
+"Checkers should repeat in z"
+)
+ {
     GIVEN("pattern ← checkers_pattern(white, black)") {
         const auto pattern = CheckersPattern::create(white, black);
 

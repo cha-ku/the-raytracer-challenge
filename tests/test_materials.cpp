@@ -16,7 +16,10 @@
 
 using namespace raytracer;
 
-SCENARIO("The default material") {
+SCENARIO (
+"The default material"
+)
+ {
     GIVEN("m ← material()") {
         constexpr Material m{};
 
@@ -38,7 +41,10 @@ SCENARIO("The default material") {
     }
 }
 
-SCENARIO("Reflectivity for the default material") {
+SCENARIO (
+"Reflectivity for the default material"
+)
+ {
     GIVEN("m ← material()") {
         constexpr Material m{};
 
@@ -48,7 +54,10 @@ SCENARIO("Reflectivity for the default material") {
     }
 }
 
-SCENARIO("Transparency and Refractive Index for the default material") {
+SCENARIO (
+"Transparency and Refractive Index for the default material"
+)
+ {
     GIVEN("m ← material()") {
         constexpr Material m{};
 
@@ -61,7 +70,10 @@ SCENARIO("Transparency and Refractive Index for the default material") {
     }
 }
 
-SCENARIO("Lighting with the eye between the light and the surface") {
+SCENARIO (
+"Lighting with the eye between the light and the surface"
+)
+ {
     GIVEN("m ← material() and position ← point(0, 0, 0)") {
         constexpr Material m{};
         const Geom object = make_sphere();
@@ -80,7 +92,10 @@ SCENARIO("Lighting with the eye between the light and the surface") {
     }
 }
 
-SCENARIO("Lighting with the eye between light and surface, eye offset 45 degrees") {
+SCENARIO (
+"Lighting with the eye between light and surface, eye offset 45 degrees"
+)
+ {
     GIVEN("m ← material() and position ← point(0, 0, 0)") {
         constexpr Material m{};
         const Geom object = make_sphere();
@@ -99,7 +114,10 @@ SCENARIO("Lighting with the eye between light and surface, eye offset 45 degrees
     }
 }
 
-SCENARIO("Lighting with the light behind the surface") {
+SCENARIO (
+"Lighting with the light behind the surface"
+)
+ {
     GIVEN("m ← material() and position ← point(0, 0, 0)") {
         constexpr Material m{};
         const Geom object = make_sphere();
@@ -118,7 +136,10 @@ SCENARIO("Lighting with the light behind the surface") {
     }
 }
 
-SCENARIO("Lighting with the surface in shadow") {
+SCENARIO (
+"Lighting with the surface in shadow"
+)
+ {
     GIVEN("m ← material() and position ← point(0, 0, 0)") {
         constexpr Material m{};
         const Geom object = make_sphere();
@@ -138,7 +159,10 @@ SCENARIO("Lighting with the surface in shadow") {
     }
 }
 
-SCENARIO("Lighting with a pattern applied") {
+SCENARIO (
+"Lighting with a pattern applied"
+)
+ {
     GIVEN("m.pattern ← stripe_pattern(color(1, 1, 1), color(0, 0, 0))") {
         Material m{};
         const Geom object = make_sphere();

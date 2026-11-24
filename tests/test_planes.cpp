@@ -6,7 +6,10 @@
 
 using namespace raytracer;
 
-SCENARIO("The normal of a plane is constant everywhere") {
+SCENARIO (
+"The normal of a plane is constant everywhere"
+)
+ {
     GIVEN("Plane") {
         const Plane p{};
         WHEN("Normal is computed at several points") {
@@ -22,7 +25,10 @@ SCENARIO("The normal of a plane is constant everywhere") {
     }
 }
 
-SCENARIO("Intersect with a ray parallel to the plane") {
+SCENARIO (
+"Intersect with a ray parallel to the plane"
+)
+ {
     GIVEN("Plane and ray") {
         const Plane p{};
         const Ray r{Point(0, 10, 0), Vector(0, 0, 1)};
@@ -35,7 +41,10 @@ SCENARIO("Intersect with a ray parallel to the plane") {
     }
 }
 
-SCENARIO("Intersect with a coplanar ray") {
+SCENARIO (
+"Intersect with a coplanar ray"
+)
+ {
     GIVEN("Plane and ray") {
         const Plane p{};
         const Ray r{Point(0, 0, 0), Vector(0, 0, 1)};
@@ -48,7 +57,10 @@ SCENARIO("Intersect with a coplanar ray") {
     }
 }
 
-SCENARIO("A ray intersecting a plane from above") {
+SCENARIO (
+"A ray intersecting a plane from above"
+)
+ {
     GIVEN("Plane and ray") {
         const Plane p{};
         const Ray r{Point(0, 1, 0), Vector(0, -1, 0)};
@@ -62,7 +74,10 @@ SCENARIO("A ray intersecting a plane from above") {
     }
 }
 
-SCENARIO("A ray intersecting a plane from below") {
+SCENARIO (
+"A ray intersecting a plane from below"
+)
+ {
     GIVEN("Plane and ray") {
         const Plane p{};
         const Ray r{Point(0, -1, 0), Vector(0, 1, 0)};

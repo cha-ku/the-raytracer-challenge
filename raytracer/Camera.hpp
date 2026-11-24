@@ -14,7 +14,7 @@ namespace raytracer {
     struct Camera {
         uint32_t hsize{160};
         uint32_t vsize{120};
-        double field_of_view{std::numbers::pi_v<double>/2};
+        double field_of_view{std::numbers::pi_v<double> / 2};
         Matrix<double> transform{Matrix<double>::identity(4)};
 
         double half_view{std::tan(field_of_view / 2)};

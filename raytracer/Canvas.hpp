@@ -15,18 +15,23 @@ namespace raytracer {
     enum class PixelError {
         bad_dimensions
     };
+
     enum class CanvasError {
         invalid_path
     };
+
     struct Canvas {
         uint32_t width{0};
         uint32_t height{0};
-        std::vector<std::vector<uint8_t>> storage{width * height, {0, 0, 0}};
+        std::vector<std::vector<uint8_t> > storage{width * height, {0, 0, 0}};
 
-        explicit constexpr Canvas(const unsigned w, const unsigned h) : width(w), height(h) {};
-        void write_pixel(uint32_t pix_w, uint32_t pix_h, const Colour& colour);
+        explicit constexpr Canvas(const unsigned w, const unsigned h) : width(w), height(h) {
+        };
+
+        void write_pixel(uint32_t pix_w, uint32_t pix_h, const Colour &colour);
     };
-    std::expected<bool, CanvasError> canvas_to_ppm(const Canvas& canvas, const std::string& file_path);
+
+    std::expected<bool, CanvasError> canvas_to_ppm(const Canvas &canvas, const std::string &file_path);
 }
 
 #endif //THE_RAYTRACER_CHALLENGE_CANVAS_HPP

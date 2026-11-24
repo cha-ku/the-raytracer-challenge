@@ -16,7 +16,7 @@ namespace raytracer {
         requires std::is_arithmetic_v<T>
     struct Matrix {
         constexpr explicit Matrix(const size_t rows, const size_t cols) : m_rows(rows), m_cols(cols),
-                                                                             m_data(rows * cols, 0) {
+                                                                          m_data(rows * cols, 0) {
         };
 
         constexpr explicit Matrix(const size_t rows, const size_t cols, auto &&custom_data) : m_rows(rows),
@@ -58,19 +58,21 @@ namespace raytracer {
     };
 
     template<typename T=Point>
-    constexpr Matrix<double> make_matrix(T&& p) {
+    constexpr Matrix<double> make_matrix(T &&p) {
         return Matrix<double>{4, 1, std::vector{p.x, p.y, p.z, p.w}};
     }
 
-    constexpr Matrix<double> make_matrix(const Vector& v) {
-        return Matrix<double>{4, 1, std::vector{static_cast<double>(v.x), static_cast<double>(v.y), static_cast<double>(v.z), 0.0}};
+    constexpr Matrix<double> make_matrix(const Vector &v) {
+        return Matrix<double>{
+            4, 1, std::vector{static_cast<double>(v.x), static_cast<double>(v.y), static_cast<double>(v.z), 0.0}
+        };
     }
 
     template<typename T>
     constexpr Matrix<T> multiply(Matrix<T> matrix1, Matrix<T> matrix2);
 
     template<typename T>
-    constexpr Matrix<T> transpose(const Matrix<T>& matrix);
+    constexpr Matrix<T> transpose(const Matrix<T> &matrix);
 
     template<typename T>
     constexpr T determinant(Matrix<T> matrix);
@@ -90,7 +92,7 @@ namespace raytracer {
     template<typename T>
     constexpr Matrix<T> translation(T x, T y, T z);
 
-    template <typename T>
+    template<typename T>
     constexpr Matrix<T> scale(T x, T y, T z);
 }
 

@@ -13,39 +13,66 @@
 
 using namespace raytracer;
 
-TEST_CASE("Vector addition test") {
+TEST_CASE (
+"Vector addition test"
+)
+ {
     REQUIRE(Vector(1, 2, 3) + Vector(4, 5, 6) == Vector(5, 7, 9));
 }
 
-TEST_CASE("Point addition test") {
+TEST_CASE (
+"Point addition test"
+)
+ {
     REQUIRE(Point(1, 2, 3) + Point(4, 5, 6) == Point(5, 7, 9));
 }
 
-TEST_CASE("Subtracting two points") {
+TEST_CASE (
+"Subtracting two points"
+)
+ {
     REQUIRE(Point(3, 2, 1) - Point(5, 6, 7) == Vector(-2, -4, -6));
 }
 
-TEST_CASE("Subtracting a vector from a point") {
+TEST_CASE (
+"Subtracting a vector from a point"
+)
+ {
     REQUIRE(Point(3, 2, 1) - Vector(5, 6, 7) == Point(-2, -4, -6));
 }
 
-TEST_CASE("Subtracting two vectors") {
+TEST_CASE (
+"Subtracting two vectors"
+)
+ {
     REQUIRE(Vector(3, 2, 1) - Vector(5, 6, 7) == Vector(-2, -4, -6));
 }
 
-TEST_CASE("Negate a vector") {
+TEST_CASE (
+"Negate a vector"
+)
+ {
     REQUIRE(-Vector(1, -2, 3) == Vector(-1, 2, -3));
 }
 
-TEST_CASE("Multiply a vector by a scalar") {
+TEST_CASE (
+"Multiply a vector by a scalar"
+)
+ {
     REQUIRE(Vector(1, -2, 3) * 3.5 == Vector(3.5, -7, 10.5));
 }
 
-TEST_CASE("Divide a vector by a scalar") {
+TEST_CASE (
+"Divide a vector by a scalar"
+)
+ {
     REQUIRE(Vector(1, -2, 3) / 2 == Vector(0.5, -1, 1.5));
 }
 
-TEST_CASE("Magnitude of a vector") {
+TEST_CASE (
+"Magnitude of a vector"
+)
+ {
     REQUIRE(Vector::magnitude({1, 0, 0}) == 1);
     REQUIRE(Vector::magnitude({0, 1, 0}) == 1);
     REQUIRE(Vector::magnitude({0, 0, 1}) == 1);
@@ -53,36 +80,57 @@ TEST_CASE("Magnitude of a vector") {
     REQUIRE(utils::equal(Vector::magnitude({-1, -2, -3}), std::sqrt(14)));
 }
 
-TEST_CASE("Normalization of a vector") {
+TEST_CASE (
+"Normalization of a vector"
+)
+ {
     REQUIRE(Vector::normalize({1, 0, 0}) == Vector(1, 0, 0));
     REQUIRE(Vector::normalize({4, 0, 0}) == Vector(1, 0, 0));
     static const auto tmp = std::sqrt(14);
     REQUIRE(Vector::areAlmostEqual(Vector::normalize({1, 2, 3}), Vector(1.0/tmp, 2.0/tmp, 3.0/tmp)));
 }
 
-TEST_CASE("Dot product") {
+TEST_CASE (
+"Dot product"
+)
+ {
     REQUIRE(Vector::dot({1, 2, 3} , {2, 3, 4}) == 20);
 }
 
-TEST_CASE("Cross product") {
+TEST_CASE (
+"Cross product"
+)
+ {
     REQUIRE(Vector::cross({1, 2, 3}, {2, 3, 4}) == Vector{-1, 2, -1});
     REQUIRE(Vector::cross({2, 3, 4}, {1, 2, 3}) == Vector{1, -2, 1});
 }
 
-TEST_CASE("Colour addition test") {
+TEST_CASE (
+"Colour addition test"
+)
+ {
     REQUIRE(areAlmostEqual(Colour(0.9, 0.6, 0.75) + Colour(0.7, 0.1, 0.25), Colour(1.6, 0.7, 1.0)));
 }
 
-TEST_CASE("Colour subtraction test") {
+TEST_CASE (
+"Colour subtraction test"
+)
+ {
     REQUIRE(areAlmostEqual(Colour(0.9, 0.6, 0.75) - Colour(0.7, 0.1, 0.25), Colour(0.2, 0.5, 0.5)));
 }
 
-TEST_CASE("Colour multiplication test") {
+TEST_CASE (
+"Colour multiplication test"
+)
+ {
     constexpr Colour colour{0.2, 0.3, 0.4};
     REQUIRE(colour * 2.0 == Colour(0.4, 0.6, 0.8));
 }
 
-TEST_CASE("Create Matrix from range") {
+TEST_CASE (
+"Create Matrix from range"
+)
+ {
     std::vector<double> tmp_vec{1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
     Matrix<double> matrix_vec(3, 3, tmp_vec);
     REQUIRE(std::ranges::equal(matrix_vec.data(), tmp_vec));
@@ -96,12 +144,18 @@ TEST_CASE("Create Matrix from range") {
     REQUIRE(std::ranges::equal(matrix_char.data(), tmp_char_array));
 }
 
-TEST_CASE("Matrix throws on invalid size") {
+TEST_CASE (
+"Matrix throws on invalid size"
+)
+ {
     std::array<double, 9> tmp{1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0};
     REQUIRE_THROWS_AS(Matrix<double>(4, 3, tmp), std::invalid_argument);
 }
 
-TEST_CASE("Matrix constructor test") {
+TEST_CASE (
+"Matrix constructor test"
+)
+ {
     constexpr auto r = 2;
     constexpr auto c = 3;
     Matrix<int> matrix{r, c};
@@ -128,13 +182,19 @@ TEST_CASE("Matrix constructor test") {
 }
 
 
-TEST_CASE("Matrix comparison test") {
+TEST_CASE (
+"Matrix comparison test"
+)
+ {
     constexpr auto r = 3;
     constexpr auto c = 3;
     Matrix<int> matrix1{r, c, std::vector{1, 3, 5, 5, 6, 8, 9, 10, 32}};
 }
 
-TEST_CASE("Matrix multiplication test") {
+TEST_CASE (
+"Matrix multiplication test"
+)
+ {
     constexpr auto dim = 4;
     Matrix<int> matrix1{
         dim, dim, std::vector{
@@ -189,7 +249,10 @@ TEST_CASE("Matrix multiplication test") {
     REQUIRE(result1[0, 3] == 1);
 }
 
-TEST_CASE("Identity matrix test") {
+TEST_CASE (
+"Identity matrix test"
+)
+ {
     Matrix<int> ident_mat{Matrix<int>::identity(3)};
     REQUIRE(ident_mat[0, 0] == 1);
     REQUIRE(ident_mat[0, 1] == 0);
@@ -202,7 +265,10 @@ TEST_CASE("Identity matrix test") {
     REQUIRE(ident_mat[2, 2] == 1);
 }
 
-TEST_CASE("Matrix transpose test") {
+TEST_CASE (
+"Matrix transpose test"
+)
+ {
     Matrix<int> transpose_test{4, 4, std::vector{
         0, 9, 3, 0,
         9, 8, 0, 8,
@@ -228,7 +294,10 @@ TEST_CASE("Matrix transpose test") {
     REQUIRE(transpose_mat[3, 3] == 8);
 }
 
-TEST_CASE("Submatrix test 1") {
+TEST_CASE (
+"Submatrix test 1"
+)
+ {
     Matrix<int> submatrix_test{3, 3, std::vector{
         1, 5, 0,
         -3, 2, 7,
@@ -240,7 +309,10 @@ TEST_CASE("Submatrix test 1") {
     REQUIRE(minor.cols() == submatrix_test.cols() - 1);
 }
 
-TEST_CASE("Submatrix test 2") {
+TEST_CASE (
+"Submatrix test 2"
+)
+ {
     Matrix<int> submatrix_test{4, 4, std::vector{
         -6, 1, 1, 6,
         -8, 5, 8, 6,
@@ -256,7 +328,10 @@ TEST_CASE("Submatrix test 2") {
     REQUIRE(minor.cols() == submatrix_test.cols() - 1);
 }
 
-TEST_CASE("Determinant test") {
+TEST_CASE (
+"Determinant test"
+)
+ {
     const Matrix<int> determinant_test2x2{2, 2, std::vector{1, 5, -3, 2}};
     REQUIRE(determinant(determinant_test2x2) == 17);
     const Matrix<int> bad_determinant_test{1, 2, std::vector{1, 5}};
@@ -275,18 +350,27 @@ TEST_CASE("Determinant test") {
     REQUIRE(determinant(determinant_test4x4) == -4071);
 }
 
-TEST_CASE("Minor test") {
+TEST_CASE (
+"Minor test"
+)
+ {
     const Matrix<int> minor_test{3, 3, std::vector{3, 5, 0, 2, -1, -7, 6, -1, 5}};
     REQUIRE(minor(minor_test, 1, 0) == 25);
 }
 
-TEST_CASE("Cofactor test") {
+TEST_CASE (
+"Cofactor test"
+)
+ {
     const Matrix<int> cofactor_test{3, 3, std::vector{3, 5, 0, 2, -1, -7, 6, -1, 5}};
     REQUIRE(cofactor(cofactor_test, 0, 0) == -12);
     REQUIRE(cofactor(cofactor_test, 1, 0) == -25);
 }
 
-TEST_CASE("Inverse test") {
+TEST_CASE (
+"Inverse test"
+)
+ {
     const Matrix<int> inverse_test{
         4, 4, std::vector{
             -5, 2, 6, -8,

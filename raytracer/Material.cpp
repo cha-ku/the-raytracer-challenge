@@ -7,8 +7,7 @@
 
 namespace raytracer {
     Colour lighting(const Geom &shape, const Material &material, const PointLight &light, const Point &point,
-                    const Vector &eye, const Vector &normal, const bool in_shadow)
-    {
+                    const Vector &eye, const Vector &normal, const bool in_shadow) {
         // use the pattern's colour at this point if the material has one, otherwise its solid colour
         const Colour surface_colour{
             material.pattern.has_value()
@@ -33,7 +32,7 @@ namespace raytracer {
         Colour specular{.r = 0, .g = 0, .b = 0};
         if (light_dot_normal > 0) {
             diffuse = effective_colour * material.diffuse * light_dot_normal;
-            const auto& reflect{Vector::reflect(-light_vector, normal)};
+            const auto &reflect{Vector::reflect(-light_vector, normal)};
             if (const auto reflect_dot_eye{Vector::dot(reflect, eye)}; reflect_dot_eye > 0) {
                 const auto factor = std::pow(reflect_dot_eye, material.shininess);
                 specular = light.intensity * material.specular * factor;
@@ -41,5 +40,4 @@ namespace raytracer {
         }
         return in_shadow ? ambient : ambient + diffuse + specular;
     }
-
 }

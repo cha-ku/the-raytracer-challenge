@@ -376,9 +376,9 @@ void simulate_group_reflections() {
         set_transform(edge, translation(0, 0, -1) * rotation_y(-π/6) * rotation_z(-π/2) * scaling(0.25, 1, 0.25))
         */
         edge.set_transform(multiply(translation(0.0, 0.0, -1.0),
-                             multiply(rotation_y(-std::numbers::pi_v<double> / 6),
-                             multiply(rotation_z(-std::numbers::pi_v<double> / 2),
-                             scale<double>(0.25, 1, 0.25)))));
+                                    multiply(rotation_y(-std::numbers::pi_v<double> / 6),
+                                             multiply(rotation_z(-std::numbers::pi_v<double> / 2),
+                                                      scale<double>(0.25, 1, 0.25)))));
 
         Geom &side = world.add(Group{});
         add_child(side, corner);
@@ -387,8 +387,8 @@ void simulate_group_reflections() {
         add_child(hex, side);
     }
     hex.set_transform(multiply(translation(3.0, 2.0, 0.0),
-                 multiply(rotation_z(std::numbers::pi_v<double> / 6),
-                          rotation_x(-std::numbers::pi_v<double> / 2))));
+                               multiply(rotation_z(std::numbers::pi_v<double> / 6),
+                                        rotation_x(-std::numbers::pi_v<double> / 2))));
 
     world.light = PointLight{.position = Point{.x = -10, .y = 10, .z = -10}, .intensity = colours::white};
 

@@ -60,7 +60,7 @@ namespace raytracer {
             };
         }
 
-        static constexpr Vector reflect(const Vector& in, const Vector& normal) {
+        static constexpr Vector reflect(const Vector &in, const Vector &normal) {
             return {in - normal * 2 * dot(in, normal)};
         }
     };

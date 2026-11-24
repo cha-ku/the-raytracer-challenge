@@ -9,7 +9,10 @@
 
 using namespace raytracer;
 
-SCENARIO("The default transformation") {
+SCENARIO (
+"The default transformation"
+)
+ {
     GIVEN("Shape") {
         const auto s = make_test_shape();
         THEN("Transform is identity matrix") {
@@ -18,7 +21,10 @@ SCENARIO("The default transformation") {
     }
 }
 
-SCENARIO("Assigning a transformation") {
+SCENARIO (
+"Assigning a transformation"
+)
+ {
     GIVEN("Shape and translation") {
         auto s = make_test_shape();
         const auto t = translation<double>(2, 3, 4);
@@ -31,7 +37,10 @@ SCENARIO("Assigning a transformation") {
     }
 }
 
-SCENARIO("A shape's default material") {
+SCENARIO (
+"A shape's default material"
+)
+ {
     GIVEN("Shape") {
         const auto s = make_test_shape();
         WHEN("Material is retrieved") {
@@ -43,7 +52,10 @@ SCENARIO("A shape's default material") {
     }
 }
 
-SCENARIO("Assigning a material to a shape") {
+SCENARIO (
+"Assigning a material to a shape"
+)
+ {
     GIVEN("Shape and material") {
         auto s = make_test_shape();
         Material m{};
@@ -57,7 +69,10 @@ SCENARIO("Assigning a material to a shape") {
     }
 }
 
-SCENARIO("Intersecting a scaled shape with a ray") {
+SCENARIO (
+"Intersecting a scaled shape with a ray"
+)
+ {
     GIVEN("Ray and shape") {
         const Ray r{Point(0, 0, -5), Vector(0, 0, 1)};
         auto s = make_test_shape();
@@ -72,7 +87,10 @@ SCENARIO("Intersecting a scaled shape with a ray") {
     }
 }
 
-SCENARIO("Intersecting a translated shape with a ray") {
+SCENARIO (
+"Intersecting a translated shape with a ray"
+)
+ {
     GIVEN("Ray and shape") {
         const Ray r{Point(0, 0, -5), Vector(0, 0, 1)};
         auto s = make_test_shape();
@@ -87,7 +105,10 @@ SCENARIO("Intersecting a translated shape with a ray") {
     }
 }
 
-SCENARIO("Computing the normal on a translated shape") {
+SCENARIO (
+"Computing the normal on a translated shape"
+)
+ {
     GIVEN("Shape with translation") {
         auto s = make_test_shape();
         s.set_transform(translation<double>(0, 1, 0));
@@ -100,7 +121,10 @@ SCENARIO("Computing the normal on a translated shape") {
     }
 }
 
-SCENARIO("Computing the normal on a transformed shape") {
+SCENARIO (
+"Computing the normal on a transformed shape"
+)
+ {
     GIVEN("Shape with scaling and rotation") {
         auto s = make_test_shape();
         const auto m = multiply(scale<double>(1, 0.5, 1), rotation_z(std::numbers::pi / 5));
@@ -115,7 +139,10 @@ SCENARIO("Computing the normal on a transformed shape") {
     }
 }
 
-SCENARIO("A shape has a parent attribute") {
+SCENARIO (
+"A shape has a parent attribute"
+)
+ {
     GIVEN("A test shape") {
         const auto s = make_test_shape();
         THEN("It has no parent") {
@@ -124,7 +151,10 @@ SCENARIO("A shape has a parent attribute") {
     }
 }
 
-SCENARIO("Converting a point from world to object space") {
+SCENARIO (
+"Converting a point from world to object space"
+)
+ {
     GIVEN("A sphere inside a scaled group inside a rotated group") {
         Geom g1 = make_group();
         g1.set_transform(rotation_y(std::numbers::pi / 2));
@@ -145,7 +175,10 @@ SCENARIO("Converting a point from world to object space") {
     }
 }
 
-SCENARIO("Converting a normal from object to world space") {
+SCENARIO (
+"Converting a normal from object to world space"
+)
+ {
     GIVEN("A sphere inside a scaled group inside a rotated group") {
         Geom g1 = make_group();
         g1.set_transform(rotation_y(std::numbers::pi / 2));
@@ -165,7 +198,10 @@ SCENARIO("Converting a normal from object to world space") {
     }
 }
 
-SCENARIO("Finding the normal on a child object") {
+SCENARIO (
+"Finding the normal on a child object"
+)
+ {
     GIVEN("A sphere inside a scaled group inside a rotated group") {
         Geom g1 = make_group();
         g1.set_transform(rotation_y(std::numbers::pi / 2));

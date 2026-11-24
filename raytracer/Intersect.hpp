@@ -72,11 +72,10 @@ namespace raytracer {
 
     // A shape type S is Normalable if it has its own local_normal_at overload taking S and a local-space Point
     // and returning a Vector.
-    template <typename S>
+    template<typename S>
     concept Normalable = requires(const S &shape, const Point &local_point, const Intersection &hit)
     {
         { local_normal_at(shape, local_point, hit) } -> std::same_as<Vector>;
-
     };
 
     // World-space normal of `geom` at a world-space point: converts the point into object space (through any
@@ -105,7 +104,7 @@ namespace raytracer {
 
     std::vector<float> local_intersect(const TestShape &shape, const Ray &local_ray);
 
-    inline std::vector<Intersection> to_intersections(const Geom &geom, const std::vector<float>& ts) {
+    inline std::vector<Intersection> to_intersections(const Geom &geom, const std::vector<float> &ts) {
         std::vector<Intersection> result;
         result.reserve(ts.size());
         for (const auto t: ts) {
@@ -114,7 +113,7 @@ namespace raytracer {
         return result;
     }
 
-    inline std::vector<Intersection> to_intersections(const Geom &geom, const std::optional<TriangleHit>& hit) {
+    inline std::vector<Intersection> to_intersections(const Geom &geom, const std::optional<TriangleHit> &hit) {
         if (!hit) {
             return {};
         }
@@ -124,6 +123,7 @@ namespace raytracer {
     inline std::vector<Intersection> to_intersections(const Geom &, std::vector<Intersection> intersections) {
         return intersections;
     }
+
     // A shape type S is Intersectable if it has its own local_intersect overload taking S and a local-space Ray
     // and returning its t values, or it returns an optional TriangleHit. This is encapsulated by the to_intersections method
     // which has an overload for both types.

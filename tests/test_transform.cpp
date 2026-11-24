@@ -7,7 +7,10 @@
 
 using namespace raytracer;
 
-TEST_CASE("Translation test") {
+TEST_CASE (
+"Translation test"
+)
+ {
     const auto transform = translation<double>(5, -3, 2);
     const auto point = make_matrix(Point(-3, 4, 5));
 
@@ -22,7 +25,10 @@ TEST_CASE("Translation test") {
     }
 }
 
-TEST_CASE("Scale test") {
+TEST_CASE (
+"Scale test"
+)
+ {
     const auto transform = scale<double>(2, 3, 4);
     const auto point = make_matrix(Point(-4, 6, 8));
     SECTION("A scaling matrix applied to a point") {
@@ -41,7 +47,10 @@ TEST_CASE("Scale test") {
     }
 }
 
-TEST_CASE("Rotation test") {
+TEST_CASE (
+"Rotation test"
+)
+ {
     using std::numbers::pi;
     using std::numbers::sqrt2;
     SECTION("Rotating a point around the x axis") {
@@ -76,7 +85,10 @@ TEST_CASE("Rotation test") {
     }
 }
 
-TEST_CASE("Shearing test") {
+TEST_CASE (
+"Shearing test"
+)
+ {
     SECTION("Shearing transformation moves x in proportion to z") {
         const auto transform{shearing(0, 1, 0, 0, 0, 0)};
         const auto point{make_matrix(Point(2, 3, 4))};
@@ -108,7 +120,10 @@ TEST_CASE("Shearing test") {
     }
 }
 
-SCENARIO("The transformation matrix for the default orientation") {
+SCENARIO (
+"The transformation matrix for the default orientation"
+)
+ {
     GIVEN("from ← point(0, 0, 0), to ← point(0, 0, -1), up ← vector(0, 1, 0)") {
         const Point from{0, 0, 0};
         const Point to{0, 0, -1};
@@ -124,7 +139,10 @@ SCENARIO("The transformation matrix for the default orientation") {
     }
 }
 
-SCENARIO("A view transformation matrix looking in positive z direction") {
+SCENARIO (
+"A view transformation matrix looking in positive z direction"
+)
+ {
     GIVEN("from ← point(0, 0, 0), to ← point(0, 0, 1), up ← vector(0, 1, 0)") {
         const Point from{0, 0, 0};
         const Point to{0, 0, 1};
@@ -140,7 +158,10 @@ SCENARIO("A view transformation matrix looking in positive z direction") {
     }
 }
 
-SCENARIO("The view transformation moves the world") {
+SCENARIO (
+"The view transformation moves the world"
+)
+ {
     GIVEN("from ← point(0, 0, 8), to ← point(0, 0, 0), up ← vector(0, 1, 0)") {
         const Point from{0, 0, 8};
         const Point to{0, 0, 0};
@@ -156,7 +177,10 @@ SCENARIO("The view transformation moves the world") {
     }
 }
 
-SCENARIO("An arbitrary view transformation") {
+SCENARIO (
+"An arbitrary view transformation"
+)
+ {
     GIVEN("from ← point(1, 3, 2), to ← point(4, -2, 8), up ← vector(1, 1, 0)") {
         const Point from{1, 3, 2};
         const Point to{4, -2, 8};
