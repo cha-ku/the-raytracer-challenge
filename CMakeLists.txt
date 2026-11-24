@@ -38,10 +38,6 @@ add_library(matrix STATIC
         raytracer/MatrixImpl.hpp
         raytracer/Point.hpp
         raytracer/Utils.hpp
-        raytracer/Intersect.hpp
-        raytracer/Intersect.cpp
-        raytracer/Geom.hpp
-        raytracer/Geom.cpp
         raytracer/Ray.hpp
 )
 
@@ -54,6 +50,10 @@ target_link_libraries(objreader PUBLIC matrix)
 target_include_directories(matrix PUBLIC raytracer)
 
 add_library(scene STATIC
+        raytracer/Intersect.hpp
+        raytracer/Intersect.cpp
+        raytracer/Geom.hpp
+        raytracer/Geom.cpp
         raytracer/Light.hpp
         raytracer/Material.hpp
         raytracer/Material.cpp
