@@ -28,6 +28,8 @@ add_subdirectory(tests)
 
 add_library(simulation STATIC raytracer/Simulation.cpp
         raytracer/Simulation.hpp
+        raytracer/ClockTower.cpp
+        raytracer/ClockTower.hpp
         raytracer/Canvas.cpp)
 target_include_directories(simulation PUBLIC raytracer)
 target_link_libraries(simulation PUBLIC objreader scene)

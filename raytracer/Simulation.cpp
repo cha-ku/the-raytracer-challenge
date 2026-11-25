@@ -7,6 +7,7 @@
 #include "Vector.hpp"
 #include "Simulation.hpp"
 #include "Canvas.hpp"
+#include "ClockTower.hpp"
 #include <numbers>
 
 #include "Intersect.hpp"
@@ -406,6 +407,49 @@ void simulate_group_reflections() {
         }
     }
     save_canvas(canvas, "reflections_hex_group.ppm");
+}
+
+void simulate_clock_tower() {
+    using namespace raytracer;
+    using namespace std::numbers;
+
+    World world;
+
+    Geom &ground = world.add(Plane{});
+    ground.material.colour = Colour{.r = 0.45f, .g = 0.47f, .b = 0.42f};
+    ground.material.specular = 0.0f;
+
+    // Sky: a huge sphere around the scene that is all ambient, so light and shadow don't affect it. The gradient
+    // varies along pattern-space x; turning it 90° about z makes it run up the sphere's y, from horizon to zenith.
+    Geom &sky = world.add(Sphere{});
+    sky.set_transform(scale<double>(200, 200, 200));
+    GradientPattern sky_gradient = GradientPattern::create(Colour{.r = 0.85f, .g = 0.90f, .b = 0.97f},
+                                                           Colour{.r = 0.15f, .g = 0.35f, .b = 0.75f});
+    sky_gradient.m_transform = rotation_z(pi / 2);
+    sky.material.pattern = sky_gradient;
+    sky.material.ambient = 1.0f;
+    sky.material.diffuse = 0.0f;
+    sky.material.specular = 0.0f;
+
+    add_clock_tower(world);
+
+    world.light = PointLight{.position = Point{.x = -20, .y = 25, .z = -30}, .intensity = colours::white};
+
+    // Portrait view from the front left, so two sides and two dials show
+    Camera camera{.hsize = 300, .vsize = 500, .field_of_view = pi / 4};
+    camera.transform = view_transform(Point{.x = -7, .y = 4.5f, .z = -14}, Point{.x = 0, .y = 5.7f, .z = 0},
+                                      Vector{.x = 0, .y = 1, .z = 0});
+
+    // No reflective or transparent materials, so one bounce is plenty
+    constexpr uint8_t max_depth = 5;
+    Canvas canvas{camera.hsize, camera.vsize};
+    for (uint32_t y = 0; y < camera.vsize; ++y) {
+        for (uint32_t x = 0; x < camera.hsize; ++x) {
+            const auto ray = World::ray_for_pixel(camera, x, y);
+            canvas.write_pixel(x, y, World::colour_at(world, ray, max_depth));
+        }
+    }
+    save_canvas(canvas, "clock_tower.ppm");
 }
 
 void simulate_model(const std::string &obj_path) {

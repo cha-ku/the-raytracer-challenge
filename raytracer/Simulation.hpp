@@ -19,6 +19,9 @@ void simulate_multiple_spheres();
 
 void simulate_group_reflections();
 
+// Renders a CSG model of the Elizabeth Tower (Big Ben), saved as clock_tower.ppm
+void simulate_clock_tower();
+
 // Renders the OBJ model at `obj_path` on a checkered floor, saved as <file stem>.ppm
 void simulate_model(const std::string &obj_path);
 

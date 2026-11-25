@@ -1,6 +1,7 @@
 #include <iostream>
 #include <random>
 #include <print>
+#include <string_view>
 #include "Canvas.hpp"
 #include "Simulation.hpp"
 #include "Utils.hpp"
@@ -18,7 +19,8 @@ void test() {
     [[maybe_unused]] auto ret = raytracer::canvas_to_ppm(c, "testfile.ppm");
 }
 
-// raytracer [model.obj]: renders the OBJ model if one is given, the group reflections scene otherwise
+// raytracer [model.obj | clock-tower]: renders the OBJ model or the CSG clock tower if one is given, the group
+// reflections scene otherwise
 int main(const int argc, char *argv[]) {
     // simulate_projectile();
     // simulate_clock();
@@ -27,7 +29,7 @@ int main(const int argc, char *argv[]) {
     // simulate_material_sphere();
     // simulate_multiple_spheres();
     if (argc < 2) {
-        simulate_group_reflections();
+        simulate_clock_tower();
         return 0;
     }
     try {
