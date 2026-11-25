@@ -64,7 +64,12 @@ namespace raytracer {
                 add(box.max);
             }
         }
+
+        [[nodiscard]] bool contains(const Point &point) const;
+        [[nodiscard]] bool contains(const BoundingBox &box) const;
     };
+
+    std::pair<BoundingBox, BoundingBox> split_bounds(const BoundingBox& box);
 
     struct Group {
         std::vector<Geom *> children;
