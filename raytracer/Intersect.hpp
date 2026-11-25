@@ -61,6 +61,8 @@ namespace raytracer {
     // Blends the corner normals by the hit's u/v (only a smooth triangle's own hits have them)
     Vector local_normal_at(const SmoothTriangle &smooth_triangle, const Point &, const Intersection &hit);
 
+    [[noreturn]] Vector local_normal_at(const Csg &, const Point &);
+
     Vector local_normal_at(const TestShape &, const Point &local_point);
 
     // Template that lifts 2-argument functions to the 3 argument function as specified by the Normalable concept
@@ -101,6 +103,8 @@ namespace raytracer {
     std::vector<float> local_intersect(const Triangle &triangle, const Ray &local_ray);
 
     std::optional<TriangleHit> local_intersect(const SmoothTriangle &smooth_triangle, const Ray &local_ray);
+
+    std::vector<Intersection> local_intersect(const Csg &csg, const Ray &local_ray);
 
     std::vector<float> local_intersect(const TestShape &shape, const Ray &local_ray);
 
@@ -166,6 +170,8 @@ namespace raytracer {
 
     std::optional<BoundingBox> local_bounds(const SmoothTriangle &smooth_triangle);
 
+    std::optional<BoundingBox> local_bounds(const Csg &csg);
+
     std::optional<BoundingBox> local_bounds(const TestShape &);
 
     // The box around all 8 transformed corners. An empty box stays empty.
@@ -180,6 +186,10 @@ namespace raytracer {
     // Recomputes and caches the bounds of `geom` and every group below it. Call once the scene is built, and again
     // after changing any child's transform or adding children.
     void refresh_bounds(Geom &geom);
+
+    bool intersection_allowed(Csg::Operation op, bool lhit, bool inl, bool inr);
+
+    std::vector<Intersection> filter_intersections(const Csg &csg, const std::vector<Intersection> &intersections);
 
 
     struct Computations {

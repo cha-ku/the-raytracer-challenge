@@ -8,7 +8,6 @@
 
 #include <algorithm>
 #include <limits>
-#include <memory>
 #include <optional>
 #include <utility>
 #include <variant>
@@ -104,6 +103,20 @@ namespace raytracer {
         //                         const Vector &n3) : p1{p1}, p2{p2}, p3{p3}, n1{n1}, n2{n2}, n3{n3} {}
     };
 
+    struct Csg {
+        enum class Operation {
+            Union,
+            Intersection,
+            Difference,
+        };
+        Operation op;
+        // Never null: the constructor is the only way to create a Csg
+        Geom *left;
+        Geom *right;
+
+        explicit Csg(const Operation op, Geom &left, Geom &right) : op{op}, left{&left}, right{&right} {}
+    };
+
     // A minimal shape used only to exercise Geom's own behaviour (transform/material) in tests. Like TestPattern
     // it lives in production code so it can be part of AnyShape; the name signals it is for tests only.
     struct TestShape {
@@ -115,7 +128,7 @@ namespace raytracer {
 
     // The closed set of concrete shape types. Adding a new shape means adding it here, plus its own
     // local_intersect/local_normal_at overloads in Intersect.hpp.
-    using AnyShape = std::variant<Sphere, Plane, Cube, Cylinder, Cone, Group, Triangle, SmoothTriangle, TestShape>;
+    using AnyShape = std::variant<Sphere, Plane, Cube, Cylinder, Cone, Group, Triangle, SmoothTriangle, Csg, TestShape>;
 
     // A node in the scene: a shape plus where it is (transform, parent) and how it looks (material).
     //
@@ -130,11 +143,16 @@ namespace raytracer {
         Geom *parent{nullptr};
 
         explicit Geom(AnyShape s) : shape{std::move(s)} {
+            if (const auto *csg = std::get_if<Csg>(&shape)) {
+                csg->left->parent = this;
+                csg->right->parent = this;
+            }
         }
 
         // For factories that need to return a Geom with a material already set: a named local Geom can't be
         // returned (that would need a move), but a prvalue built from this can
-        Geom(AnyShape s, Material m) : shape{std::move(s)}, material{std::move(m)} {
+        Geom(AnyShape s, Material m) : Geom{std::move(s)} {
+            material = std::move(m);
         }
 
         Geom(const Geom &) = delete;
@@ -167,6 +185,10 @@ namespace raytracer {
     inline Geom make_group() { return Geom{Group{}}; }
 
     inline Geom make_triangle(const Point &p1, const Point &p2, const Point &p3) { return Geom{Triangle{p1, p2, p3}}; }
+
+    inline Geom make_csg(const Csg::Operation &op, Geom &left, Geom &right) {
+        return Geom{Csg{op, left, right}};
+    }
 
     // Converts a world-space point into the geom's object space, going through every parent's transform first
     Point world_to_object(const Geom &geom, const Point &world_point);

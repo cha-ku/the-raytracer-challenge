@@ -97,6 +97,10 @@ namespace raytracer {
         return smooth_triangle.n2 * u + smooth_triangle.n3 * v + smooth_triangle.n1 * (1 - u - v);
     }
 
+    Vector local_normal_at(const Csg &, const Point &) {
+        throw std::logic_error("local_normal_at called on a Csg: ask its children");
+    }
+
     std::vector<float> local_intersect(const Sphere &, const Ray &local_ray) {
         const auto &[origin, direction] = local_ray;
 
@@ -321,6 +325,13 @@ namespace raytracer {
         return moller_trumbore(smooth_triangle.p1, e1, e2, local_ray);
     }
 
+    std::vector<Intersection> local_intersect(const Csg &csg, const Ray &local_ray) {
+        std::vector<Intersection> intersections{intersect(*csg.left, local_ray)};
+        intersections.append_range(intersect(*csg.right, local_ray));
+        std::ranges::sort(intersections, {}, &Intersection::t);
+        return filter_intersections(csg, intersections);
+    }
+
     std::vector<float> local_intersect(const TestShape &shape, const Ray &local_ray) {
         shape.saved_ray = local_ray;
         return {};
@@ -391,6 +402,45 @@ namespace raytracer {
         group->bounds = local_bounds(*group);
     }
 
+    bool intersection_allowed(const Csg::Operation op, const bool lhit, const bool inl, const bool inr) {
+        switch (op) {
+            case Csg::Operation::Union: return (lhit && !inr) || (!lhit && !inl);
+            case Csg::Operation::Intersection: return (lhit && inr) || (!lhit && inl);
+            case Csg::Operation::Difference: return (lhit && !inr) || (!lhit && inl);
+        }
+        return false;
+    }
+
+    namespace {
+        bool includes(const Geom *geom, const Geom *other) {
+            while (other) {
+                if (geom == other) return true;
+                other = other->parent;
+            }
+            return false;
+        }
+    }
+
+    std::vector<Intersection> filter_intersections(const Csg &csg, const std::vector<Intersection> &intersections) {
+        bool inl{false};
+        bool inr{false};
+
+        std::vector<Intersection> result;
+        for (const auto &intersection: intersections) {
+            const bool lhit{includes(csg.left, intersection.object)};
+            if (intersection_allowed(csg.op, lhit, inl, inr)) {
+                result.emplace_back(intersection);
+            }
+            if (lhit) {
+                inl = !inl;
+            }
+            else {
+                inr = !inr;
+            }
+        }
+        return result;
+    }
+
     std::optional<BoundingBox> local_bounds(const Group &group) {
         BoundingBox result;
         for (const Geom *child: group.children) {
@@ -417,6 +467,47 @@ namespace raytracer {
         result.add(smooth_triangle.p1);
         result.add(smooth_triangle.p2);
         result.add(smooth_triangle.p3);
+        return result;
+    }
+
+    namespace {
+        BoundingBox overlap(const BoundingBox &a, const BoundingBox &b) {
+            const BoundingBox result{
+                .min = {
+                    .x = std::max(a.min.x, b.min.x), .y = std::max(a.min.y, b.min.y), .z = std::max(a.min.z, b.min.z)
+                },
+                .max = {
+                    .x = std::min(a.max.x, b.max.x), .y = std::min(a.max.y, b.max.y), .z = std::min(a.max.z, b.max.z)
+                }
+            };
+            // empty() only looks at x, so return the default empty box when any axis doesn't overlap
+            if (result.min.x > result.max.x || result.min.y > result.max.y || result.min.z > result.max.z) {
+                return {};
+            }
+            return result;
+        }
+    }
+
+    std::optional<BoundingBox> local_bounds(const Csg &csg) {
+        const std::optional left{parent_space_bounds(*csg.left)};
+        // ignore right
+        if (csg.op == Csg::Operation::Difference) {
+            return left;
+        }
+        const std::optional right{parent_space_bounds(*csg.right)};
+        if (csg.op == Csg::Operation::Intersection) {
+            // Inside both shapes, so one bounded shape is enough to bound the result
+            if (left && right) {
+                return overlap(*left, *right);
+            }
+            return left ? left : right;
+        }
+        // Union: one unbounded shape makes the whole CSG unbounded
+        if (!left || !right) {
+            return std::nullopt;
+        }
+        BoundingBox result{*left};
+        result.add(*right);
         return result;
     }
 

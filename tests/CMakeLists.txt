@@ -16,11 +16,12 @@ add_executable(tests
         test_triangles.cpp
         test_obj_file.cpp
         test_smooth_triangles.cpp
+        test_csg.cpp
 )
 
 target_include_directories(tests PUBLIC ${CMAKE_SOURCE_DIR}/raytracer)
 
-target_link_libraries(tests PRIVATE Catch2::Catch2WithMain matrix scene objreader)
+target_link_libraries(tests PRIVATE Catch2::Catch2WithMain raytracer_math scene objreader)
 # Lets tests open fixture files such as features/triangles.obj
 target_compile_definitions(tests PRIVATE FEATURES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/features")
 #target_compile_options(tests PRIVATE -Weverything -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-padded -Wno-pre-c++20-compat-pedantic)

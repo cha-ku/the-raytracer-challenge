@@ -30,7 +30,7 @@ add_library(simulation STATIC raytracer/Simulation.cpp
         raytracer/Simulation.hpp
         raytracer/Canvas.cpp)
 target_include_directories(simulation PUBLIC raytracer)
-target_link_libraries(simulation PUBLIC objreader)
+target_link_libraries(simulation PUBLIC objreader scene)
 
 add_library(raytracer_math STATIC
         raytracer/Matrix.cpp
@@ -45,7 +45,7 @@ add_library(objreader STATIC
         raytracer/ObjFile.hpp
         raytracer/ObjFile.cpp)
 target_include_directories(objreader PUBLIC raytracer)
-target_link_libraries(objreader PUBLIC raytracer_math)
+target_link_libraries(objreader PUBLIC scene)
 
 target_include_directories(raytracer_math PUBLIC raytracer)
 
@@ -63,8 +63,6 @@ add_library(scene STATIC
         raytracer/Camera.hpp
         raytracer/Pattern.hpp
         raytracer/Pattern.cpp
-        raytracer/Csg.cpp
-        raytracer/Csg.hpp
 )
 
 target_include_directories(scene PUBLIC raytracer)
