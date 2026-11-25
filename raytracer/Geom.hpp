@@ -110,9 +110,10 @@ namespace raytracer {
             Difference,
         };
         Operation op;
-        // Never null: the constructor is the only way to create a Csg
         Geom *left;
         Geom *right;
+        // cached bounds box
+        std::optional<BoundingBox> bounds;
 
         explicit Csg(const Operation op, Geom &left, Geom &right) : op{op}, left{&left}, right{&right} {}
     };

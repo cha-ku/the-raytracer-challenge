@@ -326,7 +326,10 @@ namespace raytracer {
     }
 
     std::vector<Intersection> local_intersect(const Csg &csg, const Ray &local_ray) {
-        std::vector<Intersection> intersections{intersect(*csg.left, local_ray)};
+        if (csg.bounds && !intersects(*csg.bounds, local_ray)) {
+            return {};
+        }
+        std::vector intersections{intersect(*csg.left, local_ray)};
         intersections.append_range(intersect(*csg.right, local_ray));
         std::ranges::sort(intersections, {}, &Intersection::t);
         return filter_intersections(csg, intersections);
