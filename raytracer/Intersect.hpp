@@ -14,6 +14,7 @@
 #include "Ray.hpp"
 
 #include <concepts>
+#include <memory>
 #include <vector>
 #include <optional>
 #include <limits>
@@ -186,6 +187,12 @@ namespace raytracer {
     // Recomputes and caches the bounds of `geom` and every group below it. Call once the scene is built, and again
     // after changing any child's transform or adding children.
     void refresh_bounds(Geom &geom);
+
+    std::pair<std::vector<Geom*>, std::vector<Geom*>> partition_children(Geom &geom);
+
+    void make_subgroup(std::vector<std::unique_ptr<Geom> > &geoms, Geom &parent, const std::vector<Geom *> &children);
+
+    void divide(std::vector<std::unique_ptr<Geom>> &geoms, Geom &geom, std::size_t threshold);
 
     bool intersection_allowed(Csg::Operation op, bool lhit, bool inl, bool inr);
 

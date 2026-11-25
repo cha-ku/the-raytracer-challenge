@@ -394,15 +394,78 @@ namespace raytracer {
     }
 
     void refresh_bounds(Geom &geom) {
-        auto *group = std::get_if<Group>(&geom.shape);
-        if (group == nullptr) {
-            return;
+        if (Group *group = std::get_if<Group>(&geom.shape); group != nullptr) {
+            // Nested groups first, so each keeps its own cache for its own culling
+            for (Geom *child: group->children) {
+                refresh_bounds(*child);
+            }
+            group->bounds = local_bounds(*group);
         }
-        // Nested groups first, so each keeps its own cache for its own culling
-        for (Geom *child: group->children) {
-            refresh_bounds(*child);
+        else if (Csg *csg = std::get_if<Csg>(&geom.shape); csg != nullptr) {
+            refresh_bounds(*csg->left);
+            refresh_bounds(*csg->right);
+            csg->bounds = local_bounds(*csg);
         }
-        group->bounds = local_bounds(*group);
+    }
+
+    std::pair<std::vector<Geom*>, std::vector<Geom*>> partition_children(Geom &geom) {
+        const auto grp = std::get_if<Group>(&geom.shape);
+        if (grp == nullptr) {
+            return {{}, {}};
+        }
+        const auto bounds = local_bounds(*grp);
+        if (!bounds) {
+            return {{}, {}};
+        }
+        const auto& [lbox, rbox] = split_bounds(*bounds);
+        std::vector<Geom*> left;
+        std::vector<Geom*> right;
+        std::vector<Geom*> remaining;
+        for (const auto& child: grp->children) {
+            const auto child_box = parent_space_bounds(*child);
+            if (child_box && lbox.contains(*child_box)) {
+                left.push_back(child);
+            }
+            else if (child_box && rbox.contains(*child_box)) {
+                right.push_back(child);
+            }
+            else {
+                remaining.push_back(child);
+            }
+        }
+        grp->children = std::move(remaining);
+        return {std::move(left), std::move(right)};
+    }
+
+    void make_subgroup(std::vector<std::unique_ptr<Geom> > &geoms, Geom &parent, const std::vector<Geom *> &children) {
+        auto new_group = std::make_unique<Geom>(Group{});
+        for (Geom *child: children) {
+            add_child(*new_group, *child);
+        }
+        add_child(parent, *new_group);
+        geoms.push_back(std::move(new_group));
+    }
+
+    void divide(std::vector<std::unique_ptr<Geom>> &geoms, Geom &geom, const std::size_t threshold) {
+        // doesn't make sense if not group or Csg
+        if (const auto* grp = std::get_if<Group>(&geom.shape); grp != nullptr) {
+            if (threshold <= grp->children.size()) {
+                const auto &[left , right] = partition_children(geom);
+                if (!left.empty()) {
+                    make_subgroup(geoms, geom, left);
+                }
+                if (!right.empty()) {
+                    make_subgroup(geoms, geom, right);
+                }
+            }
+            for (Geom* child: grp->children) {
+                divide(geoms, *child, threshold);
+            }
+        }
+        else if (const auto* csg = std::get_if<Csg>(&geom.shape); csg != nullptr) {
+            divide(geoms, *csg->left, threshold);
+            divide(geoms, *csg->right, threshold);
+        }
     }
 
     bool intersection_allowed(const Csg::Operation op, const bool lhit, const bool inl, const bool inr) {
