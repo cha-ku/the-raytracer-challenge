@@ -14,6 +14,9 @@
 #include "Ray.hpp"
 
 #include <concepts>
+#include <cstddef>
+#include <memory>
+#include <utility>
 #include <vector>
 #include <optional>
 #include <limits>
@@ -183,9 +186,26 @@ namespace raytracer {
     // Whether the ray passes through the box (slab method). Never true for an empty box.
     bool intersects(const BoundingBox &box, const Ray &ray);
 
-    // Recomputes and caches the bounds of `geom` and every group below it. Call once the scene is built, and again
-    // after changing any child's transform or adding children.
+    // Recomputes and caches the bounds of `geom` and every group and CSG below it (including groups inside a CSG).
+    // Call once the scene is built, and again after changing any child's transform, adding children or divide().
     void refresh_bounds(Geom &geom);
+
+    // Splits a group's box in half along its longest side, and removes from the group every child that fits wholly
+    // in one half. Returns those children (left half, right half); the rest stay in the group. Until they are added
+    // somewhere else (see make_subgroup) the removed children still name the group as their parent, so the result
+    // must not be dropped. Returns two empty lists, and leaves the group alone, for a non-group, an unbounded group,
+    // or when nothing would be separated.
+    [[nodiscard]] std::pair<std::vector<Geom *>, std::vector<Geom *> > partition_children(Geom &geom);
+
+    // Adds a new group holding `children` to `parent`. `geoms` owns the new group, so it must outlive the tree
+    // (normally it is World::objects). The children must already have been removed from their old group.
+    void make_subgroup(std::vector<std::unique_ptr<Geom> > &geoms, Geom &parent, const std::vector<Geom *> &children);
+
+    // Builds a bounding volume hierarchy below `geom`: every group with at least `threshold` children is partitioned
+    // into sub-groups, recursively, and the children of a CSG are divided too. Primitives are left alone. `geoms`
+    // owns the new groups and must not be iterated during the call. Call refresh_bounds(geom) afterwards, or the new
+    // groups have no cached bounds and rays can't skip them (World::build_bvh does both).
+    void divide(std::vector<std::unique_ptr<Geom> > &geoms, Geom &geom, std::size_t threshold);
 
     bool intersection_allowed(Csg::Operation op, bool lhit, bool inl, bool inr);
 

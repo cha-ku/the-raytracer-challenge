@@ -23,6 +23,20 @@ namespace raytracer {
         return *objects.emplace_back(std::make_unique<Geom>(std::move(shape)));
     }
 
+    void World::build_bvh(const std::size_t threshold) {
+        // divide() adds the new groups to `objects`, which can reallocate it, so collect the roots first
+        std::vector<Geom *> roots;
+        for (const auto &object: objects) {
+            if (object->parent == nullptr) {
+                roots.push_back(object.get());
+            }
+        }
+        for (Geom *root: roots) {
+            divide(objects, *root, threshold);
+            refresh_bounds(*root);
+        }
+    }
+
     std::vector<Intersection> World::intersect_world(const World &world, const Ray &ray) {
         std::vector<Intersection> intersections;
         for (const auto &obj: world.objects) {

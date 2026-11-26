@@ -6,6 +6,9 @@
 #include "catch2/catch_test_macros.hpp"
 #include <cmath>
 #include <numbers>
+#include <memory>
+#include <variant>
+#include <vector>
 
 using namespace raytracer;
 
@@ -215,6 +218,21 @@ SCENARIO (
             const auto n = normal_at(s, Point(1.7321, 1.1547, -5.5774));
             THEN("The normal accounts for every parent's transform") {
                 REQUIRE(Vector::areAlmostEqual(n, Vector(0.2857, 0.4286, -0.8571)));
+            }
+        }
+    }
+}
+
+SCENARIO("Subdividing a primitive does nothing") {
+    GIVEN("A sphere") {
+        Geom shape = make_sphere();
+        // Would own any sub-groups that dividing creates
+        std::vector<std::unique_ptr<Geom>> geoms;
+        WHEN("It is divided") {
+            divide(geoms, shape, 1);
+            THEN("It is still a sphere, and no sub-groups were created") {
+                REQUIRE(std::holds_alternative<Sphere>(shape.shape));
+                REQUIRE(geoms.empty());
             }
         }
     }

@@ -9,7 +9,6 @@
 //  - A Difference shows the cutter's material on the cut surface, so recesses take their colour from their cutter.
 //  - A group used as a CSG child must hold parts that don't overlap: filter_intersections flips inside/outside on
 //    every hit, so overlapping parts would be counted wrongly. Cutters that cross each other go in nested Differences.
-//  - refresh_bounds() doesn't look inside a Csg, so make_cutters() caches the bounds of each group used as a cutter.
 namespace raytracer {
     namespace {
         constexpr double pi{std::numbers::pi};
@@ -86,7 +85,6 @@ namespace raytracer {
             for (Geom *part: parts) {
                 add_child(group, *part);
             }
-            refresh_bounds(group);
             return group;
         }
 

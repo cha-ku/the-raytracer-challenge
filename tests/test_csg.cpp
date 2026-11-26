@@ -6,6 +6,7 @@
 #include "catch2/generators/catch_generators.hpp"
 
 #include <cstddef>
+#include <memory>
 #include <variant>
 #include <vector>
 
@@ -129,6 +130,65 @@ SCENARIO("A ray hits a CSG object") {
                 REQUIRE(xs[0].object == &s1);
                 REQUIRE(utils::equal(xs[1].t, 6.5));
                 REQUIRE(xs[1].object == &s2);
+            }
+        }
+    }
+}
+
+SCENARIO("Subdividing a CSG shape subdivides its children") {
+    GIVEN("The difference of two groups, each of two spheres that are apart") {
+        Geom s1 = make_sphere();
+        s1.set_transform(translation(-1.5, 0.0, 0.0));
+        Geom s2 = make_sphere();
+        s2.set_transform(translation(1.5, 0.0, 0.0));
+        Geom left = make_group();
+        add_child(left, s1);
+        add_child(left, s2);
+        Geom s3 = make_sphere();
+        s3.set_transform(translation(0.0, 0.0, -1.5));
+        Geom s4 = make_sphere();
+        s4.set_transform(translation(0.0, 0.0, 1.5));
+        Geom right = make_group();
+        add_child(right, s3);
+        add_child(right, s4);
+        Geom shape = make_csg(Csg::Operation::Difference, left, right);
+        // Owns the new sub-groups
+        std::vector<std::unique_ptr<Geom>> geoms;
+        WHEN("The CSG is divided") {
+            divide(geoms, shape, 1);
+            THEN("Both groups are divided") {
+                const auto &left_children = std::get<Group>(left.shape).children;
+                REQUIRE(left_children.size() == 2);
+                REQUIRE(std::get<Group>(left_children[0]->shape).children == std::vector<Geom *>{&s1});
+                REQUIRE(std::get<Group>(left_children[1]->shape).children == std::vector<Geom *>{&s2});
+                const auto &right_children = std::get<Group>(right.shape).children;
+                REQUIRE(right_children.size() == 2);
+                REQUIRE(std::get<Group>(right_children[0]->shape).children == std::vector<Geom *>{&s3});
+                REQUIRE(std::get<Group>(right_children[1]->shape).children == std::vector<Geom *>{&s4});
+            }
+        }
+    }
+}
+
+SCENARIO("Refreshing a CSG's bounds caches them, and the bounds of a group inside it") {
+    GIVEN("The difference of a group holding one sphere at x = -1.5, and a sphere") {
+        Geom s1 = make_sphere();
+        s1.set_transform(translation(-1.5, 0.0, 0.0));
+        Geom left = make_group();
+        add_child(left, s1);
+        Geom right = make_sphere();
+        Geom shape = make_csg(Csg::Operation::Difference, left, right);
+        WHEN("Its bounds are refreshed") {
+            refresh_bounds(shape);
+            THEN("The CSG and its group both cache the box around the left sphere") {
+                const auto &csg_bounds = std::get<Csg>(shape.shape).bounds;
+                REQUIRE(csg_bounds.has_value());
+                REQUIRE(utils::equal(csg_bounds->min.x, -2.5f));
+                REQUIRE(utils::equal(csg_bounds->max.x, -0.5f));
+                const auto &group_bounds = std::get<Group>(left.shape).bounds;
+                REQUIRE(group_bounds.has_value());
+                REQUIRE(utils::equal(group_bounds->min.x, -2.5f));
+                REQUIRE(utils::equal(group_bounds->max.x, -0.5f));
             }
         }
     }

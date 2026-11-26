@@ -11,6 +11,7 @@
 #include <optional>
 #include <utility>
 #include <variant>
+#include <vector>
 
 namespace raytracer {
     // Pure geometry: each shape type only describes its own object-space surface. Where it sits in the scene
@@ -64,7 +65,12 @@ namespace raytracer {
                 add(box.max);
             }
         }
+
+        [[nodiscard]] bool contains(const Point &point) const;
+        [[nodiscard]] bool contains(const BoundingBox &box) const;
     };
+
+    std::pair<BoundingBox, BoundingBox> split_bounds(const BoundingBox& box);
 
     struct Group {
         std::vector<Geom *> children;
@@ -72,6 +78,8 @@ namespace raytracer {
         std::optional<BoundingBox> bounds;
     };
 
+    // Makes `child` a child of `group`. It doesn't remove `child` from a previous group: a child in two groups would
+    // be intersected twice, so remove it from the old group first.
     void add_child(Geom &group, Geom &child);
 
     struct Triangle {
@@ -110,9 +118,10 @@ namespace raytracer {
             Difference,
         };
         Operation op;
-        // Never null: the constructor is the only way to create a Csg
         Geom *left;
         Geom *right;
+        // cached bounds box
+        std::optional<BoundingBox> bounds;
 
         explicit Csg(const Operation op, Geom &left, Geom &right) : op{op}, left{&left}, right{&right} {}
     };

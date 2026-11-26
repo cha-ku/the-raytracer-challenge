@@ -17,11 +17,16 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <filesystem>
 #include <iterator>
 #include <print>
+#include <ranges>
 
 namespace {
+    // Groups with at least this many children are split into a bounding volume hierarchy
+    constexpr std::size_t bvh_threshold{100};
+
     // Projectile structure
     struct Projectile {
         raytracer::Point position{};
@@ -432,6 +437,7 @@ void simulate_clock_tower() {
     sky.material.specular = 0.0f;
 
     add_clock_tower(world);
+    world.build_bvh(bvh_threshold);
 
     world.light = PointLight{.position = Point{.x = -20, .y = 25, .z = -30}, .intensity = colours::white};
 
@@ -493,8 +499,9 @@ void simulate_model(const std::string &obj_path) {
     // Hand the parser's Geoms (triangles, groups and the model group itself) to the World, which renders only
     // root objects: the model group is the only parser Geom without a parent
     std::ranges::move(parser.geoms, std::back_inserter(world.objects));
+    world.build_bvh(bvh_threshold);
 
-    Camera camera{.hsize = 300, .vsize = 200, .field_of_view = pi / 3};
+    Camera camera{.hsize = 600, .vsize = 400, .field_of_view = pi / 3};
 
     // Where the camera and light go for a model without bounds; replaced below by a framing of the model. They are
     // used once, after the branch, so the camera and the light are each set in one place.
@@ -502,24 +509,46 @@ void simulate_model(const std::string &obj_path) {
     Point to{.x = 0, .y = 0.7f, .z = 0};
     Point light_position{.x = -10, .y = 10, .z = -10};
 
-    // Frame the model from its world-space box: look at its centre from above-front, far enough back that its
-    // bounding sphere fits the narrower field of view (the camera's shorter side), with a margin. The light keeps
-    // the same direction, at a distance that scales with the model.
-    if (const auto world_bounds{parent_space_bounds(model)}; world_bounds && !world_bounds->empty()) {
-        const auto &[min, max]{*world_bounds};
+    // Frame the model from its transformed vertices (a rotated box, or a sphere around it, is much larger than the
+    // model): look at their centre from above-front, just far enough back that every vertex is inside the view, with
+    // a margin. The light keeps the same direction, at a distance that scales with the model.
+    BoundingBox world_bounds;
+    std::vector<Point> points;
+    // The first vertex is only a placeholder, because OBJ indices start at 1. Vertices no face uses are included too,
+    // so a file with stray vertices is framed a little wider.
+    for (const Point &vertex: parser.vertices | std::views::drop(1)) {
+        points.push_back(transform(vertex, model.transform()));
+        world_bounds.add(points.back());
+    }
+    if (!world_bounds.empty()) {
+        const auto &[min, max]{world_bounds};
         const Point centre{.x = (min.x + max.x) / 2, .y = (min.y + max.y) / 2, .z = (min.z + max.z) / 2};
-        const float radius{Vector::magnitude(max - min) / 2};
-
-        const double half_short{std::min(camera.half_width, camera.half_height)};
-        constexpr float margin{1.15f};
-        const float distance{margin * radius / static_cast<float>(std::sin(std::atan(half_short)))};
 
         const Vector view_direction{Vector::normalize(Vector{.x = 0, .y = 0.4f, .z = -1})};
-        from = centre + view_direction * distance;
-        to = centre;
+        const Vector right{Vector::normalize(Vector::cross(Vector{.x = 0, .y = 1, .z = 0}, view_direction))};
+        const Vector up{Vector::cross(view_direction, right)};
 
-        const Vector light_direction{Vector::normalize(Vector{.x = -1, .y = 1, .z = -1})};
-        light_position = centre + light_direction * (2 * distance);
+        // A vertex is in view if its sideways offset is at most half_width (or half_height) times its depth, and its
+        // depth is the camera's distance minus how far the vertex sticks out towards the camera
+        float distance{0};
+        for (const Point &point: points) {
+            const Vector offset{point - centre};
+            const float across{std::abs(Vector::dot(offset, right)) / static_cast<float>(camera.half_width)};
+            const float upwards{std::abs(Vector::dot(offset, up)) / static_cast<float>(camera.half_height)};
+            distance = std::max(distance, std::max(across, upwards) + Vector::dot(offset, view_direction));
+        }
+        constexpr float margin{1.15f};
+        distance *= margin;
+
+        // A model of a single point has no size to frame (and the camera can't sit on what it looks at), so it keeps
+        // the default view
+        if (distance > 0) {
+            from = centre + view_direction * distance;
+            to = centre;
+
+            const Vector light_direction{Vector::normalize(Vector{.x = -1, .y = 1, .z = -1})};
+            light_position = centre + light_direction * (2 * distance);
+        }
     }
 
     camera.transform = view_transform(from, to, Vector{.x = 0, .y = 1, .z = 0});

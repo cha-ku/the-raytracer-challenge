@@ -17,6 +17,7 @@ add_executable(tests
         test_obj_file.cpp
         test_smooth_triangles.cpp
         test_csg.cpp
+        test_bounds.cpp
 )
 
 target_include_directories(tests PUBLIC ${CMAKE_SOURCE_DIR}/raytracer)
