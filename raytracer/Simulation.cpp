@@ -46,6 +46,40 @@ namespace {
         return {.position = new_position, .velocity = new_velocity};
     }
 
+    // Up direction for every camera
+    constexpr raytracer::Vector y_up{.x = 0, .y = 1, .z = 0};
+
+    // The first two sphere scenes cast rays from an eye at z = -5 onto a square wall at z = 10, one ray per pixel
+    constexpr uint32_t wall_canvas_pixels{256};
+    constexpr float wall_size{7.f};
+    constexpr float wall_pixel_size{wall_size / wall_canvas_pixels};
+    constexpr float wall_half{wall_size / 2};
+    constexpr float wall_z{10.0f};
+    constexpr raytracer::Point wall_eye{.x = 0, .y = 0, .z = -5};
+
+    // The ray from the eye through pixel (x, y) of the wall. World x starts at -half (left edge) and increases with
+    // x; world y starts at +half (top edge) and decreases with y, because canvas y points down.
+    raytracer::Ray wall_ray(const uint32_t x, const uint32_t y) {
+        const raytracer::Point target{
+            .x = -wall_half + wall_pixel_size * static_cast<float>(x),
+            .y = wall_half - wall_pixel_size * static_cast<float>(y),
+            .z = wall_z
+        };
+        return {.origin = wall_eye, .direction = raytracer::Vector::normalize(raytracer::Vector(target - wall_eye))};
+    }
+
+    // Renders `world` as `camera` sees it, one ray per pixel
+    raytracer::Canvas render(const raytracer::World &world, const raytracer::Camera &camera, const uint8_t max_depth) {
+        raytracer::Canvas canvas{camera.hsize, camera.vsize};
+        for (uint32_t y = 0; y < camera.vsize; ++y) {
+            for (uint32_t x = 0; x < camera.hsize; ++x) {
+                const auto ray = raytracer::World::ray_for_pixel(camera, x, y);
+                canvas.write_pixel(x, y, raytracer::World::colour_at(world, ray, max_depth));
+            }
+        }
+        return canvas;
+    }
+
     void save_canvas(const raytracer::Canvas &canvas, const std::string &filename) {
         const auto &retval = raytracer::canvas_to_ppm(canvas, filename);
         if (retval.has_value()) {
@@ -121,11 +155,7 @@ void simulate_clock() {
 
 void simulate_sphere() {
     using namespace raytracer;
-    constexpr auto canvas_pixels{256u};
-    constexpr auto wall_size{7.f};
-    constexpr auto pixel_size{wall_size / canvas_pixels};
-    constexpr auto half{wall_size / 2};
-    Canvas canvas{canvas_pixels, canvas_pixels};
+    Canvas canvas{wall_canvas_pixels, wall_canvas_pixels};
     constexpr Colour colour{.r = 1.f};
     Geom shape = make_sphere();
     // shrink it along the y axis
@@ -136,18 +166,9 @@ void simulate_sphere() {
     shape.set_transform(multiply(rotation_z(std::numbers::pi / 4), scale<double>(0.5, 1, 1)));
     // shrink it, and skew it
     shape.set_transform(multiply(shearing(1, 0, 0, 0, 0, 0), scale<double>(0.5, 1, 1)));
-    constexpr auto wall_z{10.0f};
-    constexpr Point ray_origin{.x = 0, .y = 0, .z = -5};
-    // Convert canvas pixels to world coordinates:
-    // world_x: starts at -half (left edge) and increases with x
-    // world_y: starts at +half (top edge) and decreases with y (canvas y is inverted)
-    for (int y = 0; y < canvas.height; ++y) {
-        const auto world_y{half - pixel_size * static_cast<float>(y)};
-        for (int x = 0; x < canvas.width; ++x) {
-            const auto world_x{-half + pixel_size * static_cast<float>(x)};
-            Point position{.x = world_x, .y = world_y, .z = wall_z};
-            Ray r{.origin = ray_origin, .direction = Vector::normalize(Vector(position - ray_origin))};
-            auto xs{intersect(shape, r)};
+    for (uint32_t y = 0; y < canvas.height; ++y) {
+        for (uint32_t x = 0; x < canvas.width; ++x) {
+            auto xs{intersect(shape, wall_ray(x, y))};
             if (hit(xs).has_value()) {
                 canvas.write_pixel(x, y, colour);
             }
@@ -158,27 +179,14 @@ void simulate_sphere() {
 
 void simulate_material_sphere() {
     using namespace raytracer;
-    constexpr auto canvas_pixels{256u};
-    constexpr auto wall_size{7.f};
-    constexpr auto pixel_size{wall_size / canvas_pixels};
-    constexpr auto half{wall_size / 2};
-    Canvas canvas{canvas_pixels, canvas_pixels};
+    Canvas canvas{wall_canvas_pixels, wall_canvas_pixels};
     Geom sphere = make_sphere();
     sphere.material.colour = Colour{.r = 1, .g = 0.2, .b = 1};
-    constexpr auto wall_z{10.0f};
 
-    // camera(eye) is the origin of our rays
-    constexpr Point camera{.x = 0, .y = 0, .z = -5};
     constexpr PointLight point_light{.position = {.x = -10, .y = 10, .z = -10}, .intensity = {.r = 1, .g = 1, .b = 1}};
-    // Convert canvas pixels to world coordinates:
-    // world_x: starts at -half (left edge) and increases with x
-    // world_y: starts at +half (top edge) and decreases with y (canvas y is inverted)
-    for (int y = 0; y < canvas.height; ++y) {
-        const auto world_y{half - pixel_size * static_cast<float>(y)};
-        for (int x = 0; x < canvas.width; ++x) {
-            const auto world_x{-half + pixel_size * static_cast<float>(x)};
-            Point p{.x = world_x, .y = world_y, .z = wall_z};
-            Ray r{.origin = camera, .direction = Vector::normalize(Vector(p - camera))};
+    for (uint32_t y = 0; y < canvas.height; ++y) {
+        for (uint32_t x = 0; x < canvas.width; ++x) {
+            const Ray r{wall_ray(x, y)};
             auto xs{intersect(sphere, r)};
             if (hit(xs).has_value()) {
                 const Intersection intersection = hit(xs).value();
@@ -234,17 +242,9 @@ void simulate_multiple_spheres() {
     };
 
     Camera camera{.hsize = 600, .vsize = 400, .field_of_view = pi_v<double> / 2};
-    camera.transform = view_transform(Point{.x = 0, .y = 1.5f, .z = -5}, Point{.x = 0, .y = 1, .z = 0},
-                                      Vector{.x = 0, .y = 1, .z = 0});
+    camera.transform = view_transform(Point{.x = 0, .y = 1.5f, .z = -5}, Point{.x = 0, .y = 1, .z = 0}, y_up);
 
-    Canvas canvas{camera.hsize, camera.vsize};
-    for (uint32_t y = 0; y < camera.vsize; ++y) {
-        for (uint32_t x = 0; x < camera.hsize; ++x) {
-            const auto ray = World::ray_for_pixel(camera, x, y);
-            canvas.write_pixel(x, y, World::colour_at(world, ray, 255));
-        }
-    }
-    save_canvas(canvas, "multiple_spheres.ppm");
+    save_canvas(render(world, camera, 255), "multiple_spheres.ppm");
 }
 
 void simulate_group_reflections() {
@@ -402,16 +402,9 @@ void simulate_group_reflections() {
     // pull back camera
     constexpr Point to{.x = 0, .y = 0.8f, .z = 0};
     constexpr Point from{to + Vector{.x = 0, .y = 1, .z = -6} * 1.4f}; // = (0, 2.2, -8.4)
-    camera.transform = view_transform(from, to, Vector{.x = 0, .y = 1, .z = 0});
+    camera.transform = view_transform(from, to, y_up);
 
-    Canvas canvas{camera.hsize, camera.vsize};
-    for (uint32_t y = 0; y < camera.vsize; ++y) {
-        for (uint32_t x = 0; x < camera.hsize; ++x) {
-            const auto ray = World::ray_for_pixel(camera, x, y);
-            canvas.write_pixel(x, y, World::colour_at(world, ray, max_depth));
-        }
-    }
-    save_canvas(canvas, "reflections_hex_group.ppm");
+    save_canvas(render(world, camera, max_depth), "reflections_hex_group.ppm");
 }
 
 void simulate_clock_tower() {
@@ -443,19 +436,11 @@ void simulate_clock_tower() {
 
     // Portrait view from the front left, so two sides and two dials show
     Camera camera{.hsize = 300, .vsize = 500, .field_of_view = pi / 4};
-    camera.transform = view_transform(Point{.x = -7, .y = 4.5f, .z = -14}, Point{.x = 0, .y = 5.7f, .z = 0},
-                                      Vector{.x = 0, .y = 1, .z = 0});
+    camera.transform = view_transform(Point{.x = -7, .y = 4.5f, .z = -14}, Point{.x = 0, .y = 5.7f, .z = 0}, y_up);
 
     // No reflective or transparent materials, so one bounce is plenty
     constexpr uint8_t max_depth = 5;
-    Canvas canvas{camera.hsize, camera.vsize};
-    for (uint32_t y = 0; y < camera.vsize; ++y) {
-        for (uint32_t x = 0; x < camera.hsize; ++x) {
-            const auto ray = World::ray_for_pixel(camera, x, y);
-            canvas.write_pixel(x, y, World::colour_at(world, ray, max_depth));
-        }
-    }
-    save_canvas(canvas, "clock_tower.ppm");
+    save_canvas(render(world, camera, max_depth), "clock_tower.ppm");
 }
 
 void simulate_model(const std::string &obj_path) {
@@ -525,7 +510,7 @@ void simulate_model(const std::string &obj_path) {
         const Point centre{.x = (min.x + max.x) / 2, .y = (min.y + max.y) / 2, .z = (min.z + max.z) / 2};
 
         const Vector view_direction{Vector::normalize(Vector{.x = 0, .y = 0.4f, .z = -1})};
-        const Vector right{Vector::normalize(Vector::cross(Vector{.x = 0, .y = 1, .z = 0}, view_direction))};
+        const Vector right{Vector::normalize(Vector::cross(y_up, view_direction))};
         const Vector up{Vector::cross(view_direction, right)};
 
         // A vertex is in view if its sideways offset is at most half_width (or half_height) times its depth, and its
@@ -551,20 +536,13 @@ void simulate_model(const std::string &obj_path) {
         }
     }
 
-    camera.transform = view_transform(from, to, Vector{.x = 0, .y = 1, .z = 0});
+    camera.transform = view_transform(from, to, y_up);
     world.light = PointLight{.position = light_position, .intensity = colours::white};
 
     // No reflective or transparent materials, so one bounce is plenty
     constexpr uint8_t max_depth = 5;
-    Canvas canvas{camera.hsize, camera.vsize};
     const auto start = std::chrono::steady_clock::now();
-
-    for (uint32_t y = 0; y < camera.vsize; ++y) {
-        for (uint32_t x = 0; x < camera.hsize; ++x) {
-            const auto ray = World::ray_for_pixel(camera, x, y);
-            canvas.write_pixel(x, y, World::colour_at(world, ray, max_depth));
-        }
-    }
+    const Canvas canvas{render(world, camera, max_depth)};
     save_canvas(canvas, std::filesystem::path{obj_path}.stem().string() + ".ppm");
     const std::chrono::duration<double> duration{std::chrono::steady_clock::now() - start};
     std::println("Render took {:.2}s", duration.count());
