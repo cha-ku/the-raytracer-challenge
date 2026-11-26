@@ -22,6 +22,9 @@
 #include <iterator>
 #include <print>
 #include <ranges>
+#include <atomic>
+#include <thread>
+#include <vector>
 
 namespace {
     // Groups with at least this many children are split into a bounding volume hierarchy
@@ -71,11 +74,26 @@ namespace {
     // Renders `world` as `camera` sees it, one ray per pixel
     raytracer::Canvas render(const raytracer::World &world, const raytracer::Camera &camera, const uint8_t max_depth) {
         raytracer::Canvas canvas{camera.hsize, camera.vsize};
-        for (uint32_t y = 0; y < camera.vsize; ++y) {
-            for (uint32_t x = 0; x < camera.hsize; ++x) {
-                const auto ray = raytracer::World::ray_for_pixel(camera, x, y);
-                canvas.write_pixel(x, y, raytracer::World::colour_at(world, ray, max_depth));
+        std::atomic<uint32_t> next_row{0};
+        // hardware_concurrency() may return 0 when it can't tell, and then no row would be drawn
+        const unsigned thread_count{std::max(1u, std::thread::hardware_concurrency())};
+        {
+            std::vector<std::jthread> workers;
+            for (unsigned n{0}; n < thread_count; ++n) {
+                workers.emplace_back([&] {
+                    while (true) {
+                        const uint32_t y{next_row.fetch_add(1)};
+                        if (y >= camera.vsize) break;
+                        for (uint32_t x{0}; x < camera.hsize; ++x) {
+                            canvas.write_pixel(
+                                x, y, raytracer::World::colour_at(world, raytracer::World::ray_for_pixel(camera, x, y),
+                                                                  max_depth));
+                        }
+                    }
+                });
             }
+            // the jthreads join here, when `workers` goes out of scope, so every row is written before `canvas` is
+            // returned
         }
         return canvas;
     }
