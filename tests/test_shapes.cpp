@@ -19,7 +19,7 @@ SCENARIO (
     GIVEN("Shape") {
         const auto s = make_test_shape();
         THEN("Transform is identity matrix") {
-            REQUIRE(s.transform() == Matrix<double>::identity(4));
+            REQUIRE(s.transform() == Matrix<double>::identity());
         }
     }
 }

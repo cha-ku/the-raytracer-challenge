@@ -53,7 +53,7 @@ namespace raytracer {
     }
 
     Vector normal_to_world(const Geom &geom, const Vector &object_normal) {
-        const Matrix<double> normal_matrix{
+        const Matrix normal_matrix{
             multiply(transpose(geom.inverse_transform()), make_matrix(object_normal))
         };
         const Vector normal{

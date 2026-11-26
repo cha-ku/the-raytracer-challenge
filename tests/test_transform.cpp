@@ -133,7 +133,7 @@ SCENARIO (
             const auto t = view_transform(from, to, up);
 
             THEN("t = identity_matrix") {
-                REQUIRE(t == Matrix<double>::identity(4));
+                REQUIRE(t == Matrix<double>::identity());
             }
         }
     }
@@ -190,7 +190,7 @@ SCENARIO (
             const auto t = view_transform(from, to, up);
 
             THEN("t is the expected 4x4 matrix") {
-                const Matrix<double> expected{4, 4,
+                const Matrix<double> expected{
                     std::array{-0.50709, 0.50709,  0.67612, -2.36643,
                       0.76772, 0.60609,  0.12122, -2.82843,
                      -0.35857, 0.59761, -0.71714,  0.00000,

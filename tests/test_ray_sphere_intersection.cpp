@@ -265,7 +265,7 @@ SCENARIO("A sphere's default transformation") {
     GIVEN("Sphere") {
         const Geom s = make_sphere();
         THEN("Transform is identity matrix") {
-            REQUIRE(s.transform() == Matrix<double>::identity(4));
+            REQUIRE(s.transform() == Matrix<double>::identity());
         }
     }
 }
@@ -486,7 +486,7 @@ SCENARIO("A helper for producing a sphere with a glassy material") {
         const Geom s = make_glass_sphere();
 
         THEN("s.transform = identity_matrix") {
-            REQUIRE(s.transform() == Matrix<double>::identity(4));
+            REQUIRE(s.transform() == Matrix<double>::identity());
         }
         AND_THEN("s.material.transparency = 1.0") {
             REQUIRE(s.material.transparency == 1.0f);
