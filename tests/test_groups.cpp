@@ -1,10 +1,12 @@
 #include "Intersect.hpp"
 #include "MatrixImpl.hpp"
 #include "TestShape.hpp"
+#include "Utils.hpp"
 
 #include "catch2/catch_test_macros.hpp"
 
 #include <algorithm>
+#include <cstddef>
 #include <memory>
 #include <variant>
 #include <vector>
@@ -195,6 +197,83 @@ SCENARIO("Subdividing a group with too few children") {
                 REQUIRE(children.size() == 2);
                 REQUIRE(std::get<Group>(children[0]->shape).children == std::vector<Geom *>{&s1});
                 REQUIRE(std::get<Group>(children[1]->shape).children == std::vector<Geom *>{&s2, &s3});
+            }
+        }
+    }
+}
+
+SCENARIO("Subdividing a group of coincident shapes leaves it alone") {
+    GIVEN("A group of two triangles squashed to the same point") {
+        const Point p{1, 1, 1};
+        Geom t1 = make_triangle(p, p, p);
+        Geom t2 = make_triangle(p, p, p);
+        Geom g = make_group();
+        add_child(g, t1);
+        add_child(g, t2);
+        std::vector<std::unique_ptr<Geom>> geoms;
+        WHEN("The group is divided") {
+            // Both triangles fit in either half of a box with no size, so this used to recurse forever
+            divide(geoms, g, 1);
+            THEN("The group keeps both triangles and no sub-groups were created") {
+                REQUIRE(std::get<Group>(g.shape).children == std::vector<Geom *>{&t1, &t2});
+                REQUIRE(geoms.empty());
+            }
+        }
+    }
+}
+
+SCENARIO("Subdividing a group with an unbounded child leaves it alone") {
+    GIVEN("A group of a plane and two spheres that are apart") {
+        Geom plane = make_plane();
+        Geom s1 = make_sphere();
+        s1.set_transform(translation<double>(-2, 0, 0));
+        Geom s2 = make_sphere();
+        s2.set_transform(translation<double>(2, 0, 0));
+        Geom g = make_group();
+        add_child(g, plane);
+        add_child(g, s1);
+        add_child(g, s2);
+        std::vector<std::unique_ptr<Geom>> geoms;
+        WHEN("The group is divided") {
+            divide(geoms, g, 1);
+            THEN("Its box is infinite, so the children stay as they were") {
+                REQUIRE(std::get<Group>(g.shape).children == std::vector<Geom *>{&plane, &s1, &s2});
+                REQUIRE(geoms.empty());
+            }
+        }
+    }
+}
+
+SCENARIO("Subdividing a group doesn't change what a ray hits") {
+    GIVEN("A group of four spheres in a row along x, and a ray along x through all of them") {
+        Geom s1 = make_sphere();
+        s1.set_transform(translation<double>(-6, 0, 0));
+        Geom s2 = make_sphere();
+        s2.set_transform(translation<double>(-2, 0, 0));
+        Geom s3 = make_sphere();
+        s3.set_transform(translation<double>(2, 0, 0));
+        Geom s4 = make_sphere();
+        s4.set_transform(translation<double>(6, 0, 0));
+        Geom g = make_group();
+        add_child(g, s1);
+        add_child(g, s2);
+        add_child(g, s3);
+        add_child(g, s4);
+        const Ray r{Point(-10, 0, 0), Vector(1, 0, 0)};
+        const auto before = intersect(g, r);
+        std::vector<std::unique_ptr<Geom>> geoms;
+        WHEN("The group is divided and its bounds refreshed") {
+            divide(geoms, g, 1);
+            refresh_bounds(g);
+            THEN("The ray hits the same shapes at the same t values") {
+                REQUIRE_FALSE(geoms.empty());
+                const auto after = intersect(g, r);
+                REQUIRE(before.size() == 8);
+                REQUIRE(after.size() == before.size());
+                for (std::size_t i = 0; i < before.size(); ++i) {
+                    REQUIRE(after[i].object == before[i].object);
+                    REQUIRE(utils::equal(after[i].t, before[i].t));
+                }
             }
         }
     }

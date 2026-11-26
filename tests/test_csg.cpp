@@ -169,3 +169,27 @@ SCENARIO("Subdividing a CSG shape subdivides its children") {
         }
     }
 }
+
+SCENARIO("Refreshing a CSG's bounds caches them, and the bounds of a group inside it") {
+    GIVEN("The difference of a group holding one sphere at x = -1.5, and a sphere") {
+        Geom s1 = make_sphere();
+        s1.set_transform(translation(-1.5, 0.0, 0.0));
+        Geom left = make_group();
+        add_child(left, s1);
+        Geom right = make_sphere();
+        Geom shape = make_csg(Csg::Operation::Difference, left, right);
+        WHEN("Its bounds are refreshed") {
+            refresh_bounds(shape);
+            THEN("The CSG and its group both cache the box around the left sphere") {
+                const auto &csg_bounds = std::get<Csg>(shape.shape).bounds;
+                REQUIRE(csg_bounds.has_value());
+                REQUIRE(utils::equal(csg_bounds->min.x, -2.5f));
+                REQUIRE(utils::equal(csg_bounds->max.x, -0.5f));
+                const auto &group_bounds = std::get<Group>(left.shape).bounds;
+                REQUIRE(group_bounds.has_value());
+                REQUIRE(utils::equal(group_bounds->min.x, -2.5f));
+                REQUIRE(utils::equal(group_bounds->max.x, -0.5f));
+            }
+        }
+    }
+}

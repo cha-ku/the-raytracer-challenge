@@ -5,7 +5,9 @@
 #ifndef THE_RAYTRACER_CHALLENGE_WORLD_HPP
 #define THE_RAYTRACER_CHALLENGE_WORLD_HPP
 
+#include <cstddef>
 #include <memory>
+#include <vector>
 #include <optional>
 #include "Intersect.hpp"
 #include "Light.hpp"
@@ -20,6 +22,10 @@ namespace raytracer {
 
         // Adds a new Geom holding `shape` and returns it, so the caller can set its transform and material
         Geom &add(AnyShape shape);
+
+        // Divides every root object (see divide) into a bounding volume hierarchy and caches its bounds. Groups with at
+        // least `threshold` children are split. Call once the scene is built.
+        void build_bvh(std::size_t threshold);
 
         static World create_default_world();
 

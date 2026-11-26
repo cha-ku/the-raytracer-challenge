@@ -11,6 +11,7 @@
 #include <optional>
 #include <utility>
 #include <variant>
+#include <vector>
 
 namespace raytracer {
     // Pure geometry: each shape type only describes its own object-space surface. Where it sits in the scene
@@ -77,6 +78,8 @@ namespace raytracer {
         std::optional<BoundingBox> bounds;
     };
 
+    // Makes `child` a child of `group`. It doesn't remove `child` from a previous group: a child in two groups would
+    // be intersected twice, so remove it from the old group first.
     void add_child(Geom &group, Geom &child);
 
     struct Triangle {

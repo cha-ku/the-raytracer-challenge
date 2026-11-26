@@ -408,7 +408,7 @@ namespace raytracer {
         }
     }
 
-    std::pair<std::vector<Geom*>, std::vector<Geom*>> partition_children(Geom &geom) {
+    std::pair<std::vector<Geom *>, std::vector<Geom *> > partition_children(Geom &geom) {
         const auto grp = std::get_if<Group>(&geom.shape);
         if (grp == nullptr) {
             return {{}, {}};
@@ -417,10 +417,10 @@ namespace raytracer {
         if (!bounds) {
             return {{}, {}};
         }
-        const auto& [lbox, rbox] = split_bounds(*bounds);
-        std::vector<Geom*> left;
-        std::vector<Geom*> right;
-        std::vector<Geom*> remaining;
+        const auto [lbox, rbox] = split_bounds(*bounds);
+        std::vector<Geom *> left;
+        std::vector<Geom *> right;
+        std::vector<Geom *> remaining;
         for (const auto& child: grp->children) {
             const auto child_box = parent_space_bounds(*child);
             if (child_box && lbox.contains(*child_box)) {
@@ -433,24 +433,30 @@ namespace raytracer {
                 remaining.push_back(child);
             }
         }
+        // Every child fits in one half only when the box has no size along the split axis (coincident shapes, or a
+        // side too small for floats to halve). Splitting would then make an identical group again and again.
+        if (remaining.empty() && (left.empty() || right.empty())) {
+            return {};
+        }
         grp->children = std::move(remaining);
         return {std::move(left), std::move(right)};
     }
 
     void make_subgroup(std::vector<std::unique_ptr<Geom> > &geoms, Geom &parent, const std::vector<Geom *> &children) {
-        auto new_group = std::make_unique<Geom>(Group{});
+        // Hand the new group to its owner before any pointer to it is stored, so nothing can dangle if a later
+        // push_back throws
+        Geom &new_group = *geoms.emplace_back(std::make_unique<Geom>(Group{}));
         for (Geom *child: children) {
-            add_child(*new_group, *child);
+            add_child(new_group, *child);
         }
-        add_child(parent, *new_group);
-        geoms.push_back(std::move(new_group));
+        add_child(parent, new_group);
     }
 
-    void divide(std::vector<std::unique_ptr<Geom>> &geoms, Geom &geom, const std::size_t threshold) {
+    void divide(std::vector<std::unique_ptr<Geom> > &geoms, Geom &geom, const std::size_t threshold) {
         // doesn't make sense if not group or Csg
-        if (const auto* grp = std::get_if<Group>(&geom.shape); grp != nullptr) {
+        if (const auto *grp = std::get_if<Group>(&geom.shape); grp != nullptr) {
             if (threshold <= grp->children.size()) {
-                const auto &[left , right] = partition_children(geom);
+                const auto [left, right] = partition_children(geom);
                 if (!left.empty()) {
                     make_subgroup(geoms, geom, left);
                 }
@@ -458,11 +464,11 @@ namespace raytracer {
                     make_subgroup(geoms, geom, right);
                 }
             }
-            for (Geom* child: grp->children) {
+            for (Geom *child: grp->children) {
                 divide(geoms, *child, threshold);
             }
         }
-        else if (const auto* csg = std::get_if<Csg>(&geom.shape); csg != nullptr) {
+        else if (const auto *csg = std::get_if<Csg>(&geom.shape); csg != nullptr) {
             divide(geoms, *csg->left, threshold);
             divide(geoms, *csg->right, threshold);
         }

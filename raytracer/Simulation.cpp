@@ -17,11 +17,16 @@
 
 #include <algorithm>
 #include <chrono>
+#include <cmath>
 #include <filesystem>
 #include <iterator>
 #include <print>
+#include <ranges>
 
 namespace {
+    // Groups with at least this many children are split into a bounding volume hierarchy
+    constexpr std::size_t bvh_threshold{100};
+
     // Projectile structure
     struct Projectile {
         raytracer::Point position{};
@@ -431,9 +436,8 @@ void simulate_clock_tower() {
     sky.material.diffuse = 0.0f;
     sky.material.specular = 0.0f;
 
-    Geom& tower = add_clock_tower(world);
-    divide(world.objects, tower, 100);
-    refresh_bounds(tower);
+    add_clock_tower(world);
+    world.build_bvh(bvh_threshold);
 
     world.light = PointLight{.position = Point{.x = -20, .y = 25, .z = -30}, .intensity = colours::white};
 
@@ -495,16 +499,7 @@ void simulate_model(const std::string &obj_path) {
     // Hand the parser's Geoms (triangles, groups and the model group itself) to the World, which renders only
     // root objects: the model group is the only parser Geom without a parent
     std::ranges::move(parser.geoms, std::back_inserter(world.objects));
-    std::vector<Geom *> roots;
-    for (const auto& object: world.objects) {
-        if (object->parent == nullptr) {
-            roots.push_back(object.get());
-        }
-    }
-    for (Geom* root: roots) {
-        divide(world.objects, *root, 100);
-        refresh_bounds(*root);
-    }
+    world.build_bvh(bvh_threshold);
 
     Camera camera{.hsize = 600, .vsize = 400, .field_of_view = pi / 3};
 
@@ -519,7 +514,8 @@ void simulate_model(const std::string &obj_path) {
     // a margin. The light keeps the same direction, at a distance that scales with the model.
     BoundingBox world_bounds;
     std::vector<Point> points;
-    // The first vertex is only a placeholder, because OBJ indices start at 1
+    // The first vertex is only a placeholder, because OBJ indices start at 1. Vertices no face uses are included too,
+    // so a file with stray vertices is framed a little wider.
     for (const Point &vertex: parser.vertices | std::views::drop(1)) {
         points.push_back(transform(vertex, model.transform()));
         world_bounds.add(points.back());
@@ -544,11 +540,15 @@ void simulate_model(const std::string &obj_path) {
         constexpr float margin{1.15f};
         distance *= margin;
 
-        from = centre + view_direction * distance;
-        to = centre;
+        // A model of a single point has no size to frame (and the camera can't sit on what it looks at), so it keeps
+        // the default view
+        if (distance > 0) {
+            from = centre + view_direction * distance;
+            to = centre;
 
-        const Vector light_direction{Vector::normalize(Vector{.x = -1, .y = 1, .z = -1})};
-        light_position = centre + light_direction * (2 * distance);
+            const Vector light_direction{Vector::normalize(Vector{.x = -1, .y = 1, .z = -1})};
+            light_position = centre + light_direction * (2 * distance);
+        }
     }
 
     camera.transform = view_transform(from, to, Vector{.x = 0, .y = 1, .z = 0});
