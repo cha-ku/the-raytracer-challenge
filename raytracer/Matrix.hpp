@@ -66,20 +66,18 @@ namespace raytracer {
         std::array<T, NUM_ROWS * NUM_COLS> m_data{};
     };
 
-    // A point as a 4x1 column (w = 1), ready to multiply by a transform. A template only so that a braced list,
-    // make_matrix({x, y, z}), means a point: T then falls back to its default, and binding the temporary to T&& beats
-    // the Vector overload's const&. The constraint keeps an actual Vector on the overload below.
+    // A point (w = 1) or a vector (w = 0, so translations don't move it) as a 4x1 column, ready to multiply by a
+    // transform. A braced list, make_matrix({x, y, z}), can't deduce T, so it falls back to the default: a point.
     template<typename T = Point>
-        requires std::same_as<std::remove_cvref_t<T>, Point>
-    constexpr Matrix<double, 4, 1> make_matrix(T &&p) {
+        requires std::same_as<T, Point> || std::same_as<T, Vector>
+    constexpr Matrix<double, 4, 1> make_matrix(const T &coords) {
+        double w{0.0};
+        if constexpr (std::same_as<T, Point>) {
+            w = coords.w;
+        }
         return Matrix<double, 4, 1>{
-            {static_cast<double>(p.x), static_cast<double>(p.y), static_cast<double>(p.z), static_cast<double>(p.w)}
+            {static_cast<double>(coords.x), static_cast<double>(coords.y), static_cast<double>(coords.z), w}
         };
-    }
-
-    // A vector as a 4x1 column (w = 0), so translations don't move it
-    constexpr Matrix<double, 4, 1> make_matrix(const Vector &v) {
-        return Matrix<double, 4, 1>{{static_cast<double>(v.x), static_cast<double>(v.y), static_cast<double>(v.z), 0.0}};
     }
 
     template<typename T, std::size_t R, std::size_t N, std::size_t C>
