@@ -29,7 +29,7 @@ SCENARIO (
                 REQUIRE(c.hsize == 160);
                 REQUIRE(c.vsize == 120);
                 REQUIRE(c.field_of_view == std::numbers::pi / 2);
-                REQUIRE(c.transform == Matrix<double>::identity(4));
+                REQUIRE(c.transform == Matrix<double>::identity());
             }
         }
     }

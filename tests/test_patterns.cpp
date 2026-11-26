@@ -103,7 +103,7 @@ SCENARIO (
         const auto pattern = test_pattern();
 
         THEN("pattern.transform = identity_matrix") {
-            REQUIRE(pattern.m_transform == Matrix<double>::identity(4));
+            REQUIRE(pattern.m_transform == Matrix<double>::identity());
         }
     }
 }

@@ -21,7 +21,7 @@ namespace raytracer {
 
     // Shared by every concrete pattern: its transform from object space into pattern space
     struct Pattern {
-        Matrix<double> m_transform{Matrix<double>::identity(4)};
+        Matrix<double> m_transform{Matrix<double>::identity()};
 
         bool operator==(const Pattern &) const = default;
     };

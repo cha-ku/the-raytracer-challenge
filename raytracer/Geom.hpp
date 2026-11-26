@@ -177,8 +177,8 @@ namespace raytracer {
         [[nodiscard]] const Matrix<double> &inverse_transform() const { return m_inverse; }
 
     private:
-        Matrix<double> m_transform{Matrix<double>::identity(4)};
-        Matrix<double> m_inverse{Matrix<double>::identity(4)};
+        Matrix<double> m_transform{Matrix<double>::identity()};
+        Matrix<double> m_inverse{Matrix<double>::identity()};
     };
 
     inline Geom make_sphere() { return Geom{Sphere{}}; }

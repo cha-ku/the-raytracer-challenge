@@ -18,18 +18,13 @@ namespace raytracer {
     }
 
     Ray transform(const Ray &ray, const Matrix<double> &matrix) {
-        const Matrix<double> origin_matrix{make_matrix(Point{.x = ray.origin.x, .y = ray.origin.y, .z = ray.origin.z})};
-        const Matrix<double> direction_matrix{
-            4, 1, std::vector{
-                static_cast<double>(ray.direction.x),
-                static_cast<double>(ray.direction.y),
-                static_cast<double>(ray.direction.z),
-                0.0
-            }
+        const Matrix origin_matrix{
+            make_matrix(Point{.x = ray.origin.x, .y = ray.origin.y, .z = ray.origin.z})
         };
+        const Matrix direction_matrix{make_matrix(ray.direction)};
 
-        const Matrix<double> new_origin{multiply(matrix, origin_matrix)};
-        const Matrix<double> new_direction{multiply(matrix, direction_matrix)};
+        const Matrix new_origin{multiply(matrix, origin_matrix)};
+        const Matrix new_direction{multiply(matrix, direction_matrix)};
 
         return Ray{
             .origin = Point{
@@ -695,7 +690,7 @@ namespace raytracer {
         const Vector true_up{Vector::cross(left, forward)};
 
         return multiply(Matrix<double>{
-                            4, 4, std::array<double, 16>{
+                            {
                                 left.x, left.y, left.z, 0,
                                 true_up.x, true_up.y, true_up.z, 0,
                                 -forward.x, -forward.y, -forward.z, 0,

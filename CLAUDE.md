@@ -45,10 +45,11 @@ This is a raytracer implementation in C++23, following "The Ray Tracer Challenge
 - **Point/Vector** (`raytracer/Point.hpp`, `raytracer/Vector.hpp`): 3D geometric primitives with w=1 for points, w=0
   implicit for vectors. Support standard operations (add, subtract, dot, cross, normalize).
 
-- **Matrix** (`raytracer/Matrix.hpp`, `raytracer/MatrixImpl.hpp`): `Matrix<T>` owns its data directly (a private
-  `std::vector<T>`, no separate `Container` class) and exposes it via a custom multidimensional `operator[](row, col)`.
-  Supports multiply, transpose, determinant, inverse, and transformations (translation, scale, rotation_x/y/z,
-  shearing).
+- **Matrix** (`raytracer/Matrix.hpp`, `raytracer/MatrixImpl.hpp`): `Matrix<T, ROWS = 4, COLS = 4>` has its size in
+  the type and stores its elements in a `std::array` (no heap allocation), exposed via a custom multidimensional
+  `operator[](row, col)`. Size mismatches (e.g. multiplying a 4x4 by a 3x1) are compile errors. `Matrix<double>` is the
+  4x4 transform; points and vectors become `Matrix<double, 4, 1>` via `make_matrix`. Supports multiply, transpose,
+  determinant, inverse, and transformations (translation, scale, rotation_x/y/z, shearing).
 
 - **Ray** (`raytracer/Ray.hpp`): origin + direction; `position(ray, t)` and `transform(ray, matrix)`.
 
