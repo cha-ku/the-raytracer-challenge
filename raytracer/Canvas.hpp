@@ -26,7 +26,7 @@ namespace raytracer {
         std::vector<std::vector<uint8_t> > storage{width * height, {0, 0, 0}};
 
         explicit constexpr Canvas(const unsigned w, const unsigned h) : width(w), height(h) {
-        };
+        }
 
         void write_pixel(uint32_t pix_w, uint32_t pix_h, const Colour &colour);
     };

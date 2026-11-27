@@ -75,4 +75,5 @@ add_executable(raytracer raytracer/main.cpp
 )
 
 target_include_directories(raytracer PUBLIC raytracer)
+target_compile_options(raytracer PUBLIC -Wall -Wpedantic -Wextra -Weverything -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-pre-c++20-compat-pedantic -Wno-unsafe-buffer-usage)
 target_link_libraries(raytracer simulation raytracer_math scene)

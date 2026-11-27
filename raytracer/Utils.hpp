@@ -23,11 +23,11 @@ namespace utils {
     }
 
     static constexpr bool equal(const float a, const float b, const float epsilon = EPSILON) {
-        return abs(a - b) < epsilon;
+        return fabs(a - b) < epsilon;
     }
 
-    static constexpr bool is_almost_equal(const std::vector<double> &a, const std::vector<double> &b,
-                                          const double epsilon = EPSILON) {
+    static constexpr bool is_almost_equal(const std::vector<float> &a, const std::vector<float> &b,
+                                          const float epsilon = EPSILON) {
         if (a.size() != b.size()) return false;
         for (size_t i = 0; i < a.size(); ++i) {
             if (abs(a[i] - b[i]) > epsilon) return false;
