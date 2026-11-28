@@ -26,6 +26,16 @@ FetchContent_MakeAvailable(Catch2)
 
 add_subdirectory(tests)
 
+# Compile all targets (except in tests) for this machine's CPU in Release builds. Turn off with -DRT_NATIVE=OFF for a
+# portable binary, or to compare against one.
+option(RT_NATIVE "Compile for this machine's CPU (-march=native) in Release builds" ON)
+add_compile_options($<$<AND:$<CONFIG:Release>,$<BOOL:${RT_NATIVE}>>:-march=native>)
+
+# Math functions (e.g. std::sqrt in the intersection code) don't set errno on bad inputs, so they compile to single
+# instructions instead of a call plus an error check. Nothing here reads errno, and results are unchanged. Unlike
+# -ffast-math, it keeps infinities and NaNs working, which the unbounded shapes and empty bounding boxes rely on.
+add_compile_options(-fno-math-errno)
+
 add_library(simulation STATIC raytracer/Simulation.cpp
         raytracer/Simulation.hpp
         raytracer/ClockTower.cpp
@@ -70,9 +80,7 @@ add_library(scene STATIC
 target_include_directories(scene PUBLIC raytracer)
 target_link_libraries(scene PUBLIC raytracer_math)
 
-add_executable(raytracer raytracer/main.cpp
-        raytracer/Canvas.cpp
-)
+add_executable(raytracer raytracer/main.cpp)
 
 target_include_directories(raytracer PUBLIC raytracer)
 target_compile_options(raytracer PUBLIC -Wall -Wpedantic -Wextra -Weverything -Wno-c++98-compat -Wno-c++98-compat-pedantic -Wno-pre-c++20-compat-pedantic -Wno-unsafe-buffer-usage)
